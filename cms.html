@@ -312,8 +312,19 @@ const WIRKUNGEN = {
    ===================================================================== */
 
 const V = window.VALDRIEN_VERBINDUNG || {};
-const LIVE = Boolean(V.url && V.anonKey && window.supabase);
-const sb = LIVE ? window.supabase.createClient(V.url, V.anonKey) : null;
+// Bereinigt die Projektadresse: Supabase braucht nur "https://xxxx.supabase.co" ohne etwas dahinter.
+// Funktioniert auch, wenn versehentlich ".../rest/v1/" oder der Link aus dem Supabase-Dashboard eingetragen wurde.
+function projektAdresse(roh) {
+  const text = String(roh || "").trim();
+  if (!text) return "";
+  const dashboard = /supabase\.com\/dashboard\/project\/([a-z0-9]+)/i.exec(text);
+  if (dashboard) return `https://${dashboard[1]}.supabase.co`;
+  try { return new URL(/^https?:\/\//i.test(text) ? text : "https://" + text).origin; } catch (e) { return text; }
+}
+const PROJEKT_URL = projektAdresse(V.url);
+const SCHLUESSEL = String(V.anonKey || "").trim();
+const LIVE = Boolean(PROJEKT_URL && SCHLUESSEL && window.supabase);
+const sb = LIVE ? window.supabase.createClient(PROJEKT_URL, SCHLUESSEL) : null;
 const VORSCHAU_SCHLUESSEL = "valdrien-cms-vorschau";
 
 const zustand = {
@@ -998,7 +1009,7 @@ async function teamEntfernen(email) {
 
 /* ---------- JSON-Datei ---------- */
 function dateiHtml() {
-  const adresse = LIVE ? `${V.url.replace(/\/$/, "")}/rest/v1/inhalt?id=eq.valdrien&select=daten&apikey=${V.anonKey}` : "";
+  const adresse = LIVE ? `${PROJEKT_URL}/rest/v1/inhalt?id=eq.valdrien&select=daten&apikey=${SCHLUESSEL}` : "";
   return `
     ${kopfHtml("Inhalt als Datei", "JSON-Datei")}
     <div class="gruppe">
@@ -1196,7 +1207,15 @@ function anmeldungHtml() {
 async function anmeldelink(email) {
   zustand.meldung = "";
   const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + location.pathname } });
-  if (error) { zustand.meldung = "Das hat nicht geklappt: " + error.message; zeichnen(); return; }
+  if (error) {
+    const pfadFehler = /invalid path/i.test(error.message);
+    zustand.meldung = pfadFehler
+      ? `Die Projektadresse in verbindung.js stimmt nicht. Das CMS verwendet gerade: ${PROJEKT_URL}. Sie muss so aussehen: https://abcdefgh.supabase.co`
+      : /rate limit|too many/i.test(error.message)
+        ? "Supabase hat gerade zu viele Anmeldemails verschickt. Bitte versuche es in einer Stunde noch einmal."
+        : "Das hat nicht geklappt: " + error.message;
+    zeichnen(); return;
+  }
   zustand.anmeldeEmail = email;
   zustand.phase = "link-geschickt";
   zeichnen();
