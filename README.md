@@ -71,10 +71,20 @@ In Supabase links **Authentication** → **URL Configuration**:
 
 ### 6. Anmelden und loslegen
 1. `https://DEINNAME.github.io/valdrien/cms.html` öffnen.
-2. E-Mail-Adresse eingeben und **Anmeldelink schicken** klicken. Den Link in der Mail öffnen.
-3. Unter **Team & Verlauf** weitere Personen per E-Mail-Adresse hinzufügen und ihnen den CMS-Link schicken.
+2. **Noch kein Passwort? Anmeldelink per E-Mail** wählen, E-Mail-Adresse eingeben und den Link in der Mail öffnen. Am besten im selben Browser, in dem du das CMS benutzen willst.
+3. Unter **Team & Verlauf** → **Mein Passwort** ein Passwort festlegen. Ab dann meldest du dich mit E-Mail und Passwort an, auf jedem Gerät, ohne Mail.
+4. Unter **Team & Verlauf** weitere Personen per E-Mail-Adresse hinzufügen und ihnen den CMS-Link schicken. Sie machen dann dasselbe: einmal Anmeldelink, dann eigenes Passwort.
 
-> Supabase verschickt im kostenlosen Paket nur wenige Anmeldemails pro Stunde. Wer angemeldet ist, bleibt es aber auf diesem Gerät, normalerweise wochenlang.
+> Supabase verschickt im kostenlosen Paket nur **2 Anmeldemails pro Stunde** für das ganze Projekt. Deshalb das Passwort. Wer angemeldet ist, bleibt es in diesem Browser, bis er auf „Abmelden“ klickt.
+
+**Ausgesperrt?** So setzt du dein Passwort direkt in Supabase, ganz ohne Mail. Öffne den **SQL Editor** und führe Folgendes aus, mit deinem Passwort statt `MEIN-PASSWORT`:
+```sql
+update auth.users
+set encrypted_password = extensions.crypt('MEIN-PASSWORT', extensions.gen_salt('bf')),
+    email_confirmed_at = coalesce(email_confirmed_at, now())
+where email = 'mikabessel@googlemail.com';
+```
+Danach den Verlauf des SQL Editors löschen, damit das Passwort dort nicht stehen bleibt.
 
 ---
 

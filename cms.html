@@ -324,7 +324,10 @@ function projektAdresse(roh) {
 const PROJEKT_URL = projektAdresse(V.url);
 const SCHLUESSEL = String(V.anonKey || "").trim();
 const LIVE = Boolean(PROJEKT_URL && SCHLUESSEL && window.supabase);
-const sb = LIVE ? window.supabase.createClient(PROJEKT_URL, SCHLUESSEL) : null;
+// Die Anmeldung wird im Browser gespeichert und automatisch verlängert: einmal anmelden, dann bleibst du drin.
+const sb = LIVE ? window.supabase.createClient(PROJEKT_URL, SCHLUESSEL, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+}) : null;
 const VORSCHAU_SCHLUESSEL = "valdrien-cms-vorschau";
 
 const zustand = {
@@ -947,12 +950,13 @@ async function teamLaden() {
 
 function teamHtml() {
   if (!LIVE) return kopfHtml("Zusammenarbeit", "Team & Verlauf") + `<div class="meldung">Im Vorschau-Modus gibt es kein Team. Sobald du in <strong>verbindung.js</strong> deine Supabase-Daten einträgst, kannst du hier Leute einladen und siehst, wer was geändert hat.</div>`;
-  if (!zustand.darfBearbeiten) return kopfHtml("Zusammenarbeit", "Team & Verlauf") + `<div class="meldung">Das Team und den Verlauf sieht nur, wer selbst im Team ist.</div>`;
+  if (!zustand.darfBearbeiten) return kopfHtml("Zusammenarbeit", "Team & Verlauf") + passwortHtml() + `<div class="meldung">Das Team und den Verlauf sieht nur, wer selbst im Team ist.</div>`;
   return `
     ${kopfHtml("Zusammenarbeit", "Team & Verlauf")}
+    ${passwortHtml()}
     <div class="gruppe">
       <h3>Wer darf bearbeiten?</h3>
-      <p class="mechanik-text">Wer hier steht, meldet sich mit dieser E-Mail-Adresse im CMS an und kann sofort mitarbeiten. Schick der Person einfach den Link zu diesem CMS.</p>
+      <p class="mechanik-text">Wer hier steht, kann mitarbeiten. Schick der Person den Link zu diesem CMS. Sie meldet sich einmal per Anmeldelink an und legt dann hier ein eigenes Passwort fest.</p>
       <div class="tabelle">
         ${zustand.team.map(t => `
           <div class="zeile"><span>${esc(t.email)}${t.email === zustand.ich ? " (du)" : ""}</span>
@@ -1192,16 +1196,73 @@ function anmeldungHtml() {
       <p class="mechanik-text">Keine Mail da? Schau im Spam-Ordner nach.</p>
       <button class="knopf leise" onclick="zustand.phase = 'anmelden'; zeichnen()">Andere Adresse verwenden</button>
     </div></div>`;
+  const mitLink = zustand.anmeldeArt === "link";
   return `
     <div class="anmeldung"><div class="anmeldung-karte">
       <span class="eyebrow">Redaktion</span><h1>Valdrien</h1>
-      <p>Melde dich mit deiner E-Mail-Adresse an. Du bekommst einen Link, ein Klick genügt. Ein Passwort brauchst du nicht.</p>
-      <form onsubmit="event.preventDefault(); anmeldelink(this.email.value)" style="display:flex; flex-direction:column; gap:10px">
-        <input name="email" id="anmelde-email" type="email" required autocomplete="email" placeholder="name@beispiel.de" aria-label="E-Mail-Adresse">
-        <button class="knopf" type="submit">Anmeldelink schicken</button>
-      </form>
+      ${mitLink ? `
+        <p>Du bekommst einen Anmeldelink per E-Mail, ein Klick genügt. Supabase schickt davon nur wenige pro Stunde.</p>
+        <form onsubmit="event.preventDefault(); anmeldelink(this.email.value)" style="display:flex; flex-direction:column; gap:10px">
+          <input name="email" id="anmelde-email" type="email" required autocomplete="email" placeholder="name@beispiel.de" aria-label="E-Mail-Adresse" value="${esc(zustand.anmeldeEmail || "")}">
+          <button class="knopf" type="submit">Anmeldelink schicken</button>
+        </form>
+        <button class="knopf leise" onclick="zustand.anmeldeArt = 'passwort'; zustand.meldung = ''; zeichnen()">Mit Passwort anmelden</button>` : `
+        <p>Melde dich mit deiner E-Mail-Adresse und deinem Passwort an. Danach bleibst du in diesem Browser angemeldet.</p>
+        <form onsubmit="event.preventDefault(); passwortAnmelden(this.email.value, this.passwort.value)" style="display:flex; flex-direction:column; gap:10px">
+          <input name="email" id="anmelde-email" type="email" required autocomplete="username" placeholder="name@beispiel.de" aria-label="E-Mail-Adresse" value="${esc(zustand.anmeldeEmail || "")}">
+          <input name="passwort" id="anmelde-passwort" type="password" required autocomplete="current-password" placeholder="Passwort" aria-label="Passwort">
+          <button class="knopf" type="submit">Anmelden</button>
+        </form>
+        <button class="knopf leise" onclick="zustand.anmeldeArt = 'link'; zustand.meldung = ''; zeichnen()">Noch kein Passwort? Anmeldelink per E-Mail</button>`}
       ${zustand.meldung ? `<div class="meldung fehler">${esc(zustand.meldung)}</div>` : ""}
     </div></div>`;
+}
+
+async function passwortAnmelden(email, passwort) {
+  zustand.meldung = "";
+  zustand.anmeldeEmail = email;
+  const { error } = await sb.auth.signInWithPassword({ email: email.trim(), password: passwort });
+  if (error) {
+    zustand.meldung = /invalid login|invalid credentials/i.test(error.message)
+      ? "E-Mail oder Passwort stimmt nicht. Noch kein Passwort? Melde dich einmal per Anmeldelink an und lege es dann unter „Team & Verlauf“ fest."
+      : /not confirmed/i.test(error.message)
+        ? "Diese E-Mail-Adresse ist noch nicht bestätigt. Bitte melde dich einmal per Anmeldelink an."
+        : "Das hat nicht geklappt: " + error.message;
+    zeichnen();
+  }
+  // Bei Erfolg meldet Supabase die Anmeldung selbst (onAuthStateChange), dann öffnet sich das CMS.
+}
+
+// Passwort für das eigene Konto festlegen oder ändern
+async function passwortSetzen(form) {
+  const p1 = form.passwort.value, p2 = form.wiederholung.value;
+  zustand.passwortMeldung = null;
+  if (p1.length < 8) zustand.passwortMeldung = { fehler: true, text: "Bitte mindestens 8 Zeichen." };
+  else if (p1 !== p2) zustand.passwortMeldung = { fehler: true, text: "Die beiden Passwörter sind nicht gleich." };
+  else {
+    const { error } = await sb.auth.updateUser({ password: p1 });
+    zustand.passwortMeldung = error
+      ? { fehler: true, text: "Das hat nicht geklappt: " + error.message }
+      : { fehler: false, text: "Passwort gespeichert. Ab jetzt kannst du dich damit anmelden, auch auf anderen Geräten." };
+  }
+  editorZeichnen();
+}
+
+function passwortHtml() {
+  if (!LIVE) return "";
+  const m = zustand.passwortMeldung;
+  return `
+    <div class="gruppe">
+      <h3>Mein Passwort</h3>
+      <p class="mechanik-text">Mit einem Passwort meldest du dich ohne Mail an. Angemeldet ist gerade: ${esc(zustand.ich)}.</p>
+      <form class="inline-form" onsubmit="event.preventDefault(); passwortSetzen(this)">
+        <input type="email" name="benutzer" value="${esc(zustand.ich)}" autocomplete="username" hidden>
+        <input name="passwort" id="neues-passwort" type="password" minlength="8" required autocomplete="new-password" placeholder="Neues Passwort" aria-label="Neues Passwort">
+        <input name="wiederholung" id="passwort-wiederholung" type="password" minlength="8" required autocomplete="new-password" placeholder="Wiederholen" aria-label="Passwort wiederholen">
+        <button class="knopf" type="submit">Speichern</button>
+      </form>
+      ${m ? `<div class="meldung ${m.fehler ? "fehler" : ""}">${esc(m.text)}</div>` : ""}
+    </div>`;
 }
 
 async function anmeldelink(email) {
