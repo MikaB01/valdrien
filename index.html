@@ -560,6 +560,18 @@
     border: 1.5px solid var(--gold); box-shadow: 0 0 0 5px var(--grund), 0 0 0 6.5px var(--linie);
   }
   .verdeckt .wer { font-family: var(--schrift-titel); font-size: 1.5rem; color: var(--wald); }
+  .private-liste { display: flex; flex-direction: column; gap: 10px; }
+  .privat-karte {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+    padding: 14px 16px; background: var(--karte); border: 1.5px solid var(--linie); border-radius: 8px;
+  }
+  .privat-karte.neu { border-color: var(--gold); box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 25%, transparent); }
+  .privat-karte p { margin: 0; }
+  .privat-titel { font-family: var(--schrift-titel); font-weight: 400; font-size: 1.3rem; color: var(--wald); }
+  @media (prefers-reduced-motion: no-preference) {
+    .privat-karte.neu { animation: aufleuchten 1.6s ease-in-out 2; }
+    @keyframes aufleuchten { 50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--gold) 35%, transparent); } }
+  }
 </style>
 
 <div id="hintergrund" hidden></div>
@@ -1915,7 +1927,7 @@ function rolleUmwandeln(id, r) {
   };
 }
 
-// Ein Ereignis aus dem CMS. Private Ereignisse sind (noch) nicht im Stapel.
+// Ein Ereignis aus dem CMS. Private Ereignisse gehen an einen einzelnen Spieler (auf seine QR-Seite).
 function ereignisUmwandeln(id, e) {
   return {
     id,
@@ -1924,7 +1936,9 @@ function ereignisUmwandeln(id, e) {
     wirkung: e.wirkung || "ruhe",
     text: textSicher(e.beschreibung || ""),
     privat: e.sichtbarkeit === "privat",
-    geloescht: e.sichtbarkeit === "privat"
+    // Private Ereignisse: "sofort" = Münzen gleich, "aufgabe" = Münzen erst, wenn geschafft
+    privatArt: e.privatArt === "aufgabe" ? "aufgabe" : "sofort",
+    privatMuenzen: zahl(e.privatMuenzen, 0)
   };
 }
 
@@ -2031,7 +2045,7 @@ function inhaltAnwenden(daten, quelle) {
   abenteuerSetzen(spiel.abenteuer);
   if (laufend) {
     reihenfolgeMerken();
-    // Gelöschte oder privat gewordene Ereignisse aus dem Stapel nehmen
+    // Gelöschte Ereignisse aus dem Stapel nehmen
     if (Array.isArray(spiel.ereignisStapel)) spiel.ereignisStapel = spiel.ereignisStapel.filter(nr => EREIGNISSE[nr] && !EREIGNISSE[nr].geloescht);
   }
   return true;
@@ -2078,6 +2092,33 @@ const MIN_SPIELER = 3;
 // Ziehst du die App einmal um (z. B. auf eine eigene Webseite), trägst du hier die neue Adresse ein.
 // Das ist automatisch die Adresse, unter der diese Seite gerade läuft (z. B. dein GitHub Pages).
 const SPIELER_LINK = location.origin + location.pathname;
+
+/* --- Verbindung zu Supabase (Werte aus verbindung.js) --- */
+const VERBINDUNG = window.VALDRIEN_VERBINDUNG || {};
+function projektAdresse(roh) {
+  const text = String(roh || "").trim();
+  if (!text) return "";
+  const dashboard = /supabase\.com\/dashboard\/project\/([a-z0-9]+)/i.exec(text);
+  if (dashboard) return `https://${dashboard[1]}.supabase.co`;
+  try { return new URL(/^https?:\/\//i.test(text) ? text : "https://" + text).origin; } catch (e) { return ""; }
+}
+const PROJEKT_URL = projektAdresse(VERBINDUNG.url);
+const PROJEKT_SCHLUESSEL = String(VERBINDUNG.anonKey || "").trim();
+
+// Eine Supabase-Funktion aufrufen (ohne Konto, nur mit dem öffentlichen Schlüssel)
+async function rpc(funktion, werte) {
+  if (!PROJEKT_URL || !PROJEKT_SCHLUESSEL) throw new Error("keine Verbindung eingetragen");
+  const antwort = await fetch(`${PROJEKT_URL}/rest/v1/rpc/${funktion}`, {
+    method: "POST",
+    headers: { apikey: PROJEKT_SCHLUESSEL, "Content-Type": "application/json" },
+    body: JSON.stringify(werte),
+    cache: "no-store"
+  });
+  if (!antwort.ok) throw new Error("Fehler " + antwort.status);
+  const text = await antwort.text();
+  return text ? JSON.parse(text) : null;
+}
+
 
 // Verbindung zum Spieltisch: Die Münzen jedes Spielers liegen hier, damit sein Handy sie lesen kann.
 let tischDb = null;           // die Datenbank, sobald die App bei Claude angemeldet läuft
@@ -2216,6 +2257,15 @@ function tafelBeutel() {
     <div class="tafel-unten" role="dialog" aria-modal="true" aria-label="Münzen">
       <div class="tafel-kopf"><h2>Münzen</h2>${SCHLIESSEN}</div>
       ${standTafel()}
+      ${offeneAufgaben().length ? `
+        <span class="etikett">Geheime Aufgaben</span>
+        ${offeneAufgaben().map(({ i, p }) => `
+          <div class="rueckfrage">
+            <strong style="font-size:1.1rem">${name(i)} hat eine geheime Aufgabe</strong>
+            <p class="leise">${name(i)} sagt dir, ob es geklappt hat. Den Inhalt kennt nur ${name(i)}.</p>
+            <button class="knopf" onclick="privatErledigt(${i}, '${p.id}', true)">Geschafft (${vorzeichen(p.muenzen)})</button>
+            <button class="knopf-leise" onclick="privatErledigt(${i}, '${p.id}', false)">Nicht geschafft</button>
+          </div>`).join("")}` : ""}
       <button class="knopf-leise" onclick="oeffne('spiel')">Münzen von Hand ändern</button>
     </div>`;
 }
@@ -2438,6 +2488,7 @@ function bildschirmRegeln() {
           <li><strong>Treffer oder daneben:</strong> Liegst du richtig, bekommst du 3 Münzen, und die Fähigkeit des Erratenen wird freigeschaltet. Liegst du falsch, ist die gesetzte Münze verloren.</li>
           <li><strong>Fähigkeiten:</strong> Jede Fähigkeit darf nur einmal pro Partie eingesetzt werden. Ihr setzt sie über »Besondere Fähigkeit einsetzen« auf der Spielübersicht ein, die App erledigt den Rest.</li>
           <li><strong>Ereignisse und Minispiele:</strong> Unerwartete Begegnungen und kleine Herausforderungen bringen Münzen. Alle ${minuten()} Minuten deckt die App automatisch eine Ereigniskarte auf. Manche Fähigkeiten lösen zusätzlich Ereignisse aus. Unter jeder Karte verteilt ihr die Münzen direkt per Knopfdruck. Das gilt auch für Minispiele.</li>
+          <li><strong>Geheime Ereignisse:</strong> Manche Karten gehen nur an einen einzelnen Spieler. Er liest sie auf seinem eigenen Handy (QR-Code auf der Rollenkarte), alle anderen erfahren nur, dass etwas geschehen ist. Ist es eine geheime Aufgabe, sagt er dem Spielleiter Bescheid, wenn er sie geschafft hat. Der bestätigt das im Geldbeutel.</li>
           <li><strong>Gleichstand bei Ereignissen:</strong> Betrifft eine Karte den Spieler mit den meisten oder den wenigsten Münzen, sind bei Gleichstand alle Gleichplatzierten betroffen.</li>
           <li><strong>Wer spielt beim Minispiel mit?</strong> Ohne Ereigniskarte gilt: Im Duell fordert der Spieler mit den wenigsten Münzen jemanden heraus. Bei Einer gegen alle ist der Spieler mit den meisten Münzen der Einzelne, bei 1 gegen 2 der Riese oder Rausschmeißer, und die zwei mit den wenigsten Münzen sind seine Gegner. Teams lost die App aus.</li>
           <li><strong>Spielbank:</strong> Münzen für Fähigkeiten und Belohnungen kommen aus einer gemeinsamen Bank.</li>
@@ -2757,6 +2808,7 @@ function bildschirmUebersicht() {
     ${spiel.seherBonus ? `<p class="hinweis">Die Nacht der Seher: Bis zum nächsten Ereignis bringt ein Treffer beim Raten 5 Münzen.</p>` : ""}
     ${spiel.siegBonus ? `<p class="hinweis">Gewinnt ${name(spiel.siegBonus.wer)} das nächste Minispiel, gibt es ${spiel.siegBonus.betrag} Münzen extra.</p>` : ""}
     ${spiel.ratenGratis ? `<p class="hinweis">Lose Zungen: Bis zum nächsten Ereignis kostet Raten keine Münze.</p>` : ""}
+    ${offeneAufgaben().length ? `<p class="hinweis">Offene geheime ${offeneAufgaben().length === 1 ? "Aufgabe" : "Aufgaben"}: ${namen([...new Set(offeneAufgaben().map(x => x.i))])}. Bestätigen über den Geldbeutel unten rechts.</p>` : ""}
     <div class="kacheln">
       <button class="kachel kachel-breit" onclick="ratenBeginnen()">
         ${symbol("raten")}
@@ -2858,6 +2910,7 @@ function bildschirmEreignis() {
   const e = spiel.ereignis;
   const karte = e && EREIGNISSE[e.nr];
   if (!karte) return bildschirmUebersicht(); // falls etwas nicht stimmt
+  if (e.privat) return bildschirmPrivatesEreignis();
 
   const wirkung = ereignisWirkung();
   const abschnitte = (wirkung.abschnitte || []).map((abschnitt, ai) => {
@@ -3379,6 +3432,7 @@ function ereignisZiehen(automatisch, festeNr) {
 
   // Der Zeitgeber stoppt. Er startet neu, sobald ihr zur Übersicht zurückkehrt.
   spiel.timerEnde = null;
+  if (EREIGNISSE[nr].privat) { privatesEreignis(nr, automatisch); return; }
   // Eine neue Karte beendet die "Nacht der Seher"
   spiel.seherBonus = EREIGNISSE[nr].wirkung === "seher";
   spiel.ratenGratis = EREIGNISSE[nr].wirkung === "losezungen";
@@ -3394,6 +3448,97 @@ function ereignisZiehen(automatisch, festeNr) {
     betroffen: schnappschuss()
   };
   zeige("ereignis");
+}
+
+/* --- Private Ereignisse ---
+   Die Karte geht an EINEN Spieler, bevorzugt an jemanden, der bisher am
+   wenigsten private Ereignisse bekommen hat. Nur er sieht den Text auf
+   seiner QR-Seite. Bei "sofort" bucht die App die Münzen gleich, bei
+   "aufgabe" bestätigt der Spielleiter später im Geldbeutel. */
+function privatesEreignis(nr, automatisch) {
+  const karte = EREIGNISSE[nr];
+  const anzahl = spiel.spieler.map(s => (s.privat || []).length);
+  const wenigste = Math.min(...anzahl);
+  const kandidaten = spiel.spieler.map((_, i) => i).filter(i => anzahl[i] === wenigste);
+  const fuer = kandidaten[Math.floor(Math.random() * kandidaten.length)];
+  const s = spiel.spieler[fuer];
+  const eintrag = {
+    id: zufallsCode().slice(0, 8),
+    titel: karte.titel,
+    text: karte.text,
+    art: karte.privatArt,
+    muenzen: karte.privatMuenzen,
+    status: karte.privatArt === "aufgabe" ? "offen" : "erhalten",
+    zeit: Date.now()
+  };
+  if (eintrag.art === "sofort" && eintrag.muenzen) plus([fuer], eintrag.muenzen);
+  s.privat = (s.privat || []).concat(eintrag);
+  spiel.ereignis = { nr, automatisch: Boolean(automatisch), privat: true, fuer, eintragId: eintrag.id, gezeigt: false, erledigt: {}, betroffen: schnappschuss() };
+  zeige("ereignis");
+}
+
+// Der Spielleiter bestätigt eine geheime Aufgabe (geschafft oder nicht)
+function privatErledigt(i, id, geschafft) {
+  const p = (spiel.spieler[i].privat || []).find(x => x.id === id);
+  if (!p || p.status !== "offen") return;
+  p.status = geschafft ? "geschafft" : "verpasst";
+  if (geschafft && p.muenzen) plus([i], p.muenzen);
+  speichern();
+  rahmenZeichnen();
+  zeichnen();
+}
+
+// Alle offenen geheimen Aufgaben: [{i, p}]
+function offeneAufgaben() {
+  return (spiel.spieler || []).flatMap((s, i) => (s.privat || []).filter(p => p.status === "offen").map(p => ({ i, p })));
+}
+
+// Bildschirm für ein privates Ereignis am Spielleiter-Handy: der Text bleibt verdeckt
+function bildschirmPrivatesEreignis() {
+  const e = spiel.ereignis;
+  const i = e.fuer;
+  const p = (spiel.spieler[i].privat || []).find(x => x.id === e.eintragId) || {};
+  setTimeout(verbindungAnzeigen, 0);
+  const folge = p.art === "aufgabe"
+    ? `Schafft ${name(i)} die Aufgabe, gibt es ${vorzeichen(p.muenzen)} Münzen. Bestätigt wird über den Geldbeutel.`
+    : p.muenzen ? `${name(i)} ${p.muenzen > 0 ? "erhält" : "verliert"} dabei ${Math.abs(p.muenzen)} ${Math.abs(p.muenzen) === 1 ? "Münze" : "Münzen"}. Schon gebucht.` : "";
+  return `
+    ${e.automatisch ? `<p class="menue-vorzeile" style="margin:0">Die Zeit ist um! Ein Ereignis tritt ein …</p>` : ""}
+    <article class="rollenkarte zugkarte">
+      <div class="titel">
+        <span class="etikett">Geheimes Ereignis</span>
+        <div class="wer">für ${name(i)}</div>
+      </div>
+      ${e.gezeigt ? `
+        <span class="etikett">${p.titel || ""}</span>
+        <p class="erzaehlung">${p.text || ""}</p>
+        ${folge ? `<p class="leise">${folge}</p>` : ""}` : `
+        <p class="erzaehlung">${name(i)}, schau auf dein Handy. Nur du erfährst, was geschieht.</p>`}
+    </article>
+    <p class="hinweis" id="verbunden-hinweis">Prüfe, ob das Handy von ${name(i)} verbunden ist …</p>
+    <button class="knopf" onclick="zeige('uebersicht')">Weiter</button>
+    ${e.gezeigt ? `<button class="knopf-leise" onclick="spiel.ereignis.gezeigt = false; zeichnen()">Karte wieder verdecken</button>`
+      : `<button class="knopf-leise" onclick="spiel.ereignis.gezeigt = true; zeichnen()">Ohne eigenes Handy: Handy an ${name(i)} geben, Karte zeigen</button>`}
+  `;
+}
+
+// Fragt bei Supabase, ob das Handy eines Spielers in den letzten 2 Minuten nachgesehen hat
+async function verbindungAnzeigen() {
+  const feld = document.getElementById("verbunden-hinweis");
+  const e = spiel.ereignis;
+  if (!feld || !e || !e.privat) return;
+  const s = spiel.spieler[e.fuer];
+  if (!PROJEKT_URL || !spiel.partie) { feld.textContent = `Keine Verbindung zu Supabase. Zeig ${s.name} die Karte hier auf diesem Handy.`; return; }
+  try {
+    const liste = await rpc("tisch_status", { p_partie: spiel.partie.id, p_geheim: spiel.partie.geheim });
+    const zeile = (liste || []).find(z => z.zugang === s.zugang);
+    const frisch = zeile && zeile.gesehen_am && Date.now() - new Date(zeile.gesehen_am).getTime() < 2 * 60000;
+    feld.textContent = frisch
+      ? `Das Handy von ${s.name} ist verbunden. Die Karte erscheint dort in wenigen Sekunden.`
+      : `Das Handy von ${s.name} ist gerade nicht verbunden. Die Karte wartet dort, bis es die Seite öffnet. Oder zeig sie hier.`;
+  } catch (err) {
+    feld.textContent = `Gerade keine Verbindung. Die Karte kommt an, sobald wieder Netz da ist. Oder zeig sie ${s.name} hier.`;
+  }
 }
 
 // Merkt sich beim Ziehen, wer gerade die meisten/wenigsten Münzen hat usw.
@@ -3613,6 +3758,7 @@ function ereignisAktion(ai, ki) {
 // Gibt es unter der Ereigniskarte noch Knöpfe, die gedrückt werden müssen?
 function ereignisOffen() {
   const e = spiel.ereignis;
+  if (!e || e.privat) return false;
   return (ereignisWirkung().abschnitte || []).some((a, i) =>
     a.knoepfe.some(k => !k.minispiel) && e.erledigt[i] === undefined);
 }
@@ -4136,7 +4282,7 @@ function qrAbschnitt(i) {
     <div class="qr-kasten">
       ${bild}
       <div>
-        <p><strong>Auf dein eigenes Handy holen:</strong> Scanne den Code mit deiner Kamera. Dann kannst du deine Rolle jederzeit selbst nachlesen.</p>
+        <p><strong>Auf dein eigenes Handy holen:</strong> Scanne den Code mit deiner Kamera. Dann siehst du deine Rolle, deine Münzen und geheime Ereignisse jederzeit selbst.</p>
       </div>
     </div>`;
 }
@@ -4151,6 +4297,8 @@ function tischDaten(s) {
     abenteuer: spiel.abenteuer || "wald",
     phase: spiel.abenteuerLaeuft ? "laeuft" : (["aufgaben", "ende"].includes(spiel.bildschirm) ? "ende" : "start"),
     timerEnde: spiel.abenteuerLaeuft && spiel.timerEnde ? spiel.timerEnde : 0,
+    // Die privaten Ereignisse dieses Spielers (neueste zuerst). Nur er sieht sie.
+    privat: (s.privat || []).slice(-12).reverse(),
     hinweise: [
       spiel.seherBonus && "Die Nacht der Seher: Bis zum nächsten Ereignis bringt ein Treffer beim Raten 5 Münzen.",
       spiel.ratenGratis && "Lose Zungen: Bis zum nächsten Ereignis kostet Raten keine Münze.",
@@ -4159,11 +4307,15 @@ function tischDaten(s) {
   };
 }
 
-// Überträgt geänderte Münzstände an die Handys der Spieler (nur was sich wirklich geändert hat)
+// Jede Partie bekommt eine eigene Kennung und einen geheimen Spielleiter-Schlüssel
+function neuePartie() { return { id: zufallsCode() + zufallsCode(), geheim: zufallsCode() + zufallsCode() }; }
+
+// Überträgt geänderte Stände an die Handys der Spieler (nur was sich wirklich geändert hat)
 async function tischSync() {
   if (!tischDb || eigene || !spiel.spieler || !spiel.spieler.length) return;
   if (tischLaeuft) { tischNochmal = true; return; }
   tischLaeuft = true;
+  if (!spiel.partie) { spiel.partie = neuePartie(); try { localStorage.setItem("waldgilde", JSON.stringify(spiel)); } catch (e) {} }
   try {
     for (const s of spiel.spieler) {
       if (!s.zugang) continue;
@@ -4171,11 +4323,9 @@ async function tischSync() {
       const vergleich = JSON.stringify(daten);
       if (tischLetzte[s.zugang] === vergleich) continue;
       try {
-        await tischDb.doc("tische/" + s.zugang).set(Object.assign(daten, { stand: Date.now() }));
+        await rpc("tisch_setzen", { p_partie: spiel.partie.id, p_geheim: spiel.partie.geheim, p_zugang: s.zugang, p_daten: Object.assign(daten, { stand: Date.now() }) });
         tischLetzte[s.zugang] = vergleich;
-      } catch (e) {
-        if (e && e.code === "invalid_argument") { tischDb = null; break; } // dieses Konto darf nicht schreiben
-      }
+      } catch (e) { /* kein Netz: beim nächsten Mal erneut versuchen */ }
     }
   } finally {
     tischLaeuft = false;
@@ -4183,20 +4333,21 @@ async function tischSync() {
   }
 }
 
-// Löscht die Spielerseiten der letzten Partie, bevor neue Rollen verteilt werden
+// Löscht die Spielerseiten der letzten Partie und beginnt eine neue
 function tischAufraeumen() {
-  if (!tischDb || !spiel.spieler) return;
-  spiel.spieler.forEach(s => {
-    if (!s.zugang) return;
-    delete tischLetzte[s.zugang];
-    tischDb.doc("tische/" + s.zugang).delete().catch(() => {});
-  });
+  const alt = spiel.partie;
+  tischLetzte = {};
+  spiel.partie = neuePartie();
+  if (tischDb && alt) rpc("partie_loeschen", { p_partie: alt.id, p_geheim: alt.geheim }).catch(() => {});
 }
 
-// Verbindet das Spielleiter-Handy mit dem Spieltisch (klappt nur in der veröffentlichten App)
+// Verbindet das Spielleiter-Handy mit dem Spieltisch (wenn Supabase in verbindung.js eingetragen ist)
 function tischVerbinden() {
-  const versuch = window.claude && window.claude.use ? window.claude.use("db") : Promise.resolve(null);
-  versuch.then(db => { tischDb = db; tischSync(); }).catch(() => {});
+  tischDb = PROJEKT_URL && PROJEKT_SCHLUESSEL ? true : null;
+  tischSync();
+  // Falls eine Übertragung ohne Netz fehlschlug: regelmäßig nachholen
+  setInterval(tischSync, 20000);
+  window.addEventListener("online", tischSync);
 }
 
 // Ist diese Seite über einen QR-Code geöffnet worden? Dann steht z. B. "#v-wald-3-abc..." in der Adresse.
@@ -4209,15 +4360,65 @@ function eigeneSeiteAusAdresse() {
 function eigeneSeiteStarten() {
   eigeneZeichnen();
   setInterval(eigeneUhr, 1000);
-  const versuch = window.claude && window.claude.use ? window.claude.use("db") : Promise.resolve(null);
-  versuch.then(db => {
-    if (!db) { eigene.status = "ohne"; eigeneZeichnen(); return; }
-    db.doc("tische/" + eigene.zugang).onSnapshot(snap => {
-      eigene.daten = snap.exists ? snap.data() : null;
-      eigene.status = snap.exists ? "ok" : "leer";
-      eigeneZeichnen();
-    }, () => { eigene.status = "ohne"; eigeneZeichnen(); });
-  }).catch(() => { eigene.status = "ohne"; eigeneZeichnen(); });
+  if (!PROJEKT_URL || !PROJEKT_SCHLUESSEL) { eigene.status = "ohne"; eigeneZeichnen(); return; }
+  eigeneHolen();
+  // Alle 5 Sekunden nachsehen, solange die Seite sichtbar ist
+  setInterval(() => { if (!document.hidden) eigeneHolen(); }, 5000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) eigeneHolen(); });
+  window.addEventListener("online", eigeneHolen);
+}
+
+// Holt die eigene Seite vom Spieltisch. Neu gezeichnet wird nur, wenn sich etwas geändert hat.
+let eigeneLetzte = "";
+async function eigeneHolen() {
+  try {
+    const daten = await rpc("tisch_lesen", { p_zugang: eigene.zugang });
+    const neu = JSON.stringify(daten);
+    if (neu === eigeneLetzte && eigene.status !== "laden") return;
+    eigeneLetzte = neu;
+    eigene.daten = daten;
+    eigene.status = daten ? "ok" : "leer";
+    eigeneZeichnen();
+  } catch (e) {
+    if (eigene.status === "laden") { eigene.status = "offline"; eigeneZeichnen(); }
+  }
+}
+
+// Welche privaten Ereignisse hat dieser Spieler schon gesehen? (nur in seinem Browser)
+function gesehenePrivate() {
+  try { return JSON.parse(localStorage.getItem("valdrien-gesehen-" + eigene.zugang) || "[]"); } catch (e) { return []; }
+}
+function privatGesehen(id) {
+  const liste = gesehenePrivate();
+  if (!liste.includes(id)) liste.push(id);
+  try { localStorage.setItem("valdrien-gesehen-" + eigene.zugang, JSON.stringify(liste)); } catch (e) {}
+  eigeneZeichnen();
+}
+
+// Die privaten Ereignisse auf der eigenen Seite
+function privateHtml(d) {
+  const liste = d && Array.isArray(d.privat) ? d.privat : [];
+  if (!liste.length) return "";
+  const gesehen = gesehenePrivate();
+  return `
+    <section class="private-liste" aria-label="Geheime Ereignisse">
+      <span class="etikett">Nur für dich</span>
+      ${liste.map(p => {
+        const neu = !gesehen.includes(p.id);
+        const folge = p.art === "aufgabe"
+          ? (p.status === "offen" ? `Geheime Aufgabe: Schaffst du es, gibt es ${vorzeichen(p.muenzen)} Münzen. Sag dem Spielleiter Bescheid, wenn du es geschafft hast.`
+            : p.status === "geschafft" ? `Geschafft: ${vorzeichen(p.muenzen)} Münzen gebucht.` : "Nicht geschafft.")
+          : (p.muenzen ? `${vorzeichen(p.muenzen)} Münzen, schon gebucht.` : "");
+        return `
+        <article class="privat-karte ${neu ? "neu" : ""}">
+          ${neu ? `<span class="chip chip-gold">Neu</span>` : ""}
+          <strong class="privat-titel">${sicher(p.titel || "")}</strong>
+          <p>${sicher(p.text || "")}</p>
+          ${folge ? `<p class="leise">${folge}</p>` : ""}
+          ${neu ? `<button class="knopf-leise" onclick="privatGesehen('${sicher(p.id)}')">Gelesen</button>` : ""}
+        </article>`;
+      }).join("")}
+    </section>`;
 }
 
 function eigeneZeichnen() {
@@ -4247,7 +4448,9 @@ function bildschirmEigene() {
   } else if (eigene.status === "ohne") {
     muenzen = `<p class="leise">Deine Münzen siehst du am Spielleiter-Handy.</p>`;
   } else if (eigene.status === "leer") {
-    muenzen = `<p class="leise">Noch keine Münzen vom Spieltisch. Sie erscheinen, sobald der Spielleiter die App angemeldet geöffnet hat.</p>`;
+    muenzen = `<p class="leise">Noch keine Münzen vom Spieltisch. Sie erscheinen, sobald das Spielleiter-Handy Netz hat.</p>`;
+  } else if (eigene.status === "offline") {
+    muenzen = `<p class="leise">Gerade keine Verbindung. Deine Münzen erscheinen, sobald wieder Netz da ist.</p>`;
   } else {
     const status = !d.frei ? `<span class="chip">noch nicht erraten</span>`
       : d.benutzt ? `<span class="chip">erraten</span><span class="chip">Fähigkeit benutzt</span>`
@@ -4269,6 +4472,7 @@ function bildschirmEigene() {
     </div>
     <div class="eigene-muenzen" aria-live="polite">${muenzen}</div>
     ${hinweise}
+    ${privateHtml(d)}
     ${eigene.offen ? `
       ${rollenkarte(r)}
       <button class="knopf-leise" onclick="eigene.offen = false; eigeneZeichnen()">Rolle verdecken</button>` : `
@@ -4283,18 +4487,6 @@ function bildschirmEigene() {
 
 // Los geht's!
 
-/* --- Verbindung zu Supabase (Werte aus verbindung.js) --- */
-const VERBINDUNG = window.VALDRIEN_VERBINDUNG || {};
-function projektAdresse(roh) {
-  const text = String(roh || "").trim();
-  if (!text) return "";
-  const dashboard = /supabase\.com\/dashboard\/project\/([a-z0-9]+)/i.exec(text);
-  if (dashboard) return `https://${dashboard[1]}.supabase.co`;
-  try { return new URL(/^https?:\/\//i.test(text) ? text : "https://" + text).origin; } catch (e) { return ""; }
-}
-const PROJEKT_URL = projektAdresse(VERBINDUNG.url);
-const PROJEKT_SCHLUESSEL = String(VERBINDUNG.anonKey || "").trim();
-
 // Was zu tun ist, wenn neuer Inhalt da ist
 function nachNeuemInhalt() {
   if (eigene) { eigeneZeichnen(); return; }
@@ -4302,7 +4494,7 @@ function nachNeuemInhalt() {
   zeichnen();
 }
 
-// Holt den aktuellen Inhalt aus Supabase
+// Holt den aktuellen Inhalt aus Supabase (Abenteuer, Rollen, Ereignisse, Minispiele)
 async function inhaltHolen() {
   if (!PROJEKT_URL || !PROJEKT_SCHLUESSEL) return;
   try {

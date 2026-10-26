@@ -142,7 +142,6 @@ Das Spiel liegt unter `https://DEINNAME.github.io/valdrien/`. Auf dem iPhone: in
 - **Laufende Partien bleiben stimmig:** Wird während einer Partie eine Rolle gelöscht, behält der Spieler sie bis zum Ende. Gelöschte oder privat gewordene Ereignisse kommen nicht mehr aus dem Stapel. Neue Einträge sind sofort dabei, neue Rollen ab der nächsten Partie.
 - **Ohne Netz (z. B. im Wald):** Das Spiel merkt sich den zuletzt geladenen Inhalt und funktioniert damit weiter. Öffne es einmal vor der Wanderung mit Netz. Gab es noch nie eine Verbindung, nimmt es den eingebauten Startinhalt.
 - **Neue Abenteuer:** Sie erscheinen automatisch in der Auswahl. Spielbar werden sie, sobald sie mindestens 3 Rollen und 1 öffentliches Ereignis haben.
-- **QR-Codes:** Sie führen auf die eigene Rollenseite unter derselben Adresse. Die Münzen sehen die Spieler dort ab Etappe 3.
-
-## Nächste Etappe
-3. Die Münzen und privaten Ereignisse auf den QR-Seiten der Spieler laufen über Supabase, ohne Claude-Konto.
+- **QR-Codes:** Jede Rollenkarte hat einen QR-Code. Er öffnet auf dem Handy des Spielers seine eigene Seite mit Rolle, Münzen, Countdown und geheimen Ereignissen. Sie aktualisiert sich alle paar Sekunden von selbst. Die Spieler brauchen kein Konto.
+- **Geheime Ereignisse:** Ereignisse, die im CMS auf „Privat“ stehen, gehen an einen einzelnen Spieler. Am Spielleiter-Handy steht nur „Geheimes Ereignis für Ben“, den Text sieht Ben auf seinem Handy. Bei „Sofort“ bucht die App die Münzen gleich. Bei „Aufgabe“ bestätigt der Spielleiter im Geldbeutel, ob sie geschafft wurde. Ohne eigenes Handy kann der Spielleiter die Karte auch auf seinem Handy zeigen.
+- **Sicherheit:** Jede Partie hat einen geheimen Spielleiter-Schlüssel. Nur das Spielleiter-Handy kann die Spielerseiten beschreiben. Jede Spielerseite ist nur mit dem Code aus ihrem QR-Code lesbar. Partien werden nach 3 Tagen automatisch gelöscht.

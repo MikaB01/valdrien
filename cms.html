@@ -581,6 +581,7 @@ function felderAuffrischen() {
     const schluessel = el.dataset.pfad;
     if (el === document.activeElement || offen[schluessel]) return;
     const wert = holen(zustand.inhalt, schluessel.split("\u0001"));
+    if (el.type === "radio" && wert == null) return; // Voreinstellung stehen lassen
     const anzeige = wertZuText(wert, el.dataset.typ);
     if (el.type === "radio") el.checked = el.value === anzeige;
     else if (el.value !== anzeige) el.value = anzeige;
@@ -661,7 +662,9 @@ function listeZeichnen() {
 function untertitel(e) {
   if (zustand.bereich === "rollen") return [e.bezeichnung, (e.startkapital ?? "?") + " Münzen"].filter(Boolean).join(" · ");
   if (zustand.bereich === "minispiele") return (KATEGORIEN[e.kategorie]?.name || "Ohne Kategorie") + belohnungKurz(e);
-  if (zustand.bereich === "ereignisse") return [e.kategorie, WIRKUNGEN[e.wirkung] ? "" : "ohne Wirkung"].filter(Boolean).join(" · ");
+  if (zustand.bereich === "ereignisse") return e.sichtbarkeit === "privat"
+    ? [e.kategorie, e.privatArt === "aufgabe" ? "Aufgabe" : "", e.privatMuenzen ? (e.privatMuenzen > 0 ? "+" : "") + e.privatMuenzen : ""].filter(Boolean).join(" · ")
+    : [e.kategorie, WIRKUNGEN[e.wirkung] ? "" : "ohne Wirkung"].filter(Boolean).join(" · ");
   return "";
 }
 function belohnungKurz(e) {
@@ -720,7 +723,7 @@ function kopfHtml(eyebrow, titel, werkzeuge) {
 function feld(pfadVoll, beschriftung, typ, optionen = {}) {
   const schluessel = pfadVoll.join("\u0001");
   const id = "f-" + pfadVoll.map(slug).join("-");
-  const wert = holen(zustand.inhalt, pfadVoll);
+  const wert = holen(zustand.inhalt, pfadVoll) ?? optionen.vorgabe;
   const text = wertZuText(wert, typ);
   const attr = `id="${id}" data-pfad="${esc(schluessel)}" data-typ="${typ}"`;
   let eingabe;
@@ -822,7 +825,7 @@ function pruefungHtml() {
   const ohne = rollen.filter(r => !r.faehigkeit?.mechanik).map(r => r.name || "Ohne Namen");
   if (ohne.length) hinweise.push(`Ohne Spielmechanik (Münzen von Hand): ${ohne.join(", ")}.`);
   const privat = ereig.filter(e => e.sichtbarkeit === "privat").length;
-  if (privat) hinweise.push(`${privat} private ${privat === 1 ? "Ereignis geht" : "Ereignisse gehen"} nur an einzelne Spieler (auf ihre QR-Seite).`);
+  if (privat) hinweise.push(`${privat} private ${privat === 1 ? "Ereignis geht" : "Ereignisse gehen"} jeweils an einen einzelnen Spieler auf seine QR-Seite.`);
   if (!probleme.length && !hinweise.length) return `<div class="meldung">Spielbereit: ${rollen.length} Rollen, ${minis.length} Minispiele, ${ereig.length} Ereignisse.</div>`;
   return `
     ${probleme.length ? `<div class="meldung fehler"><strong>So ist das Abenteuer noch nicht spielbar</strong><ul>${probleme.map(t => `<li>${esc(t)}</li>`).join("")}</ul></div>` : ""}
@@ -902,10 +905,17 @@ function eintragEditor() {
         </div>
         ${feld([...p, "sichtbarkeit"], "Wer sieht das Ereignis?", "segment", { werte: { oeffentlich: "Öffentlich: alle", privat: "Privat: ein Spieler" } })}
         <p class="mechanik-text">${e.sichtbarkeit === "privat"
-          ? "Privat: Das Ereignis erscheint nur auf der QR-Seite eines einzelnen Spielers. Die anderen erfahren nichts davon."
+          ? "Privat: Die App wählt einen Spieler aus, bevorzugt jemanden, der bisher wenige geheime Ereignisse hatte. Nur er sieht den Text auf seiner QR-Seite. Am Spielleiter-Handy steht nur „Geheimes Ereignis für …“."
           : "Öffentlich: Das Ereignis wird am Spielleiter-Handy für alle aufgedeckt."}</p>
-        ${feld([...p, "beschreibung"], "Beschreibung", "textarea", { zeilen: 5 })}
-        ${feld([...p, "wirkung"], "Was die App dabei tut", "auswahl", { werte: WIRKUNGEN, hilfe: "Die App kann nur diese Wirkungen. Neue müssen programmiert werden." })}
+        ${feld([...p, "beschreibung"], e.sichtbarkeit === "privat" ? "Text für den Spieler" : "Beschreibung", "textarea", { zeilen: 5,
+          hilfe: e.sichtbarkeit === "privat" ? "Sprich den Spieler direkt an, z. B. „Bring jemanden dazu, das Wort Drache zu sagen.“" : "" })}
+        ${e.sichtbarkeit === "privat" ? `
+          ${feld([...p, "privatArt"], "Wann gibt es die Münzen?", "segment", { werte: { sofort: "Sofort", aufgabe: "Wenn die Aufgabe geschafft ist" }, vorgabe: "sofort" })}
+          <p class="mechanik-text">${(e.privatArt || "sofort") === "aufgabe"
+            ? "Aufgabe: Der Spieler sagt dem Spielleiter, wenn er es geschafft hat. Der Spielleiter bestätigt das im Geldbeutel, dann bucht die App die Münzen."
+            : "Sofort: Die App bucht die Münzen, sobald das Ereignis eintritt. Bei 0 ist es nur eine geheime Information."}</p>
+          ${feld([...p, "privatMuenzen"], "Münzen für den Spieler", "zahl", { hilfe: "Minus heißt Verlust, z. B. −2" })}`
+        : feld([...p, "wirkung"], "Was die App dabei tut", "auswahl", { werte: WIRKUNGEN, hilfe: "Die App kann nur diese Wirkungen. Neue müssen programmiert werden." })}
       </div>`;
   }
   return html;
@@ -978,7 +988,7 @@ function teamHtml() {
     </div>`;
 }
 
-const FELDNAMEN = { name: "Name", bezeichnung: "Bezeichnung", startkapital: "Startkapital", hintergrund: "Hintergrundgeschichte", charakter: "Charakter",
+const FELDNAMEN = { privatArt: "Wann Münzen", privatMuenzen: "Münzen", name: "Name", bezeichnung: "Bezeichnung", startkapital: "Startkapital", hintergrund: "Hintergrundgeschichte", charakter: "Charakter",
   merkmale: "Erkennungsmerkmale", faehigkeit: "Fähigkeit", aufgabe: "Geheime Aufgabe", text: "Beschreibung", mechanik: "Mechanik", bonus: "Bonus",
   kategorie: "Kategorie", beschreibung: "Beschreibung", belohnung: "Belohnung", sichtbarkeit: "Sichtbarkeit", wirkung: "Wirkung", setting: "Setting",
   geschichte: "Geschichte", schlusstext: "Schlusstext", begriffe: "Begriffe", titel: "Überschrift", absaetze: "Text", schluss: "Letzter Satz",
