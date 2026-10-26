@@ -1,0 +1,1214 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Valdrien Redaktion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=IM+Fell+English:ital@0;1&family=Alegreya+Sans:wght@400;500;700&display=swap">
+
+<!-- Supabase (Datenbank, Anmeldung, Live-Aktualisierung) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<!-- Deine Verbindungsdaten (url und öffentlicher Schlüssel) -->
+<script src="verbindung.js"></script>
+<!-- Startinhalt für den Vorschau-Modus -->
+<script src="startinhalt.js"></script>
+
+<style>
+/* =====================================================================
+   TEIL 1: AUSSEHEN
+   Layout: Leiste oben, darunter drei Spalten (Bereiche · Liste · Bearbeiten).
+   Auf dem Handy wird daraus eine Spalte.
+   ===================================================================== */
+:root {
+  --grund: #ece3cc;      /* Pergament */
+  --karte: #f6efdc;      /* hellere Fläche */
+  --flaeche: #e3d8bb;    /* gedämpfte Fläche */
+  --text: #2b2a1f;       /* Tinte */
+  --text-leise: #6b6450;
+  --wald: #2f4a33;       /* Waldgrün */
+  --gold: #a87a1f;       /* Gold */
+  --linie: #cbbf9e;
+  --auf-wald: #f3ead2;
+  --leiste: #2f4a33;     /* Kopfleiste */
+  --auf-leiste: #f3ead2;
+  --rot: #9a3a26;        /* Fehler, Löschen */
+  --gruen-ok: #3c6b40;   /* gespeichert */
+  --schrift-titel: "IM Fell English SC", Georgia, serif;
+  --schrift-erzaehl: "IM Fell English", Georgia, serif;
+  --schrift-text: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --grund: #141c16; --karte: #1d2920; --flaeche: #18231b; --text: #ebe2c8; --text-leise: #a49c84;
+    --wald: #6f9a6c; --gold: #d9ad4f; --linie: #34453a; --auf-wald: #101710; --rot: #e07a5f; --gruen-ok: #8db58a;
+    --leiste: #1f3324; --auf-leiste: #ebe2c8;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --grund: #141c16; --karte: #1d2920; --flaeche: #18231b; --text: #ebe2c8; --text-leise: #a49c84;
+  --wald: #6f9a6c; --gold: #d9ad4f; --linie: #34453a; --auf-wald: #101710; --rot: #e07a5f; --gruen-ok: #8db58a;
+  --leiste: #1f3324; --auf-leiste: #ebe2c8;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--grund); color: var(--text); font-family: var(--schrift-text); font-size: 16px; line-height: 1.45; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+[hidden] { display: none !important; }
+h1, h2, h3 { font-family: var(--schrift-titel); font-weight: 400; margin: 0; line-height: 1.15; text-wrap: balance; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+/* ---------- Leiste oben ---------- */
+.leiste {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding-block: calc(env(safe-area-inset-top, 0px) + 10px) 10px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: var(--leiste); color: var(--auf-leiste);
+}
+.marke { display: flex; flex-direction: column; line-height: 1; margin-right: 6px; }
+.marke b { font-family: var(--schrift-titel); font-weight: 400; font-size: 1.45rem; }
+.marke span { font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.8; }
+.abenteuer-wahl {
+  min-height: 40px; max-width: 100%; padding: 0 34px 0 12px; border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--auf-leiste) 35%, transparent);
+  background: color-mix(in srgb, var(--auf-leiste) 12%, transparent); color: var(--auf-leiste); font-weight: 700;
+}
+.abenteuer-wahl option { color: var(--text); background: var(--karte); }
+.leiste-rechts { margin-left: auto; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.status { font-size: 0.85rem; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; opacity: 0.85; }
+.status.fehler { color: #ffc7b8; }
+.leute { display: flex; }
+.person {
+  width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
+  font-weight: 700; font-size: 0.8rem; text-transform: uppercase;
+  background: var(--gold); color: var(--leiste); border: 2px solid var(--leiste); margin-left: -6px;
+}
+.person:first-child { margin-left: 0; }
+.konto {
+  min-height: 36px; padding: 0 12px; border-radius: 999px; background: transparent;
+  border: 1px solid color-mix(in srgb, var(--auf-leiste) 35%, transparent); color: var(--auf-leiste); font-size: 0.85rem;
+}
+
+/* ---------- Hinweisbänder ---------- */
+.band {
+  padding-block: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: color-mix(in srgb, var(--gold) 18%, var(--grund)); border-bottom: 1px solid var(--linie); font-size: 0.92rem;
+}
+
+/* ---------- Arbeitsfläche ---------- */
+.arbeit { display: grid; grid-template-columns: 210px 320px minmax(0, 1fr); min-height: calc(100% - 64px); }
+.arbeit.einspaltig { grid-template-columns: 210px minmax(0, 1fr); }
+.bereiche { border-right: 1px solid var(--linie); padding: 18px 10px; display: flex; flex-direction: column; gap: 2px; }
+.bereich {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  min-height: 44px; padding: 0 12px; border: none; border-radius: 6px; background: transparent; text-align: left; font-weight: 500;
+}
+.bereich:hover { background: var(--flaeche); }
+.bereich[aria-current="true"] { background: var(--wald); color: var(--auf-wald); font-weight: 700; }
+.bereich .zahl { font-size: 0.8rem; opacity: 0.75; font-variant-numeric: tabular-nums; }
+.bereiche hr { width: 100%; border: none; border-top: 1px solid var(--linie); margin: 10px 0; }
+
+.liste { border-right: 1px solid var(--linie); padding: 18px 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.liste-kopf { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 0 4px; }
+.liste-kopf h2 { font-size: 1.5rem; }
+.suche { width: 100%; min-height: 40px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--linie); background: var(--karte); }
+.eintraege { display: flex; flex-direction: column; gap: 4px; }
+.eintrag {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; align-items: center;
+  width: 100%; padding: 10px 12px; text-align: left; border-radius: 6px;
+  background: transparent; border: 1px solid transparent;
+}
+.eintrag:hover { background: var(--flaeche); }
+.eintrag[aria-current="true"] { background: var(--karte); border-color: var(--gold); }
+.eintrag .titel { font-weight: 700; overflow-wrap: anywhere; }
+.eintrag .unter { grid-column: 1; font-size: 0.85rem; color: var(--text-leise); overflow-wrap: anywhere; }
+.eintrag .rechts { grid-row: 1 / span 2; grid-column: 2; display: flex; gap: 4px; align-items: center; }
+.leer { color: var(--text-leise); font-size: 0.92rem; padding: 8px 4px; }
+
+.editor { padding: 18px 24px 80px; min-width: 0; display: flex; flex-direction: column; gap: 18px; max-width: 860px; }
+.editor-kopf { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px 16px; }
+.editor-kopf .eyebrow { display: block; margin-bottom: 4px; }
+.editor-kopf h2 { font-size: 2rem; overflow-wrap: anywhere; }
+.eyebrow { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold); font-weight: 700; }
+.werkzeuge { display: flex; gap: 6px; flex-wrap: wrap; }
+.knopf.zurueck-mobil { display: none; }
+
+/* ---------- Felder ---------- */
+.gruppe { display: flex; flex-direction: column; gap: 14px; padding: 18px; background: var(--karte); border: 1px solid var(--linie); border-radius: 8px; }
+.gruppe > h3 { font-size: 1.25rem; color: var(--wald); }
+details.gruppe > summary { cursor: pointer; font-family: var(--schrift-titel); font-size: 1.25rem; color: var(--wald); list-style: none; display: flex; justify-content: space-between; }
+details.gruppe > summary::after { content: "+"; font-family: var(--schrift-text); color: var(--gold); font-weight: 700; }
+details.gruppe[open] > summary::after { content: "−"; }
+details.gruppe[open] > summary { margin-bottom: 4px; }
+.reihe { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+.feld { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.feld label, .feld .label { font-weight: 700; font-size: 0.92rem; }
+.feld .hilfe { font-size: 0.83rem; color: var(--text-leise); margin-top: -2px; }
+.feld input[type="text"], .feld input[type="number"], .feld select, .feld textarea {
+  width: 100%; min-height: 42px; padding: 8px 11px; border-radius: 6px;
+  border: 1px solid var(--linie); background: var(--grund);
+}
+.feld textarea { min-height: 96px; resize: vertical; line-height: 1.5; }
+.feld textarea.erzaehlung { font-family: var(--schrift-erzaehl); font-size: 1.08rem; min-height: 150px; }
+.feld input[type="number"] { max-width: 140px; font-variant-numeric: tabular-nums; }
+.feld input:focus, .feld select:focus, .feld textarea:focus { border-color: var(--gold); outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--gold) 35%, transparent); }
+.feld.wartet input, .feld.wartet textarea, .feld.wartet select { border-color: var(--gold); }
+.segment { display: inline-flex; border: 1px solid var(--linie); border-radius: 6px; overflow: hidden; align-self: flex-start; }
+.segment label { display: flex; align-items: center; min-height: 40px; padding: 0 14px; cursor: pointer; font-weight: 500; }
+.segment input { position: absolute; opacity: 0; pointer-events: none; }
+.segment label:has(input:checked) { background: var(--wald); color: var(--auf-wald); font-weight: 700; }
+.segment label:has(input:focus-visible) { outline: 3px solid var(--gold); outline-offset: -3px; }
+.mechanik-text { font-size: 0.85rem; color: var(--text-leise); }
+
+/* ---------- Knöpfe ---------- */
+.knopf {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 40px; padding: 0 16px; border-radius: 6px; font-weight: 700;
+  background: var(--wald); color: var(--auf-wald); border: 1px solid var(--wald);
+}
+.knopf.leise { background: transparent; color: var(--wald); border-color: var(--linie); }
+.knopf.klein { min-height: 34px; padding: 0 10px; font-size: 0.88rem; }
+.knopf.gefahr { background: transparent; color: var(--rot); border-color: color-mix(in srgb, var(--rot) 45%, transparent); }
+.knopf.gefahr.voll { background: var(--rot); color: #fff; border-color: var(--rot); }
+.knopf:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ---------- Kleine Etiketten ---------- */
+.chip { display: inline-flex; align-items: center; padding: 1px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; border: 1px solid var(--linie); color: var(--text-leise); white-space: nowrap; }
+.chip.privat { border-color: var(--gold); color: var(--gold); }
+.chip.zahl { font-variant-numeric: tabular-nums; }
+.wer-hier { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 0.65rem; font-weight: 700; background: var(--gold); color: var(--auf-wald); text-transform: uppercase; }
+
+/* ---------- Meldungen ---------- */
+.meldung { padding: 12px 14px; border-radius: 6px; border: 1px solid var(--linie); background: var(--karte); font-size: 0.93rem; }
+.meldung.warnung { border-color: var(--gold); }
+.meldung.fehler { border-color: var(--rot); color: var(--rot); }
+.meldung ul { margin: 6px 0 0; padding-left: 1.2rem; }
+.rueckfrage { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 12px 14px; border: 1px solid var(--rot); border-radius: 6px; background: var(--karte); }
+.rueckfrage p { margin: 0; flex: 1 1 220px; }
+
+/* ---------- Team & Verlauf ---------- */
+.tabelle { display: flex; flex-direction: column; }
+.tabelle .zeile { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 12px; padding: 10px 0; border-bottom: 1px solid var(--linie); }
+.tabelle .zeile:last-child { border-bottom: none; }
+.verlauf-zeit { color: var(--text-leise); font-size: 0.85rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.inline-form { display: flex; gap: 8px; flex-wrap: wrap; }
+.inline-form input { flex: 1 1 220px; min-height: 40px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--linie); background: var(--grund); }
+code.adresse { display: block; padding: 10px 12px; border-radius: 6px; background: var(--grund); border: 1px solid var(--linie); font-size: 0.82rem; overflow-wrap: anywhere; }
+
+/* ---------- Anmeldung ---------- */
+.anmeldung { min-height: 100%; display: grid; place-items: center; padding-block: 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.anmeldung-karte { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 14px; padding: 28px; background: var(--karte); border: 1px solid var(--gold); border-radius: 10px; }
+.anmeldung-karte h1 { font-size: 2.2rem; color: var(--wald); }
+.anmeldung-karte p { margin: 0; }
+.anmeldung-karte input { min-height: 46px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--linie); background: var(--grund); }
+.anmeldung-karte .knopf { min-height: 46px; }
+
+/* ---------- Handy ---------- */
+@media (max-width: 900px) {
+  .arbeit, .arbeit.einspaltig { grid-template-columns: minmax(0, 1fr); }
+  .bereiche {
+    flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--linie);
+    padding: 8px max(12px, env(safe-area-inset-right, 0px)) 8px max(12px, env(safe-area-inset-left, 0px)); gap: 4px;
+  }
+  .bereiche hr { display: none; }
+  .bereich { white-space: nowrap; flex-shrink: 0; }
+  .liste { border-right: none; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .editor { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .arbeit.zeigt-editor .liste { display: none; }
+  .arbeit:not(.zeigt-editor):not(.einspaltig) .editor { display: none; }
+  .knopf.zurueck-mobil { display: inline-flex; align-self: flex-start; }
+  .leiste { gap: 8px 12px; }
+  .abenteuer-wahl { order: 3; flex-basis: 100%; }
+  .konto .konto-email { display: none; }
+  .editor-kopf h2 { font-size: 1.6rem; }
+  .gruppe { padding: 14px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .knopf, .eintrag, .bereich { transition: background-color .12s ease, border-color .12s ease; }
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* =====================================================================
+   TEIL 2: WAS DIE FELDER BEDEUTEN
+   Hier kannst du Beschriftungen und Hilfetexte im CMS anpassen.
+   ===================================================================== */
+
+// Die Bereiche in der linken Spalte
+const BEREICHE = [
+  { id: "abenteuer",  name: "Abenteuer" },
+  { id: "rollen",     name: "Rollen",      liste: true, einzahl: "Rolle" },
+  { id: "minispiele", name: "Minispiele",  liste: true, einzahl: "Minispiel" },
+  { id: "ereignisse", name: "Ereignisse",  liste: true, einzahl: "Ereignis" },
+  { id: "team",       name: "Team & Verlauf", unten: true },
+  { id: "datei",      name: "JSON-Datei", unten: true }
+];
+
+// Minispiel-Kategorien und welche Belohnungsfelder dazu gehören
+const KATEGORIEN = {
+  duell:    { name: "Duell (1 gegen 1)", felder: [["sieger", "Sieger erhält"], ["verlierer", "Verlierer erhält (z. B. −1)"]] },
+  alle:     { name: "Alle gegen alle", felder: [["sieger", "Sieger erhält"], ["richter", "Richter erhält (leer lassen, wenn es keinen Richter gibt)"]] },
+  einer:    { name: "Einer gegen alle", felder: [["einzeln", "Einzelner gewinnt: erhält"], ["gruppe", "Gruppe gewinnt: jeder erhält"], ["scheitern", "Einzelner scheitert: erhält (z. B. −1)"]] },
+  team:     { name: "Team gegen Team", felder: [["team", "Siegerteam: jeder erhält"]] },
+  ungleich: { name: "1 gegen 2", felder: [["riese", "Einzelner gewinnt: erhält"], ["zwerge", "Paar gewinnt: jeder erhält"]], namen: [["einzelName", "Name des Einzelnen (z. B. Riese)"], ["paarName", "Name des Paars (z. B. Zwerge)"]] }
+};
+
+// Spielmechaniken für Fähigkeiten: Das Spiel kennt genau diese. Neue Mechaniken müssen programmiert werden.
+const FAEHIGKEITEN = {
+  "":                 "Keine (nur Text, Münzen werden von Hand gebucht)",
+  schatzsucher:       "Schatzsucher: sofort +3 Münzen",
+  pfadfinderin:       "Pfadfinderin: nächste Ereigniskarte ansehen, spielen oder unter den Stapel",
+  gluecksbringerin:   "Glücksbringerin: nach Verlust durch ein Ereignis den Verlust zurück",
+  goldfinger:         "Goldfinger: nach gewonnenem Minispiel Gewinn verdoppeln (max. +3)",
+  praezisionsmeister: "Präzisionsmeister: Sieg ankündigen, Minispiel wählen, Sieg +3",
+  schicksalswender:   "Schicksalswender: 2 Ereigniskarten sehen, eine spielen",
+  gluecksfee:         "Glücksfee: Kopf oder Zahl, Treffer +4",
+  hausrecht:          "Hausrecht: nächste Karte sehen, spielen (+1) oder unter den Stapel",
+  trinkgeld:          "Trinkgeld: nach Minispiel mit eigener Teilnahme +2",
+  narr:               "Glück des Narren: zufällig 1 bis 4 Münzen",
+  suppe:              "Stärkende Suppe: nach Verlust durch ein Ereignis +3",
+  zugabe:             "Zugabe: aus 3 Minispielen wählen und mitspielen, Sieg +2",
+  gezinkt:            "Gezinkt: verlorenen Minispielversuch wiederholen",
+  zukunft:            "Blick in die Zukunft: nächste 2 Karten sehen und Reihenfolge bestimmen",
+  herausforderung:    "Herausforderung: Duell gegen Gegner der Wahl, Sieg +2"
+};
+
+// Spielmechaniken für Ereignisse
+const WIRKUNGEN = {
+  ruhe:          "Nichts geschieht (Ruhe)",
+  goldregen:     "Alle erhalten 1 Münze",
+  steuer:        "Alle verlieren 1 Münze",
+  gunst:         "Wer die wenigsten hat, erhält 3",
+  taschendieb:   "Wer die meisten hat, verliert 2",
+  neid:          "Reichste geben je 2 an die Ärmsten",
+  entlarvt:      "Alle Erratenen verlieren 1",
+  tarnung:       "Alle Unerratenen erhalten 1",
+  duell:         "Meiste gegen Wenigste im Duell, Sieger erhält von jedem Verlierer 2",
+  kraeftemessen: "Alle gegen alle, Sieger erhält doppelte Belohnung",
+  lager:         "Erratene gegen Unerratene, Siegerteam je +1",
+  beutel:        "Meiste verliert 2, außer er gewinnt ein Duell",
+  fremder:       "Meiste allein gegen alle",
+  orakel:        "Meiste verrät ein Erkennungsmerkmal oder zahlt 2",
+  scheideweg:    "Wenigste wählt: alle +1 oder selbst +2",
+  grosszuegig:   "Meiste schenkt einem Mitspieler 2 oder zahlt 3",
+  schicksal:     "Münzwurf für jeden: Kopf +1, Zahl −1",
+  seher:         "Hält an: Treffer beim Raten bringt 5 statt 3",
+  losezungen:    "Hält an: Raten kostet nichts"
+};
+
+/* =====================================================================
+   TEIL 3: ZUSTAND UND VERBINDUNG
+   ===================================================================== */
+
+const V = window.VALDRIEN_VERBINDUNG || {};
+const LIVE = Boolean(V.url && V.anonKey && window.supabase);
+const sb = LIVE ? window.supabase.createClient(V.url, V.anonKey) : null;
+const VORSCHAU_SCHLUESSEL = "valdrien-cms-vorschau";
+
+const zustand = {
+  phase: "laden",          // laden | anmelden | link-geschickt | arbeiten | fehler
+  inhalt: null,
+  version: 0,
+  abenteuer: null,         // id des gewählten Abenteuers
+  bereich: "rollen",
+  eintrag: null,           // id des geöffneten Eintrags
+  suche: "",
+  ich: null,               // E-Mail der angemeldeten Person
+  darfBearbeiten: !LIVE,   // im Vorschau-Modus immer
+  anwesend: [],            // [{email, ort}]
+  team: [],
+  verlauf: [],
+  frage: null,             // offene Rückfrage (z. B. Löschen)
+  status: "bereit",        // bereit | speichert | fehler
+  statusText: "",
+  meldung: "",
+  importDaten: null
+};
+
+const offen = {};          // noch nicht gespeicherte Änderungen: schluessel -> {pfad, wert, timer}
+let anwesenheitsKanal = null;
+
+/* ---------- kleine Helfer ---------- */
+const esc = s => String(s ?? "").replace(/[&<>"']/g, z => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[z]));
+const nachPos = obj => Object.entries(obj || {}).sort((a, b) => (a[1].pos ?? 0) - (b[1].pos ?? 0) || a[0].localeCompare(b[0]));
+const kurzId = () => Math.random().toString(36).slice(2, 6);
+function slug(s) {
+  return String(s || "eintrag").toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss")
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 30) || "eintrag";
+}
+function holen(obj, pfad) { return pfad.reduce((o, k) => (o == null ? undefined : o[k]), obj); }
+function setzenLokal(pfad, wert) {
+  let o = zustand.inhalt;
+  for (let i = 0; i < pfad.length - 1; i++) { if (o[pfad[i]] == null || typeof o[pfad[i]] !== "object") o[pfad[i]] = {}; o = o[pfad[i]]; }
+  if (wert === null) delete o[pfad[pfad.length - 1]]; else o[pfad[pfad.length - 1]] = wert;
+}
+const A = () => zustand.inhalt.abenteuer[zustand.abenteuer];
+const basis = () => ["abenteuer", zustand.abenteuer];
+const initialen = email => (email || "?").split("@")[0].split(/[._-]/).filter(Boolean).slice(0, 2).map(t => t[0]).join("") || "?";
+const zeitText = iso => {
+  const d = new Date(iso), jetzt = new Date();
+  const uhr = d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+  return d.toDateString() === jetzt.toDateString() ? uhr : d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }) + " " + uhr;
+};
+
+/* =====================================================================
+   TEIL 4: LADEN, SPEICHERN, LIVE
+   ===================================================================== */
+
+async function start() {
+  if (!LIVE) {
+    let gespeichert = null;
+    try { gespeichert = JSON.parse(localStorage.getItem(VORSCHAU_SCHLUESSEL) || "null"); } catch (e) {}
+    inhaltUebernehmen(gespeichert || structuredClone(window.VALDRIEN_STARTINHALT || { abenteuer: {} }), 1);
+    zustand.ich = "vorschau";
+    zustand.phase = "arbeiten";
+    zeichnen();
+    return;
+  }
+  sb.auth.onAuthStateChange((ereignis, sitzung) => {
+    const email = sitzung?.user?.email || null;
+    if (email && email !== zustand.ich) { zustand.ich = email; angemeldet(); }
+    if (!email && zustand.ich) { zustand.ich = null; zustand.phase = "anmelden"; zeichnen(); }
+  });
+  const { data } = await sb.auth.getSession();
+  if (data.session?.user?.email) { zustand.ich = data.session.user.email; angemeldet(); }
+  else { zustand.phase = "anmelden"; zeichnen(); }
+}
+
+async function angemeldet() {
+  zustand.phase = "laden"; zeichnen();
+  const ok = await vomServerLaden();
+  if (!ok) return;
+  const { data: darf } = await sb.rpc("ist_redaktion");
+  zustand.darfBearbeiten = darf === true;
+  zustand.phase = "arbeiten";
+  liveAbonnieren();
+  anwesenheitStarten();
+  if (zustand.darfBearbeiten) teamLaden();
+  zeichnen();
+}
+
+async function vomServerLaden() {
+  const { data, error } = await sb.from("inhalt").select("daten, version").eq("id", "valdrien").maybeSingle();
+  if (error || !data) {
+    zustand.phase = "fehler";
+    zustand.meldung = error
+      ? "Die Datenbank antwortet nicht: " + error.message
+      : "Es gibt noch keinen Inhalt. Bitte führe die Datei supabase-einrichtung.sql im SQL Editor von Supabase aus.";
+    zeichnen();
+    return false;
+  }
+  inhaltUebernehmen(data.daten, data.version);
+  return true;
+}
+
+// Neuen Stand übernehmen, ohne eigene ungespeicherte Änderungen zu verlieren
+function inhaltUebernehmen(daten, version) {
+  zustand.inhalt = daten;
+  zustand.version = version;
+  Object.values(offen).forEach(o => setzenLokal(o.pfad, o.wert));
+  const ids = nachPos(daten.abenteuer).map(([id]) => id);
+  if (!ids.includes(zustand.abenteuer)) zustand.abenteuer = ids[0] || null;
+}
+
+// Live: Bei jeder Änderung in der Datenbank den Inhalt neu holen
+let neuLadenTimer = null;
+function liveAbonnieren() {
+  sb.channel("inhalt-live")
+    .on("postgres_changes", { event: "*", schema: "public", table: "inhalt" }, () => {
+      clearTimeout(neuLadenTimer);
+      neuLadenTimer = setTimeout(liveNeuLaden, 250);
+    })
+    .subscribe();
+}
+async function liveNeuLaden() {
+  const { data } = await sb.from("inhalt").select("daten, version").eq("id", "valdrien").maybeSingle();
+  if (!data || data.version <= zustand.version) return;
+  inhaltUebernehmen(data.daten, data.version);
+  sanftAktualisieren();
+  if (zustand.bereich === "team" && zustand.darfBearbeiten) teamLaden();
+}
+
+// Wer ist gerade im CMS und wo?
+function anwesenheitStarten() {
+  anwesenheitsKanal = sb.channel("cms-anwesenheit", { config: { presence: { key: zustand.ich } } });
+  anwesenheitsKanal
+    .on("presence", { event: "sync" }, () => {
+      const stand = anwesenheitsKanal.presenceState();
+      zustand.anwesend = Object.values(stand).map(liste => liste[liste.length - 1]).filter(Boolean);
+      leisteZeichnen();
+      listeZeichnen();
+      editorHinweisZeichnen();
+    })
+    .subscribe(s => { if (s === "SUBSCRIBED") ortMelden(); });
+}
+function ortMelden() {
+  if (!anwesenheitsKanal) return;
+  anwesenheitsKanal.track({ email: zustand.ich, ort: [zustand.abenteuer, zustand.bereich, zustand.eintrag || ""].join("/") }).catch(() => {});
+}
+const andereHier = ort => zustand.anwesend.filter(p => p.email !== zustand.ich && p.ort === ort);
+
+/* ---------- Speichern ---------- */
+
+// Eine Änderung vormerken; gespeichert wird nach einer kurzen Tipp-Pause
+function aendern(pfad, wert, sofort) {
+  setzenLokal(pfad, wert);
+  const schluessel = pfad.join("\u0001");
+  if (offen[schluessel]) clearTimeout(offen[schluessel].timer);
+  offen[schluessel] = { pfad, wert, timer: setTimeout(() => speichern(schluessel), sofort ? 0 : 700) };
+  statusSetzen("speichert");
+}
+
+async function speichern(schluessel) {
+  const eintrag = offen[schluessel];
+  if (!eintrag) return;
+  const { pfad, wert } = eintrag;
+
+  if (!LIVE) {
+    delete offen[schluessel];
+    try { localStorage.setItem(VORSCHAU_SCHLUESSEL, JSON.stringify(zustand.inhalt)); } catch (e) {}
+    statusSetzen(Object.keys(offen).length ? "speichert" : "bereit");
+    return;
+  }
+
+  const antwort = wert === null
+    ? await sb.rpc("inhalt_loeschen", { pfad })
+    : await sb.rpc("inhalt_setzen", { pfad, wert });
+
+  if (offen[schluessel] === eintrag) delete offen[schluessel]; // nur entfernen, wenn nicht schon neuer getippt
+  if (antwort.error) {
+    statusSetzen("fehler", antwort.error.message);
+    liveNeuLaden();
+    return;
+  }
+  if (typeof antwort.data === "number") zustand.version = Math.max(zustand.version, antwort.data);
+  statusSetzen(Object.keys(offen).length ? "speichert" : "bereit");
+}
+
+function statusSetzen(status, text) {
+  zustand.status = status;
+  zustand.statusText = text || "";
+  const el = document.getElementById("status");
+  if (el) { el.className = "status" + (status === "fehler" ? " fehler" : ""); el.textContent = statusBeschriftung(); }
+  document.querySelectorAll(".feld[data-schluessel]").forEach(f => f.classList.toggle("wartet", Boolean(offen[f.dataset.schluessel])));
+}
+function statusBeschriftung() {
+  if (zustand.status === "speichert") return "Speichert …";
+  if (zustand.status === "fehler") return "Nicht gespeichert: " + zustand.statusText;
+  return LIVE ? "Alles gespeichert" : "Vorschau: nur in diesem Browser";
+}
+
+// Warnen, wenn das Fenster mit ungespeicherten Änderungen geschlossen wird
+window.addEventListener("beforeunload", e => { if (Object.keys(offen).length) { e.preventDefault(); e.returnValue = ""; } });
+
+/* =====================================================================
+   TEIL 5: DARSTELLUNG
+   ===================================================================== */
+
+function zeichnen() {
+  const app = document.getElementById("app");
+  if (zustand.phase === "laden") { app.innerHTML = `<div class="anmeldung"><p class="leise">Lade Inhalte …</p></div>`; return; }
+  if (zustand.phase === "anmelden" || zustand.phase === "link-geschickt") { app.innerHTML = anmeldungHtml(); return; }
+  if (zustand.phase === "fehler") {
+    app.innerHTML = `<div class="anmeldung"><div class="anmeldung-karte"><h1>Valdrien</h1><div class="meldung fehler">${esc(zustand.meldung)}</div>
+      <button class="knopf" onclick="location.reload()">Erneut versuchen</button></div></div>`;
+    return;
+  }
+  const b = BEREICHE.find(x => x.id === zustand.bereich);
+  const mitListe = Boolean(b?.liste);
+  app.innerHTML = `
+    <header class="leiste" id="leiste"></header>
+    ${!LIVE ? `<div class="band">Vorschau-Modus: Änderungen bleiben nur in diesem Browser. Trage in <strong>verbindung.js</strong> deine Supabase-Daten ein, um gemeinsam live zu arbeiten.</div>` : ""}
+    ${LIVE && !zustand.darfBearbeiten ? `<div class="band">Du kannst alles ansehen, aber noch nicht bearbeiten. Bitte jemanden aus dem Team, deine Adresse <strong>${esc(zustand.ich)}</strong> unter „Team &amp; Verlauf“ hinzuzufügen.</div>` : ""}
+    <div class="arbeit ${mitListe ? "" : "einspaltig"} ${zustand.eintrag ? "zeigt-editor" : ""}" id="arbeit">
+      <nav class="bereiche" id="bereiche" aria-label="Bereiche"></nav>
+      ${mitListe ? `<section class="liste" id="liste" aria-label="${esc(b.name)}"></section>` : ""}
+      <section class="editor" id="editor"></section>
+    </div>`;
+  leisteZeichnen();
+  bereicheZeichnen();
+  if (mitListe) listeZeichnen();
+  editorZeichnen();
+}
+
+// Nach einer Live-Änderung: nur auffrischen, was sich geändert hat, ohne das Feld zu stören, in dem man tippt
+function sanftAktualisieren() {
+  if (zustand.phase !== "arbeiten") return;
+  if (!zustand.inhalt.abenteuer[zustand.abenteuer]) { zeichnen(); return; }
+  leisteZeichnen();
+  bereicheZeichnen();
+  listeZeichnen();
+  const editor = document.getElementById("editor");
+  const signaturJetzt = editorSignatur();
+  if (!editor || editor.dataset.signatur !== signaturJetzt) {
+    if (editor && editor.contains(document.activeElement) && editor.dataset.signatur?.split("|")[0] === signaturJetzt.split("|")[0]) {
+      felderAuffrischen();     // gleicher Eintrag, aber andere Felder: nur Werte auffrischen, Fokus behalten
+    } else {
+      editorZeichnen();
+    }
+  } else {
+    felderAuffrischen();
+  }
+}
+
+function felderAuffrischen() {
+  document.querySelectorAll("[data-pfad]").forEach(el => {
+    const schluessel = el.dataset.pfad;
+    if (el === document.activeElement || offen[schluessel]) return;
+    const wert = holen(zustand.inhalt, schluessel.split("\u0001"));
+    const anzeige = wertZuText(wert, el.dataset.typ);
+    if (el.type === "radio") el.checked = el.value === anzeige;
+    else if (el.value !== anzeige) el.value = anzeige;
+  });
+  const titel = document.getElementById("editor-titel");
+  const e = aktuellerEintrag();
+  if (titel && e) titel.textContent = e.name || "Ohne Namen";
+}
+
+function editorSignatur() {
+  const e = aktuellerEintrag();
+  return [zustand.abenteuer, zustand.bereich, zustand.eintrag || "", e ? "da" : "weg", e?.kategorie || "", e?.sichtbarkeit || "",
+    zustand.frage ? JSON.stringify(zustand.frage) : ""].join("|");
+}
+
+/* ---------- Leiste oben ---------- */
+function leisteZeichnen() {
+  const el = document.getElementById("leiste");
+  if (!el) return;
+  const andere = zustand.anwesend.filter(p => p.email !== zustand.ich);
+  el.innerHTML = `
+    <div class="marke"><b>Valdrien</b><span>Redaktion</span></div>
+    <select id="abenteuer-wahl" class="abenteuer-wahl" aria-label="Abenteuer wählen" onchange="abenteuerWaehlen(this.value)">
+      ${nachPos(zustand.inhalt.abenteuer).map(([id, a]) => `<option value="${esc(id)}" ${id === zustand.abenteuer ? "selected" : ""}>${esc(a.name || "Ohne Namen")}</option>`).join("")}
+      ${zustand.darfBearbeiten ? `<option value="__neu">+ Neues Abenteuer</option>` : ""}
+    </select>
+    <div class="leiste-rechts">
+      <span id="status" class="status${zustand.status === "fehler" ? " fehler" : ""}" role="status">${esc(statusBeschriftung())}</span>
+      ${andere.length ? `<div class="leute" title="Gerade auch im CMS">${andere.map(p => `<span class="person" title="${esc(p.email)}">${esc(initialen(p.email))}</span>`).join("")}</div>` : ""}
+      ${LIVE ? `<button class="konto" onclick="abmelden()" title="Abmelden"><span class="konto-email">${esc(zustand.ich)} · </span>Abmelden</button>` : ""}
+    </div>`;
+}
+
+/* ---------- Bereiche links ---------- */
+function bereicheZeichnen() {
+  const el = document.getElementById("bereiche");
+  if (!el) return;
+  const a = A();
+  const anzahl = id => a && a[id] ? Object.keys(a[id]).length : 0;
+  const knopf = b => `
+    <button class="bereich" aria-current="${b.id === zustand.bereich}" onclick="bereichWaehlen('${b.id}')">
+      <span>${esc(b.name)}</span>${b.liste ? `<span class="zahl">${anzahl(b.id)}</span>` : ""}
+    </button>`;
+  el.innerHTML = BEREICHE.filter(b => !b.unten).map(knopf).join("") + `<hr>` + BEREICHE.filter(b => b.unten).map(knopf).join("");
+}
+
+/* ---------- Liste der Einträge ---------- */
+function listeZeichnen() {
+  const el = document.getElementById("liste");
+  if (!el) return;
+  const b = BEREICHE.find(x => x.id === zustand.bereich);
+  const suche = zustand.suche.trim().toLowerCase();
+  const eintraege = nachPos(A()[zustand.bereich]).filter(([, e]) => !suche || JSON.stringify(e).toLowerCase().includes(suche));
+  const hatFokus = document.activeElement && document.activeElement.id === "suche";
+  el.innerHTML = `
+    <div class="liste-kopf">
+      <h2>${esc(b.name)}</h2>
+      ${zustand.darfBearbeiten ? `<button class="knopf klein" onclick="neuerEintrag()">+ ${esc(b.einzahl)}</button>` : ""}
+    </div>
+    <input id="suche" class="suche" type="search" placeholder="Suchen …" value="${esc(zustand.suche)}" oninput="zustand.suche = this.value; listeZeichnen()" aria-label="${esc(b.name)} durchsuchen">
+    <div class="eintraege">
+      ${eintraege.length ? eintraege.map(([id, e]) => {
+        const hier = andereHier([zustand.abenteuer, zustand.bereich, id].join("/"));
+        return `
+        <button class="eintrag" aria-current="${id === zustand.eintrag}" onclick="eintragOeffnen('${esc(id)}')">
+          <span class="titel">${esc(e.name || "Ohne Namen")}</span>
+          <span class="unter">${esc(untertitel(e))}</span>
+          <span class="rechts">
+            ${zustand.bereich === "ereignisse" && e.sichtbarkeit === "privat" ? `<span class="chip privat">privat</span>` : ""}
+            ${hier.map(p => `<span class="wer-hier" title="${esc(p.email)} arbeitet hier">${esc(initialen(p.email))}</span>`).join("")}
+          </span>
+        </button>`;
+      }).join("") : `<p class="leer">${suche ? "Nichts gefunden." : `Noch keine ${esc(b.name)}.`}</p>`}
+    </div>`;
+  if (hatFokus) { const s = document.getElementById("suche"); s.focus(); s.setSelectionRange(s.value.length, s.value.length); }
+}
+
+function untertitel(e) {
+  if (zustand.bereich === "rollen") return [e.bezeichnung, (e.startkapital ?? "?") + " Münzen"].filter(Boolean).join(" · ");
+  if (zustand.bereich === "minispiele") return (KATEGORIEN[e.kategorie]?.name || "Ohne Kategorie") + belohnungKurz(e);
+  if (zustand.bereich === "ereignisse") return [e.kategorie, WIRKUNGEN[e.wirkung] ? "" : "ohne Wirkung"].filter(Boolean).join(" · ");
+  return "";
+}
+function belohnungKurz(e) {
+  const k = KATEGORIEN[e.kategorie];
+  if (!k || !e.belohnung) return "";
+  const erster = k.felder.map(([f]) => e.belohnung[f]).find(w => typeof w === "number");
+  return typeof erster === "number" ? ` · ${erster > 0 ? "+" : ""}${erster}` : "";
+}
+
+/* ---------- Bearbeiten rechts ---------- */
+function aktuellerEintrag() {
+  const b = BEREICHE.find(x => x.id === zustand.bereich);
+  if (!b?.liste || !zustand.eintrag) return null;
+  return A()?.[zustand.bereich]?.[zustand.eintrag] || null;
+}
+
+function editorZeichnen() {
+  const el = document.getElementById("editor");
+  if (!el) return;
+  el.dataset.signatur = editorSignatur();
+  const b = BEREICHE.find(x => x.id === zustand.bereich);
+  let html = "";
+  if (zustand.bereich === "abenteuer") html = abenteuerEditor();
+  else if (zustand.bereich === "team") html = teamHtml();
+  else if (zustand.bereich === "datei") html = dateiHtml();
+  else if (!zustand.eintrag) html = `<p class="leer">Wähle links ${b.einzahl === "Rolle" ? "eine" : "ein"} ${esc(b.einzahl)} aus oder lege ${b.einzahl === "Rolle" ? "eine neue" : "ein neues"} an.</p>`;
+  else if (!aktuellerEintrag()) html = `<div class="meldung warnung">Diesen Eintrag gibt es nicht mehr. Vermutlich hat ihn gerade jemand gelöscht.</div>`;
+  else html = eintragEditor();
+  el.innerHTML = html;
+  if (!zustand.darfBearbeiten) el.querySelectorAll("input, textarea, select").forEach(f => { if (f.id !== "suche") f.disabled = true; });
+  statusSetzen(zustand.status, zustand.statusText);
+}
+
+function editorHinweisZeichnen() {
+  const el = document.getElementById("andere-hier");
+  if (!el) return;
+  const hier = andereHier([zustand.abenteuer, zustand.bereich, zustand.eintrag || ""].join("/"));
+  el.hidden = !hier.length;
+  el.textContent = hier.length ? `${hier.map(p => p.email.split("@")[0]).join(", ")} ${hier.length === 1 ? "arbeitet" : "arbeiten"} gerade auch hier. Ihr seht eure Änderungen gegenseitig live.` : "";
+}
+
+function kopfHtml(eyebrow, titel, werkzeuge) {
+  const b = BEREICHE.find(x => x.id === zustand.bereich);
+  return `
+    ${b?.liste ? `<button class="knopf leise klein zurueck-mobil" onclick="eintragOeffnen(null)">‹ Alle ${esc(b.name)}</button>` : ""}
+    <div class="editor-kopf">
+      <div><span class="eyebrow">${esc(eyebrow)}</span><h2 id="editor-titel">${esc(titel)}</h2></div>
+      ${werkzeuge ? `<div class="werkzeuge">${werkzeuge}</div>` : ""}
+    </div>
+    <div class="meldung" id="andere-hier" hidden></div>
+    ${zustand.frage ? rueckfrageHtml() : ""}`;
+}
+
+/* ---------- Ein einzelnes Feld ---------- */
+// pfad: relativ zum aktuellen Eintrag; typ: text | zahl | textarea | erzaehlung | absaetze | zeilen | auswahl | segment
+function feld(pfadVoll, beschriftung, typ, optionen = {}) {
+  const schluessel = pfadVoll.join("\u0001");
+  const id = "f-" + pfadVoll.map(slug).join("-");
+  const wert = holen(zustand.inhalt, pfadVoll);
+  const text = wertZuText(wert, typ);
+  const attr = `id="${id}" data-pfad="${esc(schluessel)}" data-typ="${typ}"`;
+  let eingabe;
+  if (typ === "zahl") eingabe = `<input type="number" inputmode="numeric" step="1" ${attr} value="${esc(text)}">`;
+  else if (typ === "auswahl") eingabe = `<select ${attr}>${Object.entries(optionen.werte).map(([w, n]) => `<option value="${esc(w)}" ${w === text ? "selected" : ""}>${esc(n)}</option>`).join("")}${!(text in optionen.werte) ? `<option value="${esc(text)}" selected>${esc(text || "(leer)")}</option>` : ""}</select>`;
+  else if (typ === "segment") eingabe = `<div class="segment" role="radiogroup" aria-label="${esc(beschriftung)}">${Object.entries(optionen.werte).map(([w, n]) => `<label><input type="radio" name="${id}" value="${esc(w)}" data-pfad="${esc(schluessel)}" data-typ="segment" ${w === text ? "checked" : ""}>${esc(n)}</label>`).join("")}</div>`;
+  else if (["textarea", "erzaehlung", "absaetze", "zeilen"].includes(typ)) eingabe = `<textarea ${attr} rows="${optionen.zeilen || 4}" class="${typ === "erzaehlung" || typ === "absaetze" ? "erzaehlung" : ""}">${esc(text)}</textarea>`;
+  else eingabe = `<input type="text" ${attr} value="${esc(text)}" ${optionen.liste ? `list="${optionen.liste}"` : ""} autocomplete="off">`;
+  return `
+    <div class="feld" data-schluessel="${esc(schluessel)}">
+      ${typ === "segment" ? `<span class="label">${esc(beschriftung)}</span>` : `<label for="${id}">${esc(beschriftung)}</label>`}
+      ${optionen.hilfe ? `<span class="hilfe">${esc(optionen.hilfe)}</span>` : ""}
+      ${eingabe}
+      ${optionen.danach || ""}
+    </div>`;
+}
+
+function wertZuText(wert, typ) {
+  if (wert == null) return "";
+  if (typ === "absaetze") return (Array.isArray(wert) ? wert : [wert]).join("\n\n");
+  if (typ === "zeilen") return (Array.isArray(wert) ? wert : [wert]).join("\n");
+  return String(wert);
+}
+function textZuWert(text, typ) {
+  if (typ === "zahl") { if (String(text).trim() === "") return null; const n = Number(text); return Number.isFinite(n) ? Math.round(n) : undefined; }
+  if (typ === "absaetze") return String(text).split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
+  if (typ === "zeilen") return String(text).split("\n").map(s => s.trim()).filter(Boolean);
+  return String(text);
+}
+
+// Eine Eingabe irgendwo im CMS: Wert umwandeln, lokal setzen, speichern
+document.addEventListener("input", e => {
+  const el = e.target;
+  if (!el.dataset || !el.dataset.pfad || !zustand.darfBearbeiten) return;
+  const typ = el.dataset.typ;
+  const wert = textZuWert(el.value, typ);
+  if (wert === undefined) return;
+  const pfad = el.dataset.pfad.split("\u0001");
+  const strukturell = typ === "auswahl" || typ === "segment";
+  aendern(pfad, wert, strukturell);
+  if (pfad[pfad.length - 1] === "name") {
+    const titel = document.getElementById("editor-titel");
+    if (titel && pfad.length >= 3) titel.textContent = wert || "Ohne Namen";
+    if (pfad.length === 2) leisteZeichnen();
+  }
+  if (strukturell) { editorZeichnen(); listeZeichnen(); }
+  else clearTimeout(listeTimer), listeTimer = setTimeout(() => { listeZeichnen(); bereicheZeichnen(); }, 400);
+});
+let listeTimer = null;
+
+/* ---------- Abenteuer ---------- */
+function abenteuerEditor() {
+  const p = basis();
+  const a = A();
+  const anzahl = Object.keys(zustand.inhalt.abenteuer).length;
+  return `
+    ${kopfHtml("Abenteuer", a.name || "Ohne Namen",
+      zustand.darfBearbeiten && anzahl > 1 ? `<button class="knopf gefahr klein" onclick="fragen('abenteuer-loeschen')">Abenteuer löschen</button>` : "")}
+    ${pruefungHtml()}
+    <div class="gruppe">
+      <h3>Grunddaten</h3>
+      ${feld([...p, "name"], "Name", "text")}
+      ${feld([...p, "setting"], "Setting", "text", { hilfe: "Wo und wie gespielt wird. Steht auf der Auswahlkarte, z. B. „Draußen · für Wanderungen“." })}
+    </div>
+    <div class="gruppe">
+      <h3>Geschichte</h3>
+      ${feld([...p, "geschichte", "titel"], "Überschrift", "text")}
+      ${feld([...p, "geschichte", "absaetze"], "Text", "absaetze", { zeilen: 12, hilfe: "Eine leere Zeile beginnt einen neuen Absatz." })}
+      ${feld([...p, "geschichte", "schluss"], "Letzter Satz (kursiv)", "text")}
+    </div>
+    <div class="gruppe">
+      <h3>Schlusstext</h3>
+      ${feld([...p, "schlusstext", "titel"], "Überschrift", "text")}
+      ${feld([...p, "schlusstext", "vorher"], "Text vor dem Namen des Siegers", "absaetze", { zeilen: 5 })}
+      ${feld([...p, "schlusstext", "nachher"], "Text nach dem Namen des Siegers", "absaetze", { zeilen: 6, hilfe: "{sieger} wird im Spiel durch den Namen ersetzt." })}
+    </div>
+    <details class="gruppe">
+      <summary>Begriffe im Spiel</summary>
+      <div class="reihe">
+        ${feld([...p, "begriffe", "spieler"], "Ein Spieler heißt", "text", { hilfe: "z. B. Anwärter, Gast" })}
+        ${feld([...p, "begriffe", "mehrzahl"], "Mehrere heißen", "text", { hilfe: "z. B. Anwärter, Gäste" })}
+        ${feld([...p, "begriffe", "dativ"], "„allen …“", "text", { hilfe: "z. B. Anwärtern, Gästen" })}
+      </div>
+      ${feld([...p, "begriffe", "frage"], "Frage beim Namen-Eingeben", "text")}
+      ${feld([...p, "begriffe", "beenden"], "Knopf zum Beenden", "text")}
+    </details>`;
+}
+
+// Prüft, ob das Abenteuer so spielbar ist
+function pruefungHtml() {
+  const a = A();
+  const rollen = Object.values(a.rollen || {});
+  const minis = Object.values(a.minispiele || {});
+  const ereig = Object.values(a.ereignisse || {});
+  const probleme = [], hinweise = [];
+  if (rollen.length < 3) probleme.push(`Es gibt ${rollen.length} Rollen. Für eine Partie braucht es mindestens 3.`);
+  if (!ereig.length) probleme.push("Es gibt noch keine Ereignisse.");
+  Object.entries(KATEGORIEN).forEach(([k, d]) => { if (!minis.some(m => m.kategorie === k)) hinweise.push(`Kein Minispiel in der Kategorie „${d.name}“. Ereignisse oder Fähigkeiten, die so ein Minispiel brauchen, finden dann keins.`); });
+  const ohne = rollen.filter(r => !r.faehigkeit?.mechanik).map(r => r.name || "Ohne Namen");
+  if (ohne.length) hinweise.push(`Ohne Spielmechanik (Münzen von Hand): ${ohne.join(", ")}.`);
+  const privat = ereig.filter(e => e.sichtbarkeit === "privat").length;
+  if (privat) hinweise.push(`${privat} private ${privat === 1 ? "Ereignis geht" : "Ereignisse gehen"} nur an einzelne Spieler (auf ihre QR-Seite).`);
+  if (!probleme.length && !hinweise.length) return `<div class="meldung">Spielbereit: ${rollen.length} Rollen, ${minis.length} Minispiele, ${ereig.length} Ereignisse.</div>`;
+  return `
+    ${probleme.length ? `<div class="meldung fehler"><strong>So ist das Abenteuer noch nicht spielbar</strong><ul>${probleme.map(t => `<li>${esc(t)}</li>`).join("")}</ul></div>` : ""}
+    ${hinweise.length ? `<div class="meldung warnung"><strong>Gut zu wissen</strong> · ${rollen.length} Rollen, ${minis.length} Minispiele, ${ereig.length} Ereignisse<ul>${hinweise.map(t => `<li>${esc(t)}</li>`).join("")}</ul></div>` : ""}`;
+}
+
+/* ---------- Rolle, Minispiel, Ereignis ---------- */
+function eintragEditor() {
+  const e = aktuellerEintrag();
+  const p = [...basis(), zustand.bereich, zustand.eintrag];
+  const b = BEREICHE.find(x => x.id === zustand.bereich);
+  const werkzeuge = zustand.darfBearbeiten ? `
+    <button class="knopf leise klein" onclick="verschieben(-1)" aria-label="Nach oben">↑</button>
+    <button class="knopf leise klein" onclick="verschieben(1)" aria-label="Nach unten">↓</button>
+    <button class="knopf leise klein" onclick="duplizieren()">Duplizieren</button>
+    <button class="knopf gefahr klein" onclick="fragen('eintrag-loeschen')">Löschen</button>` : "";
+  let html = kopfHtml(b.einzahl, e.name || "Ohne Namen", werkzeuge);
+
+  if (zustand.bereich === "rollen") {
+    html += `
+      <div class="gruppe">
+        <div class="reihe">
+          ${feld([...p, "name"], "Name", "text")}
+          ${feld([...p, "bezeichnung"], "Bezeichnung", "text", { hilfe: "Gleicher Anfangsbuchstabe wie der Name, z. B. „der Mundschenk“." })}
+          ${feld([...p, "startkapital"], "Startkapital", "zahl", { hilfe: "Münzen zu Beginn" })}
+        </div>
+      </div>
+      <div class="gruppe">
+        <h3>Wer ist das?</h3>
+        ${feld([...p, "hintergrund"], "Hintergrundgeschichte", "erzaehlung", { zeilen: 5 })}
+        ${feld([...p, "charakter"], "Charakter und Verhalten", "textarea", { hilfe: "Wie spielt man diese Rolle? Steht auf der eigenen Rollenkarte." })}
+        ${feld([...p, "merkmale"], "Erkennungsmerkmale", "zeilen", { zeilen: 4, hilfe: "Ein Merkmal pro Zeile. Diese sehen alle in der Rollenübersicht." })}
+      </div>
+      <div class="gruppe">
+        <h3>Fähigkeit</h3>
+        ${feld([...p, "faehigkeit", "name"], "Name der Fähigkeit", "text")}
+        ${feld([...p, "faehigkeit", "text"], "Beschreibung", "textarea")}
+        ${feld([...p, "faehigkeit", "mechanik"], "Was die App dabei tut", "auswahl", { werte: FAEHIGKEITEN, hilfe: "Die App kann nur diese Mechaniken. Neue müssen programmiert werden." })}
+      </div>
+      <div class="gruppe">
+        <h3>Geheime Aufgabe</h3>
+        <div class="reihe">
+          ${feld([...p, "aufgabe", "name"], "Name der Aufgabe", "text")}
+          ${feld([...p, "aufgabe", "bonus"], "Bonus am Ende", "zahl", { hilfe: "Münzen, wenn erfüllt" })}
+        </div>
+        ${feld([...p, "aufgabe", "text"], "Beschreibung", "textarea")}
+      </div>`;
+  }
+
+  if (zustand.bereich === "minispiele") {
+    const k = KATEGORIEN[e.kategorie];
+    const katWerte = Object.fromEntries(Object.entries(KATEGORIEN).map(([id, d]) => [id, d.name]));
+    html += `
+      <div class="gruppe">
+        <div class="reihe">
+          ${feld([...p, "name"], "Name", "text")}
+          ${feld([...p, "kategorie"], "Kategorie", "auswahl", { werte: katWerte })}
+        </div>
+        ${feld([...p, "beschreibung"], "Beschreibung", "textarea", { zeilen: 6, hilfe: "So wird gespielt. Wird vorgelesen." })}
+      </div>
+      <div class="gruppe">
+        <h3>Belohnung</h3>
+        ${k ? `<div class="reihe">${k.felder.map(([f, n]) => feld([...p, "belohnung", f], n, "zahl")).join("")}</div>
+          ${k.namen ? `<div class="reihe">${k.namen.map(([f, n]) => feld([...p, "belohnung", f], n, "text")).join("")}</div>` : ""}`
+        : `<p class="leer">Wähle zuerst eine Kategorie.</p>`}
+      </div>`;
+  }
+
+  if (zustand.bereich === "ereignisse") {
+    const arten = [...new Set(Object.values(zustand.inhalt.abenteuer).flatMap(a => Object.values(a.ereignisse || {}).map(x => x.kategorie)).filter(Boolean))];
+    html += `
+      <datalist id="ereignis-arten">${arten.map(x => `<option value="${esc(x)}"></option>`).join("")}</datalist>
+      <div class="gruppe">
+        <div class="reihe">
+          ${feld([...p, "name"], "Name", "text")}
+          ${feld([...p, "kategorie"], "Kategorie", "text", { liste: "ereignis-arten", hilfe: "z. B. Segen, Fluch, Duell, Ruhe" })}
+        </div>
+        ${feld([...p, "sichtbarkeit"], "Wer sieht das Ereignis?", "segment", { werte: { oeffentlich: "Öffentlich: alle", privat: "Privat: ein Spieler" } })}
+        <p class="mechanik-text">${e.sichtbarkeit === "privat"
+          ? "Privat: Das Ereignis erscheint nur auf der QR-Seite eines einzelnen Spielers. Die anderen erfahren nichts davon."
+          : "Öffentlich: Das Ereignis wird am Spielleiter-Handy für alle aufgedeckt."}</p>
+        ${feld([...p, "beschreibung"], "Beschreibung", "textarea", { zeilen: 5 })}
+        ${feld([...p, "wirkung"], "Was die App dabei tut", "auswahl", { werte: WIRKUNGEN, hilfe: "Die App kann nur diese Wirkungen. Neue müssen programmiert werden." })}
+      </div>`;
+  }
+  return html;
+}
+
+/* ---------- Rückfragen (statt Browser-Dialog) ---------- */
+function fragen(art) { zustand.frage = { art }; editorZeichnen(); document.querySelector(".rueckfrage .knopf")?.focus(); }
+function rueckfrageHtml() {
+  const f = zustand.frage;
+  const nein = `<button class="knopf leise klein" onclick="zustand.frage = null; editorZeichnen()">Abbrechen</button>`;
+  if (f.art === "eintrag-loeschen") {
+    const e = aktuellerEintrag();
+    return `<div class="rueckfrage" role="alertdialog"><p>„${esc(e?.name || "Ohne Namen")}“ für alle löschen? Das lässt sich nicht rückgängig machen.</p>
+      <button class="knopf gefahr voll klein" onclick="eintragLoeschen()">Ja, löschen</button>${nein}</div>`;
+  }
+  if (f.art === "abenteuer-loeschen") {
+    return `<div class="rueckfrage" role="alertdialog"><p>Das ganze Abenteuer „${esc(A().name)}“ mit allen Rollen, Minispielen und Ereignissen löschen?</p>
+      <button class="knopf gefahr voll klein" onclick="abenteuerLoeschen()">Ja, alles löschen</button>${nein}</div>`;
+  }
+  if (f.art === "import") {
+    return `<div class="rueckfrage" role="alertdialog"><p>Den gesamten Inhalt durch die Datei ersetzen? Alle aktuellen Inhalte werden überschrieben.</p>
+      <button class="knopf gefahr voll klein" onclick="importieren()">Ja, ersetzen</button>${nein}</div>`;
+  }
+  if (f.art === "zuruecksetzen") {
+    return `<div class="rueckfrage" role="alertdialog"><p>Vorschau auf den Startinhalt zurücksetzen?</p>
+      <button class="knopf gefahr voll klein" onclick="vorschauZuruecksetzen()">Zurücksetzen</button>${nein}</div>`;
+  }
+  return "";
+}
+
+/* ---------- Team & Verlauf ---------- */
+async function teamLaden() {
+  if (!LIVE) return;
+  const [team, verlauf] = await Promise.all([
+    sb.from("redaktion").select("email, hinzugefuegt_am").order("email"),
+    sb.from("verlauf").select("wann, wer, pfad, art").order("id", { ascending: false }).limit(60)
+  ]);
+  zustand.team = team.data || [];
+  zustand.verlauf = verlauf.data || [];
+  if (zustand.bereich === "team") editorZeichnen();
+}
+
+function teamHtml() {
+  if (!LIVE) return kopfHtml("Zusammenarbeit", "Team & Verlauf") + `<div class="meldung">Im Vorschau-Modus gibt es kein Team. Sobald du in <strong>verbindung.js</strong> deine Supabase-Daten einträgst, kannst du hier Leute einladen und siehst, wer was geändert hat.</div>`;
+  if (!zustand.darfBearbeiten) return kopfHtml("Zusammenarbeit", "Team & Verlauf") + `<div class="meldung">Das Team und den Verlauf sieht nur, wer selbst im Team ist.</div>`;
+  return `
+    ${kopfHtml("Zusammenarbeit", "Team & Verlauf")}
+    <div class="gruppe">
+      <h3>Wer darf bearbeiten?</h3>
+      <p class="mechanik-text">Wer hier steht, meldet sich mit dieser E-Mail-Adresse im CMS an und kann sofort mitarbeiten. Schick der Person einfach den Link zu diesem CMS.</p>
+      <div class="tabelle">
+        ${zustand.team.map(t => `
+          <div class="zeile"><span>${esc(t.email)}${t.email === zustand.ich ? " (du)" : ""}</span>
+            ${zustand.team.length > 1 ? `<button class="knopf gefahr klein" onclick="teamEntfernen('${esc(t.email)}')">Entfernen</button>` : ""}
+          </div>`).join("")}
+      </div>
+      <form class="inline-form" onsubmit="event.preventDefault(); teamHinzufuegen(this.email.value); this.reset()">
+        <input name="email" id="team-email" type="email" required placeholder="name@beispiel.de" aria-label="E-Mail-Adresse">
+        <button class="knopf" type="submit">Hinzufügen</button>
+      </form>
+    </div>
+    <div class="gruppe">
+      <h3>Letzte Änderungen</h3>
+      <div class="tabelle">
+        ${zustand.verlauf.length ? zustand.verlauf.map(v => `
+          <div class="zeile"><span><strong>${esc((v.wer || "?").split("@")[0])}</strong> ${esc(verlaufText(v))}</span><span class="verlauf-zeit">${esc(zeitText(v.wann))}</span></div>`).join("")
+          : `<p class="leer">Noch keine Änderungen.</p>`}
+      </div>
+    </div>`;
+}
+
+const FELDNAMEN = { name: "Name", bezeichnung: "Bezeichnung", startkapital: "Startkapital", hintergrund: "Hintergrundgeschichte", charakter: "Charakter",
+  merkmale: "Erkennungsmerkmale", faehigkeit: "Fähigkeit", aufgabe: "Geheime Aufgabe", text: "Beschreibung", mechanik: "Mechanik", bonus: "Bonus",
+  kategorie: "Kategorie", beschreibung: "Beschreibung", belohnung: "Belohnung", sichtbarkeit: "Sichtbarkeit", wirkung: "Wirkung", setting: "Setting",
+  geschichte: "Geschichte", schlusstext: "Schlusstext", begriffe: "Begriffe", titel: "Überschrift", absaetze: "Text", schluss: "Letzter Satz",
+  vorher: "Text vorher", nachher: "Text nachher", pos: "Reihenfolge" };
+function verlaufText(v) {
+  const p = v.pfad || [];
+  if (v.art === "importiert") return "hat eine JSON-Datei importiert";
+  if (p[0] === "team") return v.art === "hinzugefuegt" ? `hat ${p[1]} ins Team geholt` : `hat ${p[1]} aus dem Team entfernt`;
+  const teile = [];
+  const a = zustand.inhalt.abenteuer[p[1]];
+  teile.push(a?.name || p[1]);
+  const b = BEREICHE.find(x => x.id === p[2]);
+  if (b && b.liste) {
+    teile.push(b.name);
+    if (p[3]) teile.push(a?.[p[2]]?.[p[3]]?.name || p[3]);
+    p.slice(4).forEach(t => teile.push(FELDNAMEN[t] || t));
+  } else p.slice(2).forEach(t => teile.push(FELDNAMEN[t] || t));
+  const tat = v.art === "geloescht" ? "hat gelöscht:" : (p.length === 4 || p.length === 2) ? "hat angelegt:" : "hat geändert:";
+  return `${tat} ${teile.join(" › ")}`;
+}
+
+async function teamHinzufuegen(email) {
+  const { error } = await sb.rpc("redaktion_hinzufuegen", { neue_email: email });
+  if (error) statusSetzen("fehler", error.message);
+  teamLaden();
+}
+async function teamEntfernen(email) {
+  const { error } = await sb.rpc("redaktion_entfernen", { alte_email: email });
+  if (error) statusSetzen("fehler", error.message);
+  teamLaden();
+}
+
+/* ---------- JSON-Datei ---------- */
+function dateiHtml() {
+  const adresse = LIVE ? `${V.url.replace(/\/$/, "")}/rest/v1/inhalt?id=eq.valdrien&select=daten&apikey=${V.anonKey}` : "";
+  return `
+    ${kopfHtml("Inhalt als Datei", "JSON-Datei")}
+    <div class="gruppe">
+      <h3>Herunterladen</h3>
+      <p class="mechanik-text">Der gesamte Inhalt aller Abenteuer als eine JSON-Datei. Gut als Sicherung, bevor ihr Großes ändert.</p>
+      <div><button class="knopf" onclick="exportieren()">inhalt.json herunterladen</button></div>
+    </div>
+    ${LIVE ? `
+    <div class="gruppe">
+      <h3>Öffentliche Adresse</h3>
+      <p class="mechanik-text">Unter dieser Adresse kann jeder den aktuellen Inhalt als JSON abrufen, auch ohne Konto. Das Spiel liest ihn von hier.</p>
+      <code class="adresse">${esc(adresse)}</code>
+    </div>` : ""}
+    ${zustand.darfBearbeiten ? `
+    <div class="gruppe">
+      <h3>Hochladen und ersetzen</h3>
+      <p class="mechanik-text">Ersetzt den gesamten Inhalt durch eine JSON-Datei, z. B. eine frühere Sicherung.</p>
+      <input type="file" id="import-datei" accept="application/json,.json" onchange="importVorbereiten(this.files[0])">
+      ${zustand.meldung ? `<div class="meldung fehler">${esc(zustand.meldung)}</div>` : ""}
+    </div>` : ""}
+    ${!LIVE ? `
+    <div class="gruppe">
+      <h3>Vorschau zurücksetzen</h3>
+      <div><button class="knopf gefahr" onclick="fragen('zuruecksetzen')">Auf Startinhalt zurücksetzen</button></div>
+    </div>` : ""}`;
+}
+
+function exportieren() {
+  const blob = new Blob([JSON.stringify(zustand.inhalt, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `valdrien-inhalt-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+function importVorbereiten(datei) {
+  zustand.meldung = "";
+  if (!datei) return;
+  const leser = new FileReader();
+  leser.onload = () => {
+    try {
+      const daten = JSON.parse(leser.result);
+      if (!daten || typeof daten.abenteuer !== "object" || !Object.keys(daten.abenteuer).length) throw new Error("form");
+      zustand.importDaten = daten;
+      fragen("import");
+    } catch (e) {
+      zustand.meldung = "Diese Datei ist keine gültige Valdrien-Inhaltsdatei.";
+      editorZeichnen();
+    }
+  };
+  leser.readAsText(datei);
+}
+
+async function importieren() {
+  const daten = zustand.importDaten;
+  zustand.frage = null; zustand.importDaten = null;
+  if (!daten) return;
+  if (!LIVE) {
+    inhaltUebernehmen(daten, zustand.version + 1);
+    try { localStorage.setItem(VORSCHAU_SCHLUESSEL, JSON.stringify(daten)); } catch (e) {}
+    zeichnen(); return;
+  }
+  statusSetzen("speichert");
+  const { data, error } = await sb.rpc("inhalt_ersetzen", { daten });
+  if (error) { statusSetzen("fehler", error.message); editorZeichnen(); return; }
+  inhaltUebernehmen(daten, data);
+  statusSetzen("bereit");
+  zeichnen();
+}
+
+function vorschauZuruecksetzen() {
+  try { localStorage.removeItem(VORSCHAU_SCHLUESSEL); } catch (e) {}
+  zustand.frage = null;
+  inhaltUebernehmen(structuredClone(window.VALDRIEN_STARTINHALT), 1);
+  zeichnen();
+}
+
+/* =====================================================================
+   TEIL 6: AKTIONEN
+   ===================================================================== */
+
+function abenteuerWaehlen(id) {
+  if (id === "__neu") { neuesAbenteuer(); return; }
+  zustand.abenteuer = id; zustand.eintrag = null; zustand.frage = null; zustand.suche = "";
+  zeichnen(); ortMelden();
+}
+function bereichWaehlen(id) {
+  zustand.bereich = id; zustand.eintrag = null; zustand.frage = null; zustand.suche = ""; zustand.meldung = "";
+  if (id === "team") teamLaden();
+  zeichnen(); ortMelden();
+}
+function eintragOeffnen(id) {
+  zustand.eintrag = id; zustand.frage = null;
+  zeichnen(); ortMelden();
+  if (id && window.innerWidth <= 900) window.scrollTo(0, 0);
+}
+
+const VORLAGEN = {
+  rollen: () => ({ name: "Neue Rolle", bezeichnung: "", startkapital: 4, hintergrund: "", charakter: "", merkmale: [],
+    faehigkeit: { name: "", text: "", mechanik: "" }, aufgabe: { name: "", text: "", bonus: 2 } }),
+  minispiele: () => ({ name: "Neues Minispiel", kategorie: "alle", beschreibung: "", belohnung: { sieger: 2 } }),
+  ereignisse: () => ({ name: "Neues Ereignis", kategorie: "", sichtbarkeit: "oeffentlich", beschreibung: "", wirkung: "ruhe" })
+};
+
+function naechstePos(sammlung) { return Math.max(0, ...Object.values(sammlung || {}).map(e => e.pos || 0)) + 10; }
+
+function neuerEintrag() {
+  const sammlung = A()[zustand.bereich] || {};
+  const neu = Object.assign({ pos: naechstePos(sammlung) }, VORLAGEN[zustand.bereich]());
+  const id = slug(neu.name) + "-" + kurzId();
+  aendern([...basis(), zustand.bereich, id], neu, true);
+  eintragOeffnen(id);
+  const name = document.querySelector('[data-pfad$="\u0001name"]');
+  if (name) { name.focus(); name.select(); }
+}
+
+function duplizieren() {
+  const e = aktuellerEintrag();
+  if (!e) return;
+  const kopie = structuredClone(e);
+  kopie.name = (e.name || "Eintrag") + " (Kopie)";
+  kopie.pos = (e.pos || 0) + 1;
+  const id = slug(kopie.name) + "-" + kurzId();
+  aendern([...basis(), zustand.bereich, id], kopie, true);
+  eintragOeffnen(id);
+}
+
+function eintragLoeschen() {
+  aendern([...basis(), zustand.bereich, zustand.eintrag], null, true);
+  zustand.frage = null;
+  eintragOeffnen(null);
+}
+
+function verschieben(richtung) {
+  const liste = nachPos(A()[zustand.bereich]);
+  const i = liste.findIndex(([id]) => id === zustand.eintrag);
+  const j = i + richtung;
+  if (i < 0 || j < 0 || j >= liste.length) return;
+  const [idA, a] = liste[i], [idB, b] = liste[j];
+  let posA = b.pos ?? j * 10, posB = a.pos ?? i * 10;
+  if (posA === posB) posA += richtung * 5;
+  const p = [...basis(), zustand.bereich];
+  aendern([...p, idA, "pos"], posA, true);
+  aendern([...p, idB, "pos"], posB, true);
+  listeZeichnen();
+}
+
+function neuesAbenteuer() {
+  const id = "abenteuer-" + kurzId();
+  const neu = {
+    pos: naechstePos(zustand.inhalt.abenteuer), name: "Neues Abenteuer", setting: "",
+    geschichte: { titel: "", absaetze: [], schluss: "" },
+    schlusstext: { titel: "", vorher: [], nachher: ["Herzlichen Glückwunsch, {sieger}!"] },
+    begriffe: { frage: "Wer spielt mit?", spieler: "Spieler", mehrzahl: "Spieler", dativ: "Spielern", beenden: "Abenteuer beenden" },
+    rollen: {}, minispiele: {}, ereignisse: {}
+  };
+  aendern(["abenteuer", id], neu, true);
+  zustand.abenteuer = id; zustand.bereich = "abenteuer"; zustand.eintrag = null;
+  zeichnen(); ortMelden();
+  const name = document.getElementById("f-abenteuer-" + slug(id) + "-name");
+  if (name) { name.focus(); name.select(); }
+}
+
+function abenteuerLoeschen() {
+  const id = zustand.abenteuer;
+  aendern(["abenteuer", id], null, true);
+  zustand.frage = null;
+  zustand.abenteuer = nachPos(zustand.inhalt.abenteuer)[0]?.[0] || null;
+  zustand.bereich = "abenteuer";
+  zeichnen(); ortMelden();
+}
+
+/* ---------- Anmeldung ---------- */
+function anmeldungHtml() {
+  if (zustand.phase === "link-geschickt") return `
+    <div class="anmeldung"><div class="anmeldung-karte">
+      <span class="eyebrow">Redaktion</span><h1>Schau in dein Postfach</h1>
+      <p>Wir haben einen Anmeldelink an <strong>${esc(zustand.anmeldeEmail)}</strong> geschickt. Öffne ihn auf diesem Gerät, dann bist du drin.</p>
+      <p class="mechanik-text">Keine Mail da? Schau im Spam-Ordner nach.</p>
+      <button class="knopf leise" onclick="zustand.phase = 'anmelden'; zeichnen()">Andere Adresse verwenden</button>
+    </div></div>`;
+  return `
+    <div class="anmeldung"><div class="anmeldung-karte">
+      <span class="eyebrow">Redaktion</span><h1>Valdrien</h1>
+      <p>Melde dich mit deiner E-Mail-Adresse an. Du bekommst einen Link, ein Klick genügt. Ein Passwort brauchst du nicht.</p>
+      <form onsubmit="event.preventDefault(); anmeldelink(this.email.value)" style="display:flex; flex-direction:column; gap:10px">
+        <input name="email" id="anmelde-email" type="email" required autocomplete="email" placeholder="name@beispiel.de" aria-label="E-Mail-Adresse">
+        <button class="knopf" type="submit">Anmeldelink schicken</button>
+      </form>
+      ${zustand.meldung ? `<div class="meldung fehler">${esc(zustand.meldung)}</div>` : ""}
+    </div></div>`;
+}
+
+async function anmeldelink(email) {
+  zustand.meldung = "";
+  const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + location.pathname } });
+  if (error) { zustand.meldung = "Das hat nicht geklappt: " + error.message; zeichnen(); return; }
+  zustand.anmeldeEmail = email;
+  zustand.phase = "link-geschickt";
+  zeichnen();
+}
+
+async function abmelden() {
+  if (anwesenheitsKanal) { await anwesenheitsKanal.untrack().catch(() => {}); }
+  await sb.auth.signOut();
+  location.reload();
+}
+
+start();
+</script>
+</body>
+</html>
