@@ -1,147 +1,108 @@
 # Valdrien
 
-Ein Gesellschaftsspiel mit geheimen Rollen, Ereignissen und Minispielen, dazu eine Begleit-App und ein eigenes CMS für alle Inhalte.
+A social deduction party game with secret roles, events and minigames, plus a companion web app and a collaborative CMS for all content. The player-facing UI is German.
 
-## Was in diesem Ordner liegt
+- Game: `https://<user>.github.io/valdrien/`
+- CMS: `https://<user>.github.io/valdrien/cms.html`
 
-| Datei | Wofür |
+## Repository layout
+
+| Path | Purpose |
 |---|---|
-| `index.html` | Das Spiel. Läuft auf dem Spielleiter-Handy und lädt seine Inhalte live aus Supabase. |
-| `cms.html` | Das CMS (die Redaktion). Hier pflegt ihr Abenteuer, Rollen, Minispiele und Ereignisse, gemeinsam und live. |
-| `verbindung.js` | Die Adresse deines Supabase-Projekts. **Hier trägst du einmal zwei Werte ein.** Spiel und CMS nutzen dieselbe Datei. |
-| `supabase-einrichtung.sql` | Richtet die Datenbank ein. Wird einmal in Supabase ausgeführt. |
-| `inhalt.json` | Der komplette Startinhalt beider Abenteuer als eine JSON-Datei (zum Nachschauen und als Sicherung). |
-| `startinhalt.js` | Derselbe Inhalt für den Vorschau-Modus des CMS. |
+| `index.html` | Game shell (game master phone and player pages opened via QR code). |
+| `cms.html` | CMS shell ("Valdrien Redaktion"): edit adventures, roles, minigames and events together and live. |
+| `connection.js` | Supabase project URL and public anon key, shared by game and CMS. |
+| `js/shared/` | Loaded by game and CMS: `helpers.js`, `catalog.js` (available mechanics), `content-format.js` (content JSON format + upgrade from format 1). |
+| `js/game/` | Game code, one file per topic (see below). |
+| `js/cms/cms.js` | CMS code. |
+| `js/lib/qrcode.js` | Vendored QR code generator (MIT), do not modify. |
+| `css/` | `game.css`, `cms.css`. Color tokens at the top, light and dark theme. |
+| `images/` | Painted artwork, e.g. `forest-guild.jpg`. |
+| `content/` | Initial content of both adventures: `content.json` (backup) and `initial-content.js` (CMS preview mode and game fallback). |
+| `database/` | `setup.sql` (full Supabase setup, idempotent), `migrate-to-english.sql` (one-time upgrade from the old German schema). |
 
-**Ausprobieren ohne Einrichtung:** `cms.html` per Doppelklick öffnen. Solange `verbindung.js` leer ist, läuft das CMS im Vorschau-Modus. Änderungen bleiben dann nur in deinem Browser.
+No build step: plain `<script>` files loaded in order, all top-level declarations are global. Code that runs at load time may only use what earlier scripts defined. `js/game/main.js` is loaded last and starts the app.
 
----
+## Game code (`js/game/`)
 
-## Einrichtung Schritt für Schritt (etwa 20 Minuten)
+| File | Contents |
+|---|---|
+| `rules.js` | `RULES`: core rule numbers (guess cost, hit reward, player limits, event interval). Texts read these values. |
+| `server.js` | `rpc()` for Supabase functions. |
+| `content.js` | Converts CMS content into `ADVENTURES`, `ROLES`, `EVENTS`, `MINIGAMES`; keeps slots stable during a running game; live updates. |
+| `state.js` | `state` (saved to localStorage), settings, coin helpers. |
+| `artwork.js` | Drawn forest and tavern artwork, icons. |
+| `frame.js` | `show(screen)`, `render()`, `SCREENS` registry, back button, menu and purse sheets. |
+| `menu.js`, `rulebook.js`, `setup.js`, `overview.js` | Screens before and around play. |
+| `timer.js` | Countdown to the next event card. |
+| `guessing.js` | Guessing a role. |
+| `abilities.js` | `ABILITIES`: one handler per ability mechanic. |
+| `events.js` | Drawing and resolving event cards, private events. |
+| `effects.js` | `EFFECTS`: one handler per event effect. |
+| `minigames.js` | Drawing minigames, line-ups, scoring. |
+| `ending.js` | Secret tasks, final count, play again. |
+| `player-page.js` | QR links, syncing seats to Supabase, the player's own page. |
+| `main.js` | Startup. |
 
-### 1. Supabase-Projekt anlegen
-1. Auf **supabase.com** mit GitHub oder E-Mail ein kostenloses Konto anlegen.
-2. **New project** klicken.
-   - Name: `valdrien`
-   - Database Password: ein sicheres Passwort ausdenken und notieren (brauchst du im CMS nie)
-   - Region: **Central EU (Frankfurt)**
-3. Etwa 2 Minuten warten, bis das Projekt bereit ist.
+### Common changes
 
-### 2. Datenbank einrichten
-1. Links auf **SQL Editor** klicken, dann **New query**.
-2. Die Datei `supabase-einrichtung.sql` in VS Code öffnen, alles markieren (Strg + A), kopieren und in Supabase einfügen.
-3. Unten rechts auf **Run** klicken. Unten erscheint „Success. No rows returned“.
+- **Rule numbers:** `js/game/rules.js`.
+- **New screen:** write `screenXyz()` returning HTML, register it with `Object.assign(SCREENS, { xyz: screenXyz })`, navigate with `show("xyz")`.
+- **New ability or event effect:**
+  1. Add the key and a German CMS label to `js/shared/catalog.js` (it becomes selectable in the CMS).
+  2. Implement it in `ABILITIES` (`js/game/abilities.js`) or `EFFECTS` (`js/game/effects.js`); the expected shape is documented at the top of each file.
+  `main.js` logs a console warning for catalog entries without an implementation.
 
-> In der Datei steht bei Abschnitt 1 die erste E-Mail-Adresse, die bearbeiten darf: `mikabessel@googlemail.com`. Willst du eine andere verwenden, ändere sie dort **vor** dem Ausführen.
+## Content JSON (format 2)
 
-### 3. Den Code auf GitHub hochladen
-1. Auf **github.com** ein kostenloses Konto anlegen (falls noch nicht vorhanden).
-2. Oben rechts **+** → **New repository**.
-   - Name: `valdrien`
-   - **Public** auswählen
-   - **Create repository**
-3. Auf der neuen Seite **uploading an existing file** klicken und alle Dateien aus diesem Ordner hineinziehen. Unten **Commit changes**.
-4. Oben **Settings** → links **Pages**.
-   - Bei **Branch** `main` und `/ (root)` wählen
-   - **Save**
-5. Nach 1 bis 2 Minuten steht oben: *Your site is live at* `https://DEINNAME.github.io/valdrien/`.
-   Das CMS liegt dann unter `https://DEINNAME.github.io/valdrien/cms.html`.
+```text
+{ format: 2, world: { name, motto },
+  adventures: { <id>: { pos, name, setting,
+    story: { title, paragraphs[], closing },
+    epilogue: { title, before[], after[] },          ({winner} is replaced by the winner's name)
+    terms: { question, player, plural, dative, finish },
+    roles: { <id>: { pos, name, title, startingCoins, background, character, traits[],
+                     ability: { name, text, mechanic }, task: { name, text, bonus } } },
+    minigames: { <id>: { pos, name, category (duel|all|oneVsAll|team|uneven), description,
+                         reward: { winner, loser, judge, solo, group, fail, team, single, pair, singleName, pairName } } },
+    events: { <id>: { pos, name, category, visibility (public|private), description, effect,
+                      privateType (instant|task), privateCoins } } } } }
+```
 
-### 4. Supabase sagen, wohin der Anmeldelink führt
-In Supabase links **Authentication** → **URL Configuration**:
-- **Site URL:** `https://DEINNAME.github.io/valdrien/cms.html`
-- Bei **Redirect URLs** auf **Add URL** klicken und `https://DEINNAME.github.io/valdrien/**` eintragen.
-- **Save**
+Entries are objects keyed by id (not arrays) so several editors can add and reorder entries at the same time; order comes from `pos`. Old format-1 files (German keys) are converted automatically by `upgradeContent()`.
 
-### 5. CMS mit Supabase verbinden
-1. In Supabase links unten **Project Settings** → **API** (in neueren Versionen: **API Keys**).
-2. Zwei Werte kopieren:
-   - **Project URL** (sieht aus wie `https://abcdefgh.supabase.co`). Steht sie nicht auf dieser Seite, findest du sie unter **Data API**.
-   - **anon public** Key: eine sehr lange Zeichenkette. Gibt es zwei Reiter, nimm ihn aus **Legacy API Keys**.
-3. Auf GitHub die Datei `verbindung.js` öffnen und auf den **Stift** (Bearbeiten) klicken.
-4. Die beiden Werte zwischen die Anführungszeichen setzen:
-   ```js
-   window.VALDRIEN_VERBINDUNG = {
-     url: "https://abcdefgh.supabase.co",
-     anonKey: "eyJhbGciOi..."
-   };
-   ```
-5. **Commit changes**. Nach etwa einer Minute ist die Änderung online.
+## Supabase
 
-> Der anon-Schlüssel ist **öffentlich** und darf auf GitHub stehen. Er erlaubt nur das Lesen. Bearbeiten darf nur, wer sich anmeldet **und** im Team steht. Den Schlüssel **service_role** dagegen nie irgendwo eintragen.
+Tables: `content` (one row `id = 'valdrien'`, `data` jsonb, `version`), `editors`, `history`, plus `sessions` and `seats` for player pages. Clients never write tables directly; all writes go through security-definer functions:
 
-### 6. Anmelden und loslegen
-1. `https://DEINNAME.github.io/valdrien/cms.html` öffnen.
-2. **Noch kein Passwort? Anmeldelink per E-Mail** wählen, E-Mail-Adresse eingeben und den Link in der Mail öffnen. Am besten im selben Browser, in dem du das CMS benutzen willst.
-3. Unter **Team & Verlauf** → **Mein Passwort** ein Passwort festlegen. Ab dann meldest du dich mit E-Mail und Passwort an, auf jedem Gerät, ohne Mail.
-4. Unter **Team & Verlauf** weitere Personen per E-Mail-Adresse hinzufügen und ihnen den CMS-Link schicken. Sie machen dann dasselbe: einmal Anmeldelink, dann eigenes Passwort.
+- CMS (signed in, listed in `editors`): `content_set(path, value)`, `content_delete(path)`, `content_replace(data)`, `editor_add`, `editor_remove`, `is_editor()`.
+- Game (anon): `seat_write(p_session, p_secret, p_access, p_data)` from the game master phone, `seat_read(p_access)` from a player phone, `seat_status`, `session_delete`. Sessions older than 3 days are removed on the next write.
 
-> Supabase verschickt im kostenlosen Paket nur **2 Anmeldemails pro Stunde** für das ganze Projekt. Deshalb das Passwort. Wer angemeldet ist, bleibt es in diesem Browser, bis er auf „Abmelden“ klickt.
+`content` is part of the `supabase_realtime` publication, so CMS windows and games update live.
 
-**Ausgesperrt?** So setzt du dein Passwort direkt in Supabase, ganz ohne Mail. Öffne den **SQL Editor** und führe Folgendes aus, mit deinem Passwort statt `MEIN-PASSWORT`:
+## Setup
+
+1. **Supabase:** create a project (region Frankfurt), open *SQL Editor*, run `database/setup.sql`. The first editor email is set at the top of the file.
+2. **GitHub Pages:** push the repository, enable *Settings → Pages* for `main` / root.
+3. **Auth URLs:** in Supabase *Authentication → URL Configuration* set the Site URL to `.../valdrien/cms.html` and add `.../valdrien/**` to the redirect URLs. Recommended: disable new sign-ups (*Sign In / Providers*) and add editors via *Authentication → Users*.
+4. **connection.js:** enter the project URL and the anon public key (*Project Settings → API*). The anon key is public; never use the service_role key. Without values the CMS runs in preview mode (browser storage only).
+5. **Sign in:** open the CMS, request a magic link once, then set a password under *Team & Verlauf → Mein Passwort*. Supabase only sends a few auth emails per hour.
+
+Emergency password reset in the SQL editor:
+
 ```sql
 update auth.users
-set encrypted_password = extensions.crypt('MEIN-PASSWORT', extensions.gen_salt('bf')),
+set encrypted_password = extensions.crypt('NEW-PASSWORD', extensions.gen_salt('bf')),
     email_confirmed_at = coalesce(email_confirmed_at, now())
 where email = 'mikabessel@googlemail.com';
 ```
-Danach den Verlauf des SQL Editors löschen, damit das Passwort dort nicht stehen bleibt.
 
----
+### Upgrading from the German schema
 
-## So funktioniert das CMS
+1. Run `database/migrate-to-english.sql`, then `database/setup.sql`.
+2. Push the code.
+3. Sign in to the CMS once as an editor: it stores the content in format 2. Until then the game converts the old format on the fly.
 
-- **Live zusammenarbeiten:** Jede Änderung wird nach einer kurzen Tipp-Pause gespeichert. Alle anderen sehen sie sofort.
-- **Wer arbeitet wo:** Oben rechts siehst du, wer gerade im CMS ist. In der Liste und im Eintrag siehst du, wer am selben Eintrag arbeitet.
-- **Kein Überschreiben:** Gespeichert wird immer nur das eine Feld, das sich geändert hat. Zwei Personen, die gleichzeitig verschiedene Felder bearbeiten, stören sich nicht. Am selben Feld gewinnt, wer zuletzt tippt.
-- **Verlauf:** Unter **Team & Verlauf** steht, wer wann was geändert hat.
-- **Sicherung:** Unter **JSON-Datei** lädst du den gesamten Inhalt als `inhalt.json` herunter oder spielst eine Sicherung wieder ein.
-- **Spielmechaniken:** Bei Fähigkeiten und Ereignissen wählst du aus einer Liste, was die App tun soll, zum Beispiel „Alle erhalten 1 Münze“. Neue Mechaniken müssen programmiert werden. Alles andere (Texte, Zahlen, neue Rollen, Minispiele, Ereignisse, ganze Abenteuer) könnt ihr frei anlegen.
-- **Spielbarkeit prüfen:** Unter **Abenteuer** zeigt das CMS, ob ein Abenteuer spielbar ist, zum Beispiel ob genug Rollen da sind und ob es für jede Kategorie ein Minispiel gibt.
+## Local development
 
-## Aufbau der JSON-Datei
-
-```text
-{
-  "format": 1,
-  "welt": { "name", "spruch" },
-  "abenteuer": {
-    "wald": {
-      "pos", "name", "setting",
-      "geschichte":  { "titel", "absaetze": [...], "schluss" },
-      "schlusstext": { "titel", "vorher": [...], "nachher": [...] },   ← {sieger} wird ersetzt
-      "begriffe":    { "frage", "spieler", "mehrzahl", "dativ", "beenden" },
-      "rollen": {
-        "magnus": { "pos", "name", "bezeichnung", "startkapital", "hintergrund", "charakter",
-                    "merkmale": [...],
-                    "faehigkeit": { "name", "text", "mechanik" },
-                    "aufgabe":    { "name", "text", "bonus" } }
-      },
-      "minispiele": {
-        "wortgefecht": { "pos", "name", "kategorie", "beschreibung", "belohnung": { "sieger": 2, "verlierer": -1 } }
-      },
-      "ereignisse": {
-        "goldregen": { "pos", "name", "kategorie", "sichtbarkeit": "oeffentlich" | "privat", "beschreibung", "wirkung" }
-      }
-    }
-  }
-}
-```
-
-Einträge sind nach Kennung (`"magnus"`) statt als Liste gespeichert. So können mehrere Personen gleichzeitig Einträge anlegen und umsortieren, ohne sich zu stören. Die Reihenfolge steht in `pos`.
-
-**Öffentlich abrufen** (zum Beispiel für die Spiel-App):
-`https://DEIN-PROJEKT.supabase.co/rest/v1/inhalt?id=eq.valdrien&select=daten&apikey=DEIN-ANON-KEY`
-Die fertige Adresse zeigt dir das CMS unter **JSON-Datei**.
-
-## Das Spiel
-
-Das Spiel liegt unter `https://DEINNAME.github.io/valdrien/`. Auf dem iPhone: in Safari öffnen → Teilen → **Zum Home-Bildschirm**.
-
-- **Live-Inhalte:** Beim Start lädt das Spiel den aktuellen Inhalt aus Supabase. Ändert jemand etwas im CMS, steht es nach wenigen Sekunden im Spiel, auch mitten in einer Partie.
-- **Laufende Partien bleiben stimmig:** Wird während einer Partie eine Rolle gelöscht, behält der Spieler sie bis zum Ende. Gelöschte oder privat gewordene Ereignisse kommen nicht mehr aus dem Stapel. Neue Einträge sind sofort dabei, neue Rollen ab der nächsten Partie.
-- **Ohne Netz (z. B. im Wald):** Das Spiel merkt sich den zuletzt geladenen Inhalt und funktioniert damit weiter. Öffne es einmal vor der Wanderung mit Netz. Gab es noch nie eine Verbindung, nimmt es den eingebauten Startinhalt.
-- **Neue Abenteuer:** Sie erscheinen automatisch in der Auswahl. Spielbar werden sie, sobald sie mindestens 3 Rollen und 1 öffentliches Ereignis haben.
-- **QR-Codes:** Jede Rollenkarte hat einen QR-Code. Er öffnet auf dem Handy des Spielers seine eigene Seite mit Rolle, Münzen, Countdown und geheimen Ereignissen. Sie aktualisiert sich alle paar Sekunden von selbst. Die Spieler brauchen kein Konto.
-- **Geheime Ereignisse:** Ereignisse, die im CMS auf „Privat“ stehen, gehen an einen einzelnen Spieler. Am Spielleiter-Handy steht nur „Geheimes Ereignis für Ben“, den Text sieht Ben auf seinem Handy. Bei „Sofort“ bucht die App die Münzen gleich. Bei „Aufgabe“ bestätigt der Spielleiter im Geldbeutel, ob sie geschafft wurde. Ohne eigenes Handy kann der Spielleiter die Karte auch auf seinem Handy zeigen.
-- **Sicherheit:** Jede Partie hat einen geheimen Spielleiter-Schlüssel. Nur das Spielleiter-Handy kann die Spielerseiten beschreiben. Jede Spielerseite ist nur mit dem Code aus ihrem QR-Code lesbar. Partien werden nach 3 Tagen automatisch gelöscht.
+Open `index.html` or `cms.html` directly in a browser (or serve the folder with any static server). Reload after changes.
