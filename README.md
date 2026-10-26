@@ -6,8 +6,9 @@ Ein Gesellschaftsspiel mit geheimen Rollen, Ereignissen und Minispielen, dazu ei
 
 | Datei | Wofür |
 |---|---|
+| `index.html` | Das Spiel. Läuft auf dem Spielleiter-Handy und lädt seine Inhalte live aus Supabase. |
 | `cms.html` | Das CMS (die Redaktion). Hier pflegt ihr Abenteuer, Rollen, Minispiele und Ereignisse, gemeinsam und live. |
-| `verbindung.js` | Die Adresse deines Supabase-Projekts. **Hier trägst du einmal zwei Werte ein.** |
+| `verbindung.js` | Die Adresse deines Supabase-Projekts. **Hier trägst du einmal zwei Werte ein.** Spiel und CMS nutzen dieselbe Datei. |
 | `supabase-einrichtung.sql` | Richtet die Datenbank ein. Wird einmal in Supabase ausgeführt. |
 | `inhalt.json` | Der komplette Startinhalt beider Abenteuer als eine JSON-Datei (zum Nachschauen und als Sicherung). |
 | `startinhalt.js` | Derselbe Inhalt für den Vorschau-Modus des CMS. |
@@ -133,6 +134,15 @@ Einträge sind nach Kennung (`"magnus"`) statt als Liste gespeichert. So können
 `https://DEIN-PROJEKT.supabase.co/rest/v1/inhalt?id=eq.valdrien&select=daten&apikey=DEIN-ANON-KEY`
 Die fertige Adresse zeigt dir das CMS unter **JSON-Datei**.
 
-## Nächste Etappen
-2. Die Spiel-App (`index.html`) liest ihre Inhalte live aus Supabase.
+## Das Spiel
+
+Das Spiel liegt unter `https://DEINNAME.github.io/valdrien/`. Auf dem iPhone: in Safari öffnen → Teilen → **Zum Home-Bildschirm**.
+
+- **Live-Inhalte:** Beim Start lädt das Spiel den aktuellen Inhalt aus Supabase. Ändert jemand etwas im CMS, steht es nach wenigen Sekunden im Spiel, auch mitten in einer Partie.
+- **Laufende Partien bleiben stimmig:** Wird während einer Partie eine Rolle gelöscht, behält der Spieler sie bis zum Ende. Gelöschte oder privat gewordene Ereignisse kommen nicht mehr aus dem Stapel. Neue Einträge sind sofort dabei, neue Rollen ab der nächsten Partie.
+- **Ohne Netz (z. B. im Wald):** Das Spiel merkt sich den zuletzt geladenen Inhalt und funktioniert damit weiter. Öffne es einmal vor der Wanderung mit Netz. Gab es noch nie eine Verbindung, nimmt es den eingebauten Startinhalt.
+- **Neue Abenteuer:** Sie erscheinen automatisch in der Auswahl. Spielbar werden sie, sobald sie mindestens 3 Rollen und 1 öffentliches Ereignis haben.
+- **QR-Codes:** Sie führen auf die eigene Rollenseite unter derselben Adresse. Die Münzen sehen die Spieler dort ab Etappe 3.
+
+## Nächste Etappe
 3. Die Münzen und privaten Ereignisse auf den QR-Seiten der Spieler laufen über Supabase, ohne Claude-Konto.
