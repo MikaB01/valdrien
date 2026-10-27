@@ -32,9 +32,9 @@ No build step: plain `<script>` files loaded in order, all top-level declaration
 | `content.js` | Converts CMS content into `ADVENTURES`, `ROLES`, `EVENTS`, `MINIGAMES`; keeps slots stable during a running game; live updates. |
 | `state.js` | `state` (saved to localStorage), settings, coin helpers. |
 | `artwork.js` | Drawn forest and tavern artwork, icons. |
-| `frame.js` | `show(screen)`, `render()`, `SCREENS` registry, back button, menu and purse sheets. |
+| `frame.js` | `show(screen)`, `render()`, `SCREENS` registry, bottom app bar (back, purse, menu) and its sheets. |
 | `menu.js`, `rulebook.js`, `setup.js`, `overview.js` | Screens before and around play. |
-| `timer.js` | Countdown to the next event card. |
+| `timer.js` | Countdown to the next event card: fixed or random interval, pause/play, timer bar. |
 | `guessing.js` | Guessing a role. |
 | `abilities.js` | `ABILITIES`: one handler per ability mechanic. |
 | `events.js` | Drawing and resolving event cards, private events. |

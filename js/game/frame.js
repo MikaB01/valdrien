@@ -26,8 +26,8 @@ function backAction() {
     case "myRole": {
       const m = state.peekRole;
       if (!m || m.player === null) return go("overview");
-      if (!m.open) return startMyRole;
-      return () => { state.peekRole = null; show("overview"); };
+      if (!m.open) return () => startMyRole();
+      return closeMyRole;
     }
     case "guess": {
       const r = state.guess || {};
@@ -50,6 +50,7 @@ function backAction() {
 }
 
 function goBack() {
+  if (sheet) { closeSheet(); return; }
   const back = backAction();
   if (back) back();
 }
@@ -57,7 +58,7 @@ function goBack() {
 function renderFrame() {
   const back = document.getElementById("btn-back");
   const purse = document.getElementById("btn-purse");
-  if (back) back.hidden = !backAction();
+  if (back) back.hidden = !sheet && !backAction();
   const noPurse = ["start", "adventures", "names", "handover", "intro"];
   if (purse) purse.hidden = !(state.players && state.players.length) || noPurse.includes(state.screen);
   const layer = document.getElementById("sheet");
@@ -86,6 +87,7 @@ function menuSheet() {
       ${inGame ? `
         <span class="menu-divider">Dieses Abenteuer</span>
         <div class="menu-list">
+          ${entry(icon("secret"), "Geheim nachsehen", "startMyRole()")}
           ${entry(icon("event"), "Ereigniskarte jetzt ziehen", "sheet = null; drawEvent(false)")}
           ${confirmFinish ? "" : entry(icon("flag"), currentAdventure().finish, "confirmFinish = true; renderFrame()")}
         </div>
@@ -120,9 +122,7 @@ function show(screen) {
   state.screen = screen;
   confirmFinish = false;
   sheet = null;
-  if (screen === "overview" && state.running && !state.timerEnd) {
-    state.timerEnd = Date.now() + minutes() * 60000;
-  }
+  if (screen === "overview" && state.running && !state.timerEnd) startRound();
   save();
   render();
   window.scrollTo(0, 0);

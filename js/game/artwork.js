@@ -156,6 +156,7 @@ function icon(name) {
     guess: `<path d="M4 20 C10 10.5 30 10.5 36 20 C30 29.5 10 29.5 4 20 Z"/><circle cx="20" cy="20" r="5"/><circle class="filled" cx="20" cy="20" r="2"/>`,
     role: `<rect x="9" y="5" width="22" height="30" rx="3"/><circle cx="20" cy="16" r="4.5"/><path d="M13.5 29 C14.5 22.5 25.5 22.5 26.5 29"/>`,
     roles: `<rect x="5" y="10" width="15" height="21" rx="2" transform="rotate(-12 12.5 20.5)"/><rect x="20" y="10" width="15" height="21" rx="2" transform="rotate(12 27.5 20.5)"/><rect x="12.5" y="7" width="15" height="23" rx="2" style="fill: var(--card)"/>`,
+    secret: `<path d="M8 18 V13 a12 12 0 0 1 24 0 V18"/><rect x="5" y="18" width="30" height="18" rx="3"/><circle class="filled" cx="20" cy="26" r="2.6"/><path d="M20 28 V31"/>`,
     lightning: `<path d="M22 4 L11 22 H19 L17 36 L29 16 H21 Z"/>`,
     gear: `<circle cx="20" cy="20" r="5"/><path d="M20 5v5M20 30v5M35 20h-5M10 20H5M30.6 9.4l-3.5 3.5M12.9 27.1l-3.5 3.5M30.6 30.6l-3.5-3.5M12.9 12.9L9.4 9.4"/>`,
     flag: `<path d="M11 35 V6"/><path d="M11 7 C17 3 22 11 30 7 V21 C22 25 17 17 11 21"/>`,

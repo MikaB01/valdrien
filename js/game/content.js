@@ -109,7 +109,7 @@ function convertAdventure(id, a, before, slots) {
         ${beforeText.length ? `<div class="narrative">${beforeText.map(p => `<p>${fill(p)}</p>`).join("")}</div>` : ""}
         <p class="winner">${winner}</p>
         ${afterText.length ? `<div class="narrative">${afterText.map((p, i) => i === afterText.length - 1
-          ? `<p><em>${fill(p)}</em></p>` : `<p>${fill(p)}</p>`).join("")}</div>` : ""}`;
+          ? `<p class="closing">${fill(p)}</p>` : `<p>${fill(p)}</p>`).join("")}</div>` : ""}`;
     }
   };
   const activeRoles = adventure.roles.filter(r => !r.deleted).length;

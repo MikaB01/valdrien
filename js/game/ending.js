@@ -5,7 +5,7 @@ function screenTasks() {
       <label class="task-check">
         <input type="checkbox" id="task-${i}" ${s.taskDone ? "checked" : ""}
                onchange="state.players[${i}].taskDone = this.checked; save()">
-        <span><strong>${escapeName(s.name)}</strong> als ${r.name}, ${r.title}<br>
+        <span><span class="player-name">${escapeName(s.name)}</span><br>als ${r.name}, ${r.title}<br>
         <span class="muted">${r.task.name}: ${r.task.text} (+${r.task.bonus})</span></span>
       </label>`;
   }).join("");
@@ -41,26 +41,26 @@ function screenEnd() {
 
 function finishAdventure() {
   state.running = false;
-  state.timerEnd = null;
+  resetTimer();
   show("tasks");
 }
 
 function resumeAdventure() {
   state.running = true;
-  state.timerEnd = null;
+  resetTimer();
   show("overview");
 }
 
 function playAgain() {
   state.running = false;
-  state.timerEnd = null;
+  resetTimer();
   state.players = [];
   show("names");
 }
 
 function newGame() {
   state.running = false;
-  state.timerEnd = null;
+  resetTimer();
   state.players = [];
   show("start");
 }

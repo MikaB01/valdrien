@@ -16,16 +16,47 @@ function screenStart() {
 }
 
 function screenSettings() {
-  const options = RULES.eventMinuteOptions;
+  const random = settings.timerMode === "random";
+  const visible = settings.showTimer !== false;
+  const [lo, hi] = randomRange();
+  const segment = (pressed, action, text) => `<button aria-pressed="${pressed}" onclick="${action}">${text}</button>`;
+  const stepper = (key, label, value) => `
+    <div class="stepper">
+      <span class="stepper-label">${label}</span>
+      <div class="counter">
+        <button aria-label="${label}: eine Minute weniger" onclick="stepRandom('${key}', -1)">−</button>
+        <span class="count">${value}</span>
+        <button aria-label="${label}: eine Minute mehr" onclick="stepRandom('${key}', 1)">+</button>
+      </div>
+      <span class="muted">Min.</span>
+    </div>`;
   return `
     <h2>Einstellungen</h2>
     <div class="rules">
       <section>
         <h3>Zeit zwischen zwei Ereignissen</h3>
-        <p class="muted">Beim Wandern passen 15 Minuten gut, am Tisch eher 10.</p>
-        <div class="options" role="group" aria-label="Minuten zwischen zwei Ereignissen">
-          ${options.map(m => `<button id="minutes-${m}" aria-pressed="${minutes() === m}" onclick="setSetting('minutes', ${m})">${m} Min.</button>`).join("")}
+        <div class="segmented" role="group" aria-label="Art der Ereignis-Uhr">
+          ${segment(!random, "setSetting('timerMode', 'fixed')", "Feste Zeit")}
+          ${segment(random, "setSetting('timerMode', 'random')", "Zufällige Zeit")}
         </div>
+        ${random ? `
+          ${stepper("randomMin", "Frühestens nach", lo)}
+          ${stepper("randomMax", "Spätestens nach", hi)}
+          <p class="hint">Nach jeder neu gezogenen Ereigniskarte würfelt die App eine neue Zeit zwischen ${lo} und ${hi} Minuten aus. So weiß niemand genau, wann das nächste Ereignis kommt. Besonders spannend mit verborgener Uhr. Gilt ab der nächsten Karte.</p>` : `
+          <div class="options" role="group" aria-label="Minuten zwischen zwei Ereignissen">
+            ${RULES.eventMinuteOptions.map(m => `<button id="minutes-${m}" aria-pressed="${minutes() === m}" onclick="setSetting('minutes', ${m})">${m} Min.</button>`).join("")}
+          </div>
+          <p class="hint">Beim Wandern passen 15 Minuten gut, am Tisch eher 10.</p>`}
+      </section>
+      <section>
+        <h3>Uhr auf der Hauptseite</h3>
+        <div class="segmented" role="group" aria-label="Uhr auf der Hauptseite">
+          ${segment(visible, "setSetting('showTimer', true)", "Anzeigen")}
+          ${segment(!visible, "setSetting('showTimer', false)", "Verbergen")}
+        </div>
+        <p class="hint">${visible
+          ? "Die Restzeit bis zum nächsten Ereignis steht oben auf der Hauptseite."
+          : "Die Restzeit bleibt geheim. Anhalten und Weiterlaufen geht trotzdem über den kleinen Knopf."}</p>
       </section>
     </div>
   `;
@@ -59,7 +90,7 @@ function screenIntro() {
       <h1>${a.introTitle}</h1>
       <div class="narrative">
         ${a.intro.map(paragraph => `<p>${paragraph}</p>`).join("")}
-        <p><em>${a.introEnd}</em></p>
+        <p class="closing">${a.introEnd}</p>
       </div>
       <button class="btn" onclick="startAdventure()">Abenteuer bestreiten</button>
     </div>

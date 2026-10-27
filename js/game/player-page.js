@@ -32,12 +32,13 @@ function qrSection(i) {
   const art = qrSvg(playerUrl(i));
   if (!art) return "";
   return `
-    <div class="qr-box">
-      ${art}
-      <div>
-        <p><strong>Auf dein eigenes Handy holen:</strong> Scanne den Code mit deiner Kamera. Dann siehst du deine Rolle, deine Münzen und geheime Ereignisse jederzeit selbst.</p>
+    <details class="qr-optional">
+      <summary>Optional: aufs eigene Handy holen</summary>
+      <div class="qr-box">
+        ${art}
+        <p>Scanne den Code mit deiner Kamera. Dann siehst du Rolle, Münzen und geheime Ereignisse auch auf deinem Handy. Nicht nötig: Alles steht auch hier unter „Geheim nachsehen“.</p>
       </div>
-    </div>`;
+    </details>`;
 }
 
 // What a player's phone may see. The role itself is not included, only encoded in the QR link.
@@ -49,7 +50,7 @@ function seatData(s) {
     abilityUsed: Boolean(s.abilityUsed),
     adventure: state.adventure || "forest",
     phase: state.running ? "running" : (["tasks", "end"].includes(state.screen) ? "end" : "start"),
-    timerEnd: state.running && state.timerEnd ? state.timerEnd : 0,
+    timerEnd: state.running && state.timerEnd && !timerPaused() && settings.showTimer !== false ? state.timerEnd : 0,
     secrets: (s.secrets || []).slice(-12).reverse(),
     notes: [
       state.seersNight && `Die Nacht der Seher: Bis zum nächsten Ereignis bringt ein Treffer beim Raten ${RULES.hitRewardSeers} Münzen.`,
@@ -165,7 +166,8 @@ function secretsHtml(d) {
 
 function renderOwn() {
   document.getElementById("app").innerHTML = screenOwnPage();
-  document.querySelectorAll(".frame-top, .frame-bottom").forEach(e => e.hidden = true);
+  document.querySelector(".app-bar").hidden = true;
+  document.body.classList.add("own-page");
   document.getElementById("backdrop").hidden = true;
 }
 

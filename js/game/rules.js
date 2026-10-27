@@ -13,5 +13,7 @@ const RULES = {
   hitRewardSeers: 5, // during "Die Nacht der Seher"
 
   eventMinutesDefault: 15,
-  eventMinuteOptions: [5, 10, 15, 20]
+  eventMinuteOptions: [5, 10, 15, 20],
+  randomMinutesDefault: [5, 15], // random timer mode: window in minutes
+  randomMinutesLimit: [1, 60]
 };

@@ -11,7 +11,7 @@ function scoreBoard() {
     else if (s.revealed) chips.push(`<span class="chip">enttarnt</span>`);
     return `
       <div class="score-row">
-        <span class="score-name">${escapeName(s.name)} ${chips.join("")}</span>
+        <span class="score-name"><span class="player-name">${escapeName(s.name)}</span> ${chips.join("")}</span>
         <span class="score-coins">${s.coins}<span class="coin-icon" aria-hidden="true"></span></span>
       </div>`;
   }).join("");
@@ -20,35 +20,23 @@ function scoreBoard() {
 
 function screenOverview() {
   const ready = state.players.filter(s => s.revealed && !s.abilityUsed).length;
-  const total = minutes() * 60000;
   return `
     <div class="heading"><span class="eyebrow">${currentAdventure().title}</span><h2>Das Abenteuer</h2></div>
-    ${state.running && state.timerEnd ? `
-      <div class="timer" role="timer">
-        <span class="label">Nächstes Ereignis in</span>
-        <span class="time" id="remaining">${timeText(remainingMs())}</span>
-        <div class="progress"><div id="progress-fill" style="width:${Math.min(100, 100 * remainingMs() / total)}%"></div></div>
-      </div>` : ""}
+    ${timerBar()}
     ${state.seersNight ? `<p class="note">Die Nacht der Seher: Bis zum nächsten Ereignis bringt ein Treffer beim Raten ${RULES.hitRewardSeers} Münzen.</p>` : ""}
     ${state.winBonus ? `<p class="note">Gewinnt ${playerName(state.winBonus.player)} das nächste Minispiel, gibt es ${state.winBonus.amount} Münzen extra.</p>` : ""}
     ${state.freeGuesses ? `<p class="note">Lose Zungen: Bis zum nächsten Ereignis kostet Raten keine Münze.</p>` : ""}
-    ${openTasks().length ? `<p class="note">Offene geheime ${openTasks().length === 1 ? "Aufgabe" : "Aufgaben"}: ${playerNames([...new Set(openTasks().map(x => x.i))])}. Bestätigen über den Geldbeutel unten rechts.</p>` : ""}
+    ${openTasks().length ? `<p class="note">Offene geheime ${openTasks().length === 1 ? "Aufgabe" : "Aufgaben"}: ${playerNames([...new Set(openTasks().map(x => x.i))])}. Bestätigen über den Geldbeutel unten in der Mitte.</p>` : ""}
     <div class="tiles">
-      <button class="tile tile-wide" onclick="startGuess()">
+      <button class="tile" onclick="startGuess()">
         ${icon("guess")}
-        <span class="tile-body">
-          <span class="tile-title">Auf eine Rolle raten</span>
-          <span class="tile-text">${state.freeGuesses ? "Raten kostet gerade nichts" : `Ein Tipp kostet ${coinsText(RULES.guessCost)}`}, ein Treffer bringt ${hitReward()}</span>
-        </span>
+        <span class="tile-title">Raten</span>
+        <span class="tile-text">${state.freeGuesses ? "Gerade kostenlos" : `Kostet ${coinsText(RULES.guessCost)}`}, Treffer bringt ${hitReward()}</span>
       </button>
-      <button class="tile tile-wide" onclick="startAbility()" ${ready ? "" : 'style="border-color: var(--line)"'}>
+      <button class="tile ${ready ? "tile-ready" : ""}" onclick="startAbility()">
         ${icon("ability")}
-        <span class="tile-body">
-          <span class="tile-title">Besondere Fähigkeit einsetzen</span>
-          <span class="tile-text">${ready
-            ? `${ready} ${ready === 1 ? "Person kann" : "Personen können"} jetzt eine Fähigkeit einsetzen`
-            : "Wird frei, sobald eine Rolle erraten ist"}</span>
-        </span>
+        <span class="tile-title">Fähigkeit</span>
+        <span class="tile-text">${ready ? `${ready} ${ready === 1 ? "Person kann" : "Personen können"} jetzt` : "Frei, sobald eine Rolle erraten ist"}</span>
       </button>
       <button class="tile" onclick="drawMinigame(null, false)">
         ${icon("minigame")}
@@ -58,51 +46,115 @@ function screenOverview() {
       <button class="tile" onclick="show('roles')">
         ${icon("roles")}
         <span class="tile-title">Rollen</span>
-        <span class="tile-text">Meine Rolle und alle anderen</span>
+        <span class="tile-text">Alle Rollen im Spiel</span>
+      </button>
+      <button class="tile tile-wide tile-secret" onclick="startMyRole()">
+        ${icon("secret")}
+        <span class="tile-body">
+          <span class="tile-title">Geheim nachsehen${unseenCount() ? ` <span class="chip chip-gold">${unseenCount()} neu</span>` : ""}</span>
+          <span class="tile-text">Eigene Rolle, Münzen und geheime Ereignisse</span>
+        </span>
       </button>
     </div>
   `;
 }
 
-function startMyRole() {
-  state.peekRole = { player: null, open: false };
+function unseenCount() {
+  return (state.players || []).reduce((n, s) => n + (s.secrets || []).filter(p => !p.seen).length, 0);
+}
+
+function startMyRole(player) {
+  state.peekRole = { player: player === undefined ? null : player, open: false };
   show("myRole");
+}
+
+function openMyRole() {
+  const m = state.peekRole;
+  const s = state.players[m.player];
+  m.fresh = (s.secrets || []).filter(p => !p.seen).map(p => p.id);
+  (s.secrets || []).forEach(p => { p.seen = true; });
+  m.open = true;
+  save();
+  render();
+  window.scrollTo(0, 0);
+}
+
+function closeMyRole() {
+  state.peekRole = null;
+  show("overview");
+}
+
+function statusChips(s) {
+  return !s.revealed ? `<span class="chip">noch nicht erraten</span>`
+    : s.abilityUsed ? `<span class="chip">erraten</span><span class="chip">Fähigkeit benutzt</span>`
+    : `<span class="chip">erraten</span><span class="chip chip-forest">Fähigkeit bereit</span>`;
+}
+
+function secretEntries(i, fresh) {
+  const s = state.players[i];
+  const list = (s.secrets || []).slice().reverse();
+  if (!list.length) return `<p class="muted" style="text-align:center">Noch keine geheimen Ereignisse.</p>`;
+  return `
+    <section class="secret-list" aria-label="Geheime Ereignisse">
+      ${list.map(p => {
+        const isNew = fresh.includes(p.id);
+        const consequence = p.kind === "task"
+          ? (p.status === "open" ? `Geheime Aufgabe: Schaffst du es, gibt es ${signed(p.coins)} Münzen. Sag dem Spielleiter Bescheid, sobald du es geschafft hast.`
+            : p.status === "done" ? `Geschafft: ${signed(p.coins)} Münzen gebucht.` : "Nicht geschafft.")
+          : (p.coins ? `${signed(p.coins)} Münzen, schon gebucht.` : "");
+        return `
+          <article class="secret-card ${isNew ? "new" : ""}">
+            ${isNew ? `<span class="chip chip-gold">Neu</span>` : ""}
+            <strong class="secret-title">${escapeName(p.title || "")}</strong>
+            <p>${escapeName(p.text || "")}</p>
+            ${consequence ? `<p class="muted">${consequence}</p>` : ""}
+          </article>`;
+      }).join("")}
+    </section>`;
 }
 
 function screenMyRole() {
   const m = state.peekRole || { player: null, open: false };
   if (m.player === null || !state.players[m.player]) {
     return `
-      <div class="heading"><span class="eyebrow">Geheim</span><h2>Meine Rolle ansehen</h2></div>
-      <p class="muted">Wer möchte nachsehen? Danach sieht nur diese Person aufs Handy.</p>
+      <div class="heading"><span class="eyebrow">Geheim</span><h2>Wer möchte nachsehen?</h2></div>
+      <p class="muted">Rolle, Münzen und geheime Ereignisse. Danach sieht nur diese Person aufs Handy.</p>
       <div class="choices">
-        ${state.players.map((s, i) => `
+        ${state.players.map((s, i) => {
+          const unseen = (s.secrets || []).filter(p => !p.seen).length;
+          return `
           <button class="choice" onclick="state.peekRole = { player: ${i}, open: false }; render()">
-            <span>${escapeName(s.name)}</span><span class="muted">›</span>
-          </button>`).join("")}
+            <span>${escapeName(s.name)}</span>
+            ${unseen ? `<span class="chip chip-gold">${unseen} neu</span>` : `<span class="muted">›</span>`}
+          </button>`;
+        }).join("")}
       </div>`;
   }
-  const s = state.players[m.player];
+  const i = m.player;
+  const s = state.players[i];
   if (!m.open) {
     return `
       <div class="handover">
         <p class="muted">Gib das Handy an</p>
         <p class="name-large">${escapeName(s.name)}</p>
         <p class="muted">Nur ${escapeName(s.name)} darf jetzt hinsehen.</p>
-        <button class="btn" onclick="state.peekRole.open = true; render()">Ich bin ${escapeName(s.name)}, Rolle zeigen</button>
+        <button class="btn" onclick="openMyRole()">Ich bin ${escapeName(s.name)}, zeigen</button>
       </div>`;
   }
-  const status = !s.revealed
-    ? `<span class="chip">noch nicht erraten</span>`
-    : s.abilityUsed
-      ? `<span class="chip">erraten</span><span class="chip">Fähigkeit benutzt</span>`
-      : `<span class="chip">erraten</span><span class="chip chip-forest">Fähigkeit bereit</span>`;
+  const notes = seatData(s).notes.map(n => `<p class="note">${escapeName(n)}</p>`).join("");
   return `
-    <p class="muted" style="text-align:center">Deine geheime Rolle, ${escapeName(s.name)}</p>
-    <div class="chips">${status}</div>
+    <div class="own-header"><span class="eyebrow">Nur für dich</span><h1>${escapeName(s.name)}</h1></div>
+    <div class="own-coins">
+      <span class="own-count">${s.coins}<span class="coin-icon" aria-hidden="true"></span></span>
+      <div class="chips">${statusChips(s)}</div>
+    </div>
+    ${notes}
+    <span class="label">Geheime Ereignisse</span>
+    ${secretEntries(i, m.fresh || [])}
+    <span class="label">Deine Rolle</span>
     ${roleCard(ROLES[s.role])}
-    ${qrSection(m.player)}
-    <button class="btn" onclick="state.peekRole = null; show('overview')">Karte verbergen und zurück</button>`;
+    ${qrSection(i)}
+    <button class="btn" onclick="closeMyRole()">Verbergen und zurückgeben</button>`;
 }
 
 function screenRoles() {
@@ -111,7 +163,7 @@ function screenRoles() {
   const playerCount = state.players.length;
   return `
     <div class="heading"><span class="eyebrow">${currentAdventure().title}</span><h2>Rollen</h2></div>
-    <button class="btn" onclick="startMyRole()">Meine Rolle heimlich ansehen</button>
+    <button class="btn" onclick="startMyRole()">Geheim nachsehen</button>
     <p class="muted">Diese ${maxPlayers()} Rollen gibt es in diesem Abenteuer. ${playerCount < maxPlayers()
       ? `Ihr seid ${playerCount}, also sind nicht alle im Spiel.`
       : "Jede Rolle ist vergeben."} Fähigkeiten und Aufgaben bleiben geheim.</p>
@@ -136,11 +188,7 @@ function screenCoins() {
         <span class="count">${s.coins}</span>
         <button aria-label="Eine Münze mehr für ${escapeName(s.name)}" onclick="changeCoins(${i}, 1)">+</button>
       </div>
-      <div class="ability-status">
-        ${!s.revealed ? `<span class="chip">noch nicht erraten</span>`
-          : s.abilityUsed ? `<span class="chip">erraten</span><span class="chip">Fähigkeit benutzt</span>`
-          : `<span class="chip">erraten</span><span class="chip chip-forest">Fähigkeit bereit</span>`}
-      </div>
+      <div class="ability-status">${statusChips(s)}</div>
     </div>`).join("");
 
   const corrections = state.players.map((s, i) => `

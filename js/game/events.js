@@ -47,7 +47,7 @@ function drawEvent(automatic, fixedIndex) {
     index = state.eventDeck.pop();
   }
 
-  state.timerEnd = null;
+  resetTimer();
   if (EVENTS[index].isPrivate) { privateEvent(index, automatic); return; }
   // a new card ends everything that lasted "until the next event"
   state.seersNight = false;
@@ -67,7 +67,7 @@ function drawEvent(automatic, fixedIndex) {
   show("event");
 }
 
-// A private card goes to one player (preferably one with few so far) and is shown on their own phone.
+// A private card goes to one player (preferably one with few so far) and read under "Geheim nachsehen" or on their own phone.
 function privateEvent(index, automatic) {
   const card = EVENTS[index];
   const counts = state.players.map(s => (s.secrets || []).length);
@@ -86,7 +86,7 @@ function privateEvent(index, automatic) {
   };
   if (entry.kind === "instant" && entry.coins) addCoins([player], entry.coins);
   s.secrets = (s.secrets || []).concat(entry);
-  state.event = { index, automatic: Boolean(automatic), isPrivate: true, player, entryId: entry.id, shown: false, done: {}, snapshot: takeSnapshot() };
+  state.event = { index, automatic: Boolean(automatic), isPrivate: true, player, entryId: entry.id, done: {}, snapshot: takeSnapshot() };
   show("event");
 }
 
@@ -107,11 +107,7 @@ function openTasks() {
 function screenPrivateEvent() {
   const e = state.event;
   const i = e.player;
-  const p = (state.players[i].secrets || []).find(x => x.id === e.entryId) || {};
   setTimeout(showConnection, 0);
-  const consequence = p.kind === "task"
-    ? `Schafft ${playerName(i)} die Aufgabe, gibt es ${signed(p.coins)} Münzen. Bestätigt wird über den Geldbeutel.`
-    : p.coins ? `${playerName(i)} ${p.coins > 0 ? "erhält" : "verliert"} dabei ${Math.abs(p.coins)} ${Math.abs(p.coins) === 1 ? "Münze" : "Münzen"}. Schon gebucht.` : "";
   return `
     ${e.automatic ? `<p class="menu-kicker" style="margin:0">Die Zeit ist um! Ein Ereignis tritt ein …</p>` : ""}
     <article class="card drawn-card">
@@ -119,35 +115,29 @@ function screenPrivateEvent() {
         <span class="label">Geheimes Ereignis</span>
         <div class="card-name">für ${playerName(i)}</div>
       </div>
-      ${e.shown ? `
-        <span class="label">${p.title || ""}</span>
-        <p class="narrative">${p.text || ""}</p>
-        ${consequence ? `<p class="muted">${consequence}</p>` : ""}` : `
-        <p class="narrative">${playerName(i)}, schau auf dein Handy. Nur du erfährst, was geschieht.</p>`}
+      <p class="narrative">Nur ${playerName(i)} erfährt, was geschieht. Alle anderen wissen nur: Da ist etwas im Gange.</p>
     </article>
-    <p class="note" id="connection-note">Prüfe, ob das Handy von ${playerName(i)} verbunden ist …</p>
-    <button class="btn" onclick="show('overview')">Weiter</button>
-    ${e.shown ? `<button class="btn-quiet" onclick="state.event.shown = false; render()">Karte wieder verdecken</button>`
-      : `<button class="btn-quiet" onclick="state.event.shown = true; render()">Ohne eigenes Handy: Handy an ${playerName(i)} geben, Karte zeigen</button>`}
+    <p class="note" id="connection-note" hidden></p>
+    <button class="btn" onclick="startMyRole(${i})">${playerName(i)} sieht jetzt nach</button>
+    <button class="btn-quiet" onclick="show('overview')">Später nachsehen</button>
   `;
 }
 
+// Only a connected player phone is worth a note; without one the card waits under "Geheim nachsehen".
 async function showConnection() {
   const field = document.getElementById("connection-note");
   const e = state.event;
-  if (!field || !e || !e.isPrivate) return;
+  if (!field || !e || !e.isPrivate || !PROJECT_URL || !state.session) return;
   const s = state.players[e.player];
-  if (!PROJECT_URL || !state.session) { field.textContent = `Keine Verbindung zu Supabase. Zeig ${s.name} die Karte hier auf diesem Handy.`; return; }
   try {
     const list = await rpc("seat_status", { p_session: state.session.id, p_secret: state.session.secret });
     const row = (list || []).find(z => z.access_code === s.accessCode);
     const fresh = row && row.seen_at && Date.now() - new Date(row.seen_at).getTime() < 2 * 60000;
-    field.textContent = fresh
-      ? `Das Handy von ${s.name} ist verbunden. Die Karte erscheint dort in wenigen Sekunden.`
-      : `Das Handy von ${s.name} ist gerade nicht verbunden. Die Karte wartet dort, bis es die Seite öffnet. Oder zeig sie hier.`;
-  } catch (err) {
-    field.textContent = `Gerade keine Verbindung. Die Karte kommt an, sobald wieder Netz da ist. Oder zeig sie ${s.name} hier.`;
-  }
+    if (fresh) {
+      field.textContent = `Das Handy von ${s.name} ist verbunden. Die Karte erscheint dort in wenigen Sekunden.`;
+      field.hidden = false;
+    }
+  } catch (err) {}
 }
 
 function eventAction(gi, bi) {
