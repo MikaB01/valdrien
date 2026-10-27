@@ -51,6 +51,17 @@ function slideTime(key, input) {
   document.getElementById("time-value").textContent = timeLabel();
 }
 
+function mixLabel() {
+  const minigames = Math.round(100 * (settings.minigameShare ?? RULES.minigameShareDefault));
+  return `${100 - minigames} % Ereignisse · ${minigames} % Minispiele`;
+}
+
+function slideMix(input) {
+  settings.minigameShare = 1 - Number(input.value) / 100;
+  document.getElementById("mix-range").style.setProperty("--to", input.value / 100);
+  document.getElementById("mix-value").textContent = mixLabel();
+}
+
 function slideVolume(input) {
   setMusicVolume(input.value);
   document.getElementById("volume-range").style.setProperty("--to", input.value / 100);
@@ -83,6 +94,7 @@ function screenSettings() {
   const [lo, hi] = randomRange();
   const range = RULES.eventMinuteRange;
   const volume = Math.round(100 * (settings.musicVolume ?? 0.5));
+  const eventShare = Math.round(100 * (1 - (settings.minigameShare ?? RULES.minigameShareDefault)));
   const segment = (pressed, action, text) => `<button aria-pressed="${pressed}" onclick="${action}">${text}</button>`;
   const slider = (key, value, label) => `<input type="range" min="${range[0]}" max="${range[1]}" step="1" value="${value}" aria-label="${label}"
     oninput="slideTime('${key}', this)" onchange="saveSettings()">`;
@@ -116,6 +128,16 @@ function screenSettings() {
             : slider("minutes", minutes(), "Minuten zwischen zwei Ereignissen")}
         </div>
         <div class="range-scale"><span>${range[0]} Min.</span><span>${range[1]} Min.</span></div>
+      </section>
+      <section>
+        ${sectionHead("mix", "Ereignisse und Minispiele")}
+        ${hint("mix", "Ist die Zeit um, zieht die App zufällig eine Ereigniskarte oder ein Minispiel. Unabhängig davon lösen manche Ereigniskarten selbst ein Minispiel mit besonderem Dreh aus.")}
+        <p class="slider-value" id="mix-value">${mixLabel()}</p>
+        <div class="range" id="mix-range" style="--from:0; --to:${eventShare / 100}">
+          <input type="range" min="0" max="100" step="10" value="${eventShare}" aria-label="Anteil der Ereigniskarten in Prozent"
+                 oninput="slideMix(this)" onchange="saveSettings()">
+        </div>
+        <div class="range-scale"><span>Nur Minispiele</span><span>Nur Ereignisse</span></div>
       </section>
       <section>
         ${sectionHead("clock", "Uhr auf der Hauptseite")}
@@ -152,6 +174,14 @@ function screenSettings() {
             <input type="range" min="0" max="100" step="5" value="${volume}" aria-label="Lautstärke der Musik"
                    oninput="slideVolume(this)" onchange="saveSettings()">
           </div>` : ""}
+      </section>
+      <section>
+        ${sectionHead("sound", "Signalton")}
+        ${hint("sound", "Ist die Zeit um, erklingt kurz ein passender Ton, sobald die neue Karte erscheint: eine Harfe im Wald, Laute und Glöckchen in der Taverne.")}
+        <div class="segmented" role="group" aria-label="Signalton">
+          ${segment(settings.sound !== false, "setSetting('sound', true)", "An")}
+          ${segment(settings.sound === false, "setSetting('sound', false)", "Aus")}
+        </div>
       </section>
     </div>
   `;

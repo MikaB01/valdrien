@@ -1,10 +1,11 @@
 const REFERENCE_SCREENS = ["rules", "settings", "quickGuide", "coins"];
 
-function openReference(target) {
+// from: where the back button leads, when a reference screen links to another one (rules -> quick guide)
+function openReference(target, from) {
   state.backTo = state.backTo || {};
   const here = state.screen;
   if (here !== target) {
-    state.backTo[target] = REFERENCE_SCREENS.includes(here) ? (state.backTo[here] || "start") : here;
+    state.backTo[target] = from || (REFERENCE_SCREENS.includes(here) ? (state.backTo[here] || "start") : here);
   }
   state.cardVisible = false;
   if (state.peekRole) state.peekRole.open = false;
@@ -43,6 +44,8 @@ function backAction() {
     }
     case "event": return eventPending() ? null : go("overview");
     case "minigame": return state.minigame && state.minigame.fromEvent ? go("event") : go("overview");
+    case "buyCard": return state.buyCard && state.buyCard.player !== null
+      ? () => { state.buyCard.player = null; render(); } : go("overview");
     case "tasks": return resumeAdventure;
     case "end": return go("tasks");
   }
@@ -121,6 +124,7 @@ function purseSheet() {
 function show(screen) {
   state.screen = screen;
   confirmFinish = false;
+  confirmRedraw = false;
   sheet = null;
   if (screen === "overview" && state.running && !state.timerEnd) startRound();
   save();

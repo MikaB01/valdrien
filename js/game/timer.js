@@ -110,7 +110,8 @@ function tick() {
     const interruptible = ["overview", "coins", "rules", "quickGuide", "roles", "settings"].includes(state.screen);
     if (interruptible && !sheet) {
       try { if (navigator.vibrate) navigator.vibrate([300, 150, 300]); } catch (e) {}
-      drawEvent(true);
+      drawTimedCard();
+      playChime();
     }
   }
 }

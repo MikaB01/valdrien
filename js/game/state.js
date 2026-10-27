@@ -7,7 +7,9 @@ let settings = {
   speech: true,
   music: true,
   musicVolume: 0.5,
-  theme: "auto" // "auto" follows the phone, "light" or "dark" forces it
+  theme: "auto", // "auto" follows the phone, "light" or "dark" forces it
+  minigameShare: RULES.minigameShareDefault,
+  sound: true // short reward sound when the time is up
 };
 try { Object.assign(settings, JSON.parse(localStorage.getItem("valdrien-settings") || "{}")); } catch (e) {}
 function clampMinutes(m) { return Math.min(RULES.eventMinuteRange[1], Math.max(RULES.eventMinuteRange[0], Math.round(m))); }
@@ -34,6 +36,7 @@ function setSetting(key, value) {
 }
 
 let confirmFinish = false;
+let confirmRedraw = false;
 let correctionsOpen = false;
 let sheet = null;
 

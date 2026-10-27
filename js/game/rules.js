@@ -9,10 +9,12 @@ const RULES = {
   startingCoinsFallback: 4, // if a role has no starting coins set
 
   guessCost: 1,
+  privateCardCost: 2, // a player buys a secret event card on the game master phone
   hitReward: 3,
   hitRewardSeers: 5, // during "Die Nacht der Seher"
 
   eventMinutesDefault: 15,
   eventMinuteRange: [1, 30], // slider range in the settings
-  randomMinutesDefault: [5, 15] // random timer mode: window in minutes
+  randomMinutesDefault: [5, 15], // random timer mode: window in minutes
+  minigameShareDefault: 0.3 // when the time is up: share of minigames, the rest are event cards
 };

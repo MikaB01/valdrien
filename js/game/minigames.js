@@ -1,4 +1,27 @@
 function screenMinigame() {
+  return minigameBody() + redrawBlock();
+}
+
+function redrawBlock() {
+  const m = state.minigame;
+  if (!m || m.done || !MINIGAMES[m.index]) return "";
+  return confirmRedraw ? `
+    <div class="confirm" role="alertdialog" aria-labelledby="redraw-title">
+      <strong id="redraw-title">Wirklich ein anderes Minispiel ziehen?</strong>
+      <p class="muted">Das aktuelle Minispiel wird verworfen.</p>
+      <button class="btn" onclick="redrawMinigame()">Ja, neu ziehen</button>
+      <button class="link-button" onclick="confirmRedraw = false; render()">Abbrechen</button>
+    </div>` : `<button class="link-button" onclick="confirmRedraw = true; render()">Anderes Minispiel ziehen</button>`;
+}
+
+function redrawMinigame() {
+  const m = state.minigame;
+  const r = m.request || {};
+  confirmRedraw = false;
+  drawMinigame(r.category || null, m.fromEvent, r.player === null || r.player === undefined ? undefined : r.player, true);
+}
+
+function minigameBody() {
   const m = state.minigame;
   const mg = m && MINIGAMES[m.index];
   if (!mg) return screenOverview();
@@ -12,7 +35,8 @@ function screenMinigame() {
       : "";
 
   const header = loadedDice + `
-    <p class="muted" style="text-align:center">${m.fromEvent ? "Ausgelöst durch die Ereigniskarte" : "Minispiel"}</p>
+    ${m.automatic ? `<p class="kicker">Die Zeit ist um! Ein Minispiel beginnt …</p>`
+      : `<p class="muted" style="text-align:center">${m.fromEvent ? "Ausgelöst durch die Ereigniskarte" : "Minispiel"}</p>`}
     <article class="card drawn-card speakable">
       ${speakButton()}
       <div class="title">
@@ -53,12 +77,20 @@ function screenMinigame() {
     </div>`;
 }
 
-// player: set when an ability makes this player the challenger or solo player
-function drawMinigame(category, fromEvent, player) {
+// player: set when an ability makes this player the challenger or solo player.
+// An open minigame is shown again instead of drawing a new one; again = true draws anew (confirmed redraw).
+function drawMinigame(category, fromEvent, player, again) {
+  const open = state.minigame;
+  const resume = !again && open && (fromEvent
+    ? open.fromEvent && state.event && state.event.minigameIndex === open.index
+    : !open.done && !open.fromEvent && !open.byAbility && !category && player === undefined);
+  if (resume) { show("minigame"); return; }
   let options = activeIndices(MINIGAMES).filter(i => !category || MINIGAMES[i].category === category);
   if (options.length > 1 && state.minigame) options = options.filter(i => i !== state.minigame.index);
   const index = options[Math.floor(Math.random() * options.length)];
   startMinigame(index, fromEvent, player);
+  state.minigame.request = { category: category || null, player: player === undefined ? null : player };
+  save();
 }
 
 function startMinigame(index, fromEvent, player) {
@@ -165,6 +197,7 @@ function scoreMinigame(k) {
   const before = state.players.map(s => s.coins);
   result.apply();
   minigameFinished(result.winners || [], before, minigameParticipants());
+  state.minigame.done = true;
   show("overview");
 }
 

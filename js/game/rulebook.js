@@ -6,7 +6,7 @@ function screenQuickGuide() {
       <li><span><strong>Du hast ein Geheimnis.</strong>Jeder bekommt heimlich eine Rolle. Spiel sie durch dein Verhalten, aber nicht zu deutlich.</span></li>
       <li><span><strong>Rate, wer die anderen sind.</strong>Ein Tipp kostet ${coinsText(RULES.guessCost)}. Liegst du richtig, bekommst du ${coinsText(RULES.hitReward)}.</span></li>
       <li><span><strong>Erraten werden hat zwei Seiten.</strong>Deine Tarnung ist weg, dafür wird deine besondere Fähigkeit frei. Du darfst sie einmal einsetzen.</span></li>
-      <li><span><strong>Unterwegs passiert etwas.</strong>${intervalText()} deckt die App ein Ereignis auf. Ereignisse und Minispiele bringen oder kosten Münzen.</span></li>
+      <li><span><strong>Unterwegs passiert etwas.</strong>${intervalText()} deckt die App ein Ereignis oder ein Minispiel auf. Ereignisse und Minispiele bringen oder kosten Münzen.</span></li>
       <li><span><strong>Am Ende wird gezählt.</strong>Deine Münzen plus der Bonus für deine geheime Aufgabe. Wer die meisten hat, gewinnt.</span></li>
     </ol>
     <p class="note">Die App rechnet alle Münzen mit. Ihr tippt nur an, was passiert ist.</p>
@@ -19,6 +19,13 @@ function screenRules() {
   return `<div class="speakable stack">
     ${speakButton()}
     <h2>Regelwerk</h2>
+    <button class="tile tile-wide tile-secret" onclick="openReference('quickGuide', 'rules')">
+      ${icon("lightning")}
+      <span class="tile-body">
+        <span class="tile-title">Kurzregeln</span>
+        <span class="tile-text">Das Spiel in einer Minute erklärt</span>
+      </span>
+    </button>
     <div class="rules">
       <section>
         <h3>Ziel des Spiels</h3>
@@ -42,8 +49,8 @@ function screenRules() {
           <li><strong>Rollen erraten:</strong> Beobachte die anderen und versuche, ihre Rollen zu erraten. Du darfst jederzeit und so oft du willst raten. Jeder Tipp kostet ${coinsText(RULES.guessCost)}, ${stakeText("wer keine Münze hat", "wer nicht genug Münzen hat")}, kann nicht raten. Manche Ereigniskarten ändern das für eine Weile. Eine Rolle, die schon erraten wurde, kann nicht noch einmal erraten werden.</li>
           <li><strong>Treffer oder daneben:</strong> Liegst du richtig, bekommst du ${coinsText(RULES.hitReward)}, und die Fähigkeit des Erratenen wird freigeschaltet. Liegst du falsch, ${stakeText("ist die gesetzte Münze", "sind die gesetzten Münzen")} verloren.</li>
           <li><strong>Fähigkeiten:</strong> Jede Fähigkeit darf nur einmal pro Partie eingesetzt werden. Ihr setzt sie über »Besondere Fähigkeit einsetzen« auf der Spielübersicht ein, die App erledigt den Rest.</li>
-          <li><strong>Ereignisse und Minispiele:</strong> Unerwartete Begegnungen und kleine Herausforderungen bringen Münzen. ${intervalText()} deckt die App automatisch eine Ereigniskarte auf. Die Uhr lässt sich auf der Hauptseite jederzeit anhalten. Manche Fähigkeiten lösen zusätzlich Ereignisse aus. Unter jeder Karte verteilt ihr die Münzen direkt per Knopfdruck. Das gilt auch für Minispiele.</li>
-          <li><strong>Geheime Ereignisse:</strong> Manche Karten gehen nur an einen einzelnen Spieler. Er liest sie heimlich auf dem Spielleiter-Handy unter „Geheim nachsehen“ oder, wenn er mag, auf seinem eigenen Handy (QR-Code, freiwillig). Alle anderen erfahren nur, dass etwas geschehen ist. Ist es eine geheime Aufgabe, sagt er dem Spielleiter Bescheid, wenn er sie geschafft hat. Der bestätigt das im Geldbeutel.</li>
+          <li><strong>Ereignisse und Minispiele:</strong> Unerwartete Begegnungen und kleine Herausforderungen bringen Münzen. ${intervalText()} deckt die App automatisch eine Ereigniskarte oder ein Minispiel auf (das Verhältnis lässt sich in den Einstellungen festlegen). Die Uhr lässt sich auf der Hauptseite jederzeit anhalten. Manche Fähigkeiten lösen zusätzlich Ereignisse aus. Unter jeder Karte verteilt ihr die Münzen direkt per Knopfdruck. Das gilt auch für Minispiele.</li>
+          <li><strong>Geheime Ereignisse:</strong> Manche Karten gehen nur an einen einzelnen Spieler. Er liest sie heimlich auf dem Spielleiter-Handy unter „Geheim nachsehen“ oder, wenn er mag, auf seinem eigenen Handy (QR-Code, freiwillig). Alle anderen erfahren nur, dass etwas geschehen ist. Ist es eine geheime Aufgabe, sagt er dem Spielleiter Bescheid, wenn er sie geschafft hat. Der bestätigt das im Geldbeutel. Wer mag, kauft sich auf der Hauptseite für ${coinsText(RULES.privateCardCost)} eine geheime Karte.</li>
           <li><strong>Gleichstand bei Ereignissen:</strong> Betrifft eine Karte den Spieler mit den meisten oder den wenigsten Münzen, sind bei Gleichstand alle Gleichplatzierten betroffen.</li>
           <li><strong>Wer spielt beim Minispiel mit?</strong> Ohne Ereigniskarte gilt: Im Duell fordert der Spieler mit den wenigsten Münzen jemanden heraus. Bei Einer gegen alle ist der Spieler mit den meisten Münzen der Einzelne, bei 1 gegen 2 der Riese oder Rausschmeißer, und die zwei mit den wenigsten Münzen sind seine Gegner. Teams lost die App aus.</li>
           <li><strong>Spielbank:</strong> Münzen für Fähigkeiten und Belohnungen kommen aus einer gemeinsamen Bank.</li>

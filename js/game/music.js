@@ -34,6 +34,16 @@ function audioGraph() {
   comp.connect(music.duck);
   music.duck.connect(music.out);
   music.out.connect(ctx.destination);
+  music.sfx = ctx.createGain();
+  music.sfx.gain.value = 0.9;
+  const sfxWet = ctx.createGain();
+  sfxWet.gain.value = 0.3;
+  const sfxReverb = ctx.createConvolver();
+  sfxReverb.buffer = reverb.buffer;
+  music.sfx.connect(ctx.destination);
+  music.sfx.connect(sfxReverb);
+  sfxReverb.connect(sfxWet);
+  sfxWet.connect(ctx.destination);
   music.noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
   const data = music.noise.getChannelData(0);
   for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
@@ -72,7 +82,7 @@ function stopMusic() {
   const ctx = music.ctx;
   music.out.gain.cancelScheduledValues(ctx.currentTime);
   music.out.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.4);
-  music.stopTimer = setTimeout(() => { if (!music.playing) ctx.suspend().catch(() => {}); }, 2500);
+  music.stopTimer = setTimeout(() => { if (!music.playing && !soundOn()) ctx.suspend().catch(() => {}); }, 2500);
 }
 
 function setMusicVolume(value) {
@@ -87,10 +97,37 @@ function duckMusic(on) {
 document.addEventListener("visibilitychange", () => {
   if (!music.ctx) return;
   if (document.hidden) music.ctx.suspend().catch(() => {});
-  else if (music.playing) music.ctx.resume().catch(() => {});
+  else if (music.playing || soundOn()) music.ctx.resume().catch(() => {});
 });
 // Browsers start audio only after a tap; this covers a reload in the middle of a running game.
-document.addEventListener("pointerdown", () => { if (musicWanted()) startMusic(); }, { passive: true });
+document.addEventListener("pointerdown", () => {
+  if (musicWanted()) startMusic();
+  else if (soundOn() && state.running) unlockAudio();
+}, { passive: true });
+
+function soundOn() { return settings.sound !== false; }
+
+function unlockAudio() {
+  const ctx = audioGraph();
+  if (ctx && ctx.state === "suspended") ctx.resume().catch(() => {});
+}
+
+// Short reward sound (about 1.5 s) when the time is up and a new card appears.
+function playChime() {
+  if (!soundOn()) return;
+  const ctx = audioGraph();
+  if (!ctx) return;
+  if (ctx.state === "suspended") ctx.resume().catch(() => {});
+  const t = ctx.currentTime + 0.05, out = music.sfx;
+  if (state.adventure === "tavern") {
+    [62, 66, 69, 74].forEach((m, k) => tone(t + k * 0.035, m, 0.9, { type: "sawtooth", gain: 0.05, attack: 0.004, filter: 3200, out }));
+    [86, 93].forEach((m, k) => tone(t + 0.3 + k * 0.14, m, 1.1, { gain: 0.09, attack: 0.004, out }));
+    noiseHit(t + 0.3, { gain: 0.05, length: 0.06, filter: 5000, out });
+  } else {
+    [74, 78, 81, 86, 90].forEach((m, k) => tone(t + k * 0.07, m, 1.2, { type: "triangle", gain: 0.08, attack: 0.004, out }));
+    [93, 98].forEach((m, k) => tone(t + 0.42 + k * 0.1, m, 1.0, { gain: 0.05, attack: 0.01, out }));
+  }
+}
 
 function scheduleMusic() {
   const ctx = music.ctx;
@@ -114,7 +151,7 @@ function scheduleMusic() {
 const midiHz = m => 440 * Math.pow(2, (m - 69) / 12);
 const pick = list => list[Math.floor(Math.random() * list.length)];
 
-function tone(t, midi, length, { type = "sine", gain = 0.1, attack = 0.01, filter = 0, vibrato = 0, detune = 0 } = {}) {
+function tone(t, midi, length, { type = "sine", gain = 0.1, attack = 0.01, filter = 0, vibrato = 0, detune = 0, out = null } = {}) {
   const ctx = music.ctx;
   const osc = ctx.createOscillator();
   osc.type = type;
@@ -134,7 +171,7 @@ function tone(t, midi, length, { type = "sine", gain = 0.1, attack = 0.01, filte
     node = f;
   }
   node.connect(g);
-  g.connect(music.bus);
+  g.connect(out || music.bus);
   if (vibrato) {
     const lfo = ctx.createOscillator();
     const depth = ctx.createGain();
@@ -149,7 +186,7 @@ function tone(t, midi, length, { type = "sine", gain = 0.1, attack = 0.01, filte
   osc.stop(t + attack + length + 0.1);
 }
 
-function noiseHit(t, { gain = 0.05, length = 0.05, filter = 3000, type = "highpass" } = {}) {
+function noiseHit(t, { gain = 0.05, length = 0.05, filter = 3000, type = "highpass", out = null } = {}) {
   const ctx = music.ctx;
   const src = ctx.createBufferSource();
   src.buffer = music.noise;
@@ -161,7 +198,7 @@ function noiseHit(t, { gain = 0.05, length = 0.05, filter = 3000, type = "highpa
   g.gain.exponentialRampToValueAtTime(0.0001, t + length);
   src.connect(f);
   f.connect(g);
-  g.connect(music.bus);
+  g.connect(out || music.bus);
   src.start(t, Math.random() * 0.5);
   src.stop(t + length + 0.05);
 }

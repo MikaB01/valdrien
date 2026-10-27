@@ -39,12 +39,15 @@ function screenOverview() {
         <span class="tile-title">Fähigkeit</span>
         <span class="tile-text">${ready ? `${ready} ${ready === 1 ? "Person kann" : "Personen können"} jetzt` : "Frei, sobald eine Rolle erraten ist"}</span>
       </button>
-      <button class="tile tile-wide tile-secret" onclick="startMyRole()">
+      <button class="tile tile-compact" onclick="startBuyCard()">
+        ${icon("event")}
+        <span class="tile-title">Geheimkarte</span>
+        <span class="tile-text">Für ${coinsText(RULES.privateCardCost)} kaufen</span>
+      </button>
+      <button class="tile tile-compact tile-secret" onclick="startMyRole()">
         ${icon("secret")}
-        <span class="tile-body">
-          <span class="tile-title">Geheim nachsehen${unseenCount() ? ` <span class="chip chip-gold">${unseenCount()} neu</span>` : ""}</span>
-          <span class="tile-text">Eigene Rolle, Münzen und geheime Ereignisse</span>
-        </span>
+        <span class="tile-title">Nachsehen${unseenCount() ? ` <span class="chip chip-gold">${unseenCount()} neu</span>` : ""}</span>
+        <span class="tile-text">Rolle, Münzen, Geheimes</span>
       </button>
     </div>
   `;

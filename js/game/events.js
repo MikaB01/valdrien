@@ -5,11 +5,15 @@ function screenEvent() {
   if (e.isPrivate) return screenPrivateEvent();
 
   const effect = eventEffect();
+  // "Wer hat gewonnen?" only makes sense once the minigame has been drawn
+  const waiting = e.minigameIndex === null && (effect.groups || []).some(g => g.buttons.some(k => k.minigame));
   const groups = (effect.groups || []).map((group, gi) => {
+    if (waiting && !group.buttons.some(k => k.minigame)) return "";
     const chosen = e.done[gi];
     const buttons = group.buttons.map((k, bi) => {
       if (k.minigame) {
-        return `<button class="action action-minigame" onclick="eventAction(${gi}, ${bi})">Minispiel ziehen: ${CATEGORY_NAMES[k.minigame]}</button>`;
+        const drawn = MINIGAMES[e.minigameIndex];
+        return `<button class="action action-minigame" onclick="eventAction(${gi}, ${bi})">${drawn ? `Minispiel ansehen: ${drawn.title}` : `Minispiel ziehen: ${CATEGORY_NAMES[k.minigame]}`}</button>`;
       }
       if (chosen === bi) {
         return `<button class="action chosen" disabled>✓ ${k.text}</button>`;
@@ -21,7 +25,7 @@ function screenEvent() {
 
   return `
     ${e.automatic
-      ? `<p class="menu-kicker" style="margin:0">Die Zeit ist um! Ein Ereignis tritt ein …</p>`
+      ? `<p class="kicker">Die Zeit ist um! Ein Ereignis tritt ein …</p>`
       : `<p class="muted" style="text-align:center">Ereigniskarte · noch ${state.eventDeck.length} im Stapel</p>`}
     <article class="card drawn-card speakable">
       ${speakButton()}
@@ -49,6 +53,7 @@ function drawEvent(automatic, fixedIndex) {
   }
 
   resetTimer();
+  if (state.minigame && state.minigame.fromEvent) state.minigame = null;
   if (EVENTS[index].isPrivate) { privateEvent(index, automatic); return; }
   // a new card ends everything that lasted "until the next event"
   state.seersNight = false;
@@ -70,11 +75,17 @@ function drawEvent(automatic, fixedIndex) {
 
 // A private card goes to one player (preferably one with few so far) and read under "Geheim nachsehen" or on their own phone.
 function privateEvent(index, automatic) {
-  const card = EVENTS[index];
   const counts = state.players.map(s => (s.secrets || []).length);
   const fewest = Math.min(...counts);
   const candidates = state.players.map((_, i) => i).filter(i => counts[i] === fewest);
   const player = candidates[Math.floor(Math.random() * candidates.length)];
+  const entry = givePrivateCard(index, player);
+  state.event = { index, automatic: Boolean(automatic), isPrivate: true, player, entryId: entry.id, done: {}, snapshot: takeSnapshot() };
+  show("event");
+}
+
+function givePrivateCard(index, player) {
+  const card = EVENTS[index];
   const s = state.players[player];
   const entry = {
     id: randomCode().slice(0, 8),
@@ -87,8 +98,74 @@ function privateEvent(index, automatic) {
   };
   if (entry.kind === "instant" && entry.coins) addCoins([player], entry.coins);
   s.secrets = (s.secrets || []).concat(entry);
-  state.event = { index, automatic: Boolean(automatic), isPrivate: true, player, entryId: entry.id, done: {}, snapshot: takeSnapshot() };
-  show("event");
+  return entry;
+}
+
+// When the time is up: an event card or, by the share set in the settings, a minigame.
+function drawTimedCard() {
+  const share = settings.minigameShare ?? RULES.minigameShareDefault;
+  if (activeIndices(MINIGAMES).length && Math.random() < share) {
+    resetTimer();
+    drawMinigame(null, false);
+    state.minigame.automatic = true;
+    save();
+    render();
+  } else {
+    drawEvent(true);
+  }
+}
+
+// A player buys a secret event card: coins go to the bank, the card goes to the secret view.
+function privateCards() { return activeIndices(EVENTS).filter(i => EVENTS[i].isPrivate); }
+
+function startBuyCard() {
+  state.buyCard = { player: null };
+  show("buyCard");
+}
+
+function screenBuyCard() {
+  const b = state.buyCard || { player: null };
+  const cost = RULES.privateCardCost;
+  const heading = `<div class="heading"><span class="eyebrow">Geheimkarte</span><h2>Wer kauft eine geheime Karte?</h2></div>`;
+  if (!privateCards().length) {
+    return `${heading}<p class="note">In diesem Abenteuer gibt es noch keine geheimen Ereigniskarten. Im CMS lassen sie sich mit der Sichtbarkeit „geheim“ anlegen.</p>`;
+  }
+  if (b.player === null || !state.players[b.player]) {
+    return `
+      ${heading}
+      <p class="muted">Eine geheime Ereigniskarte kostet ${coinsText(cost)}. Nur wer sie kauft, erfährt, was darauf steht.</p>
+      <div class="choices">
+        ${state.players.map((s, i) => `
+          <button class="choice" onclick="state.buyCard.player = ${i}; render()" ${s.coins < cost ? "disabled" : ""}>
+            <span>${escapeName(s.name)}</span>
+            <span class="muted">${s.coins < cost ? "zu wenige Münzen" : coinsText(s.coins)}</span>
+          </button>`).join("")}
+      </div>`;
+  }
+  const name = playerName(b.player);
+  return `
+    <div class="handover">
+      <div class="emblem">${icon("event")}</div>
+      <h2>${name} kauft eine geheime Karte</h2>
+      <p class="muted">${coinsText(cost)} gehen an die Spielbank. Danach bekommt ${name} das Handy und liest die Karte allein.</p>
+      <button class="btn" onclick="buyCard()">Ja, für ${coinsText(cost)} kaufen</button>
+      <button class="link-button" onclick="state.buyCard.player = null; render()">Doch nicht</button>
+    </div>`;
+}
+
+function buyCard() {
+  const i = state.buyCard && state.buyCard.player;
+  const s = state.players[i];
+  const cost = RULES.privateCardCost;
+  const cards = privateCards();
+  if (!s || !cards.length || s.coins < cost) return;
+  const had = new Set((s.secrets || []).map(p => p.title));
+  const unseen = cards.filter(k => !had.has(EVENTS[k].title));
+  const pool = unseen.length ? unseen : cards;
+  addCoins([i], -cost);
+  givePrivateCard(pool[Math.floor(Math.random() * pool.length)], i);
+  state.buyCard = null;
+  startMyRole(i);
 }
 
 function resolveTask(i, id, success) {
@@ -110,7 +187,7 @@ function screenPrivateEvent() {
   const i = e.player;
   setTimeout(showConnection, 0);
   return `
-    ${e.automatic ? `<p class="menu-kicker" style="margin:0">Die Zeit ist um! Ein Ereignis tritt ein …</p>` : ""}
+    ${e.automatic ? `<p class="kicker">Die Zeit ist um! Ein Ereignis tritt ein …</p>` : ""}
     <article class="card drawn-card">
       <div class="title">
         <span class="label">Geheimes Ereignis</span>
@@ -153,7 +230,10 @@ function eventAction(gi, bi) {
     const diff = s.coins - before[i];
     if (diff < 0) e.losses[i] = (e.losses[i] || 0) - diff;
   });
-  if (button.winners) minigameFinished(button.winners, before, button.participants);
+  if (button.winners) {
+    minigameFinished(button.winners, before, button.participants);
+    if (state.minigame && state.minigame.fromEvent) state.minigame.done = true;
+  }
   e.done[gi] = bi;
 
   if (button.stay) { save(); render(); return; }
@@ -189,5 +269,6 @@ function moveTopCardToBottom() {
 }
 
 Object.assign(SCREENS, {
-  event: screenEvent
+  event: screenEvent,
+  buyCard: screenBuyCard
 });

@@ -283,6 +283,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outl
   color: #f7eed8; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 14px rgba(0, 0, 0, 0.6); padding: 10px 12px;
   background: radial-gradient(ellipse at center, rgba(15, 10, 4, 0.5), transparent 72%);
 }
+.kicker { text-align: center; font-family: var(--font-title); font-size: 1.2rem; letter-spacing: 0.03em; color: var(--gold); padding-inline: 44px; }
+.link-button {
+  min-height: 44px; padding: 6px 12px; background: none; border: none; align-self: center;
+  color: var(--accent); font-weight: 700; text-decoration: underline; text-underline-offset: 3px;
+}
 .menu-actions { margin-top: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 6px; }
 .menu-actions .muted { color: #efe2c2; text-align: center; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); margin-top: -4px; }
 
@@ -293,7 +298,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outl
 
 /* Main screen tiles; on the overview they grow to fill the page */
 .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.tiles > .tile:not(.tile-wide) { min-height: 136px; }
+.tiles > .tile:not(.tile-wide):not(.tile-compact) { min-height: 128px; }
+.tile-compact { gap: 2px; padding: 10px 10px 12px; }
+.tile-compact svg { width: 30px; height: 30px; }
+.tile-compact .tile-title { font-size: 1.2rem; }
+.tile-compact .tile-text { font-size: 0.92rem; }
 .scene-banner {
   flex: 1; min-height: 110px; position: relative; overflow: hidden; border-radius: 12px;
   border: 1.5px solid var(--brass); box-shadow: 0 0 0 4px var(--paper), 0 0 0 5.5px var(--line), 0 6px 14px var(--shade);
