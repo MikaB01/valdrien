@@ -67,18 +67,43 @@ function renderFrame() {
   layer.innerHTML = sheet === "menu" ? menuSheet() : sheet === "purse" ? purseSheet() : "";
 }
 
-function openSheet(which) { sheet = which; confirmFinish = false; renderFrame(); }
+function openSheet(which) { sheet = sheet === which ? null : which; confirmFinish = false; renderFrame(); }
 function closeSheet() { sheet = null; confirmFinish = false; renderFrame(); }
 document.addEventListener("keydown", e => { if (e.key === "Escape" && sheet) closeSheet(); });
 
-const CLOSE_BUTTON = `<button class="round" aria-label="Schließen" onclick="closeSheet()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6 L18 18 M18 6 L6 18"/></svg></button>`;
+const SHEET_HANDLE = `<div class="sheet-handle" aria-hidden="true"></div>`;
+
+// Swipe a sheet down to close it (only when its content is scrolled to the top).
+(function sheetSwipe() {
+  const layer = document.getElementById("sheet");
+  if (!layer) return;
+  let startY = null, dy = 0, panel = null;
+  layer.addEventListener("touchstart", e => {
+    panel = layer.querySelector(".sheet-panel");
+    startY = panel && panel.scrollTop <= 0 ? e.touches[0].clientY : null;
+    dy = 0;
+  }, { passive: true });
+  layer.addEventListener("touchmove", e => {
+    if (startY === null) return;
+    dy = Math.max(0, e.touches[0].clientY - startY);
+    panel.style.transition = "none";
+    panel.style.transform = `translateY(${dy}px)`;
+  }, { passive: true });
+  layer.addEventListener("touchend", () => {
+    if (startY === null) return;
+    startY = null;
+    if (dy > 70) { closeSheet(); return; }
+    panel.style.transition = "transform .2s ease";
+    panel.style.transform = "";
+  });
+})();
 
 function menuSheet() {
   const entry = (iconSvg, text, action) => `<button class="menu-item" onclick="${action}">${iconSvg}<span>${text}</span></button>`;
   const inGame = state.running && state.players && state.players.length;
   return `
     <div class="sheet-panel" role="dialog" aria-modal="true" aria-label="Menü">
-      <div class="sheet-header"><h2>Menü</h2>${CLOSE_BUTTON}</div>
+      ${SHEET_HANDLE}<div class="sheet-header"><h2>Menü</h2></div>
       <div class="menu-list">
         ${entry(icon("rules"), "Regelwerk", "openReference('rules')")}
         ${entry(icon("lightning"), "In einer Minute erklärt", "openReference('quickGuide')")}
@@ -88,6 +113,8 @@ function menuSheet() {
         <span class="menu-divider">Dieses Abenteuer</span>
         <div class="menu-list">
           ${entry(icon("secret"), "Geheim nachsehen", "startMyRole()")}
+          ${entry(icon("minigame"), "Minispiel ziehen", "sheet = null; drawMinigame(null, false)")}
+          ${entry(icon("roles"), "Alle Rollen ansehen", "show('roles')")}
           ${entry(icon("event"), "Ereigniskarte jetzt ziehen", "sheet = null; drawEvent(false)")}
           ${confirmFinish ? "" : entry(icon("flag"), currentAdventure().finish, "confirmFinish = true; renderFrame()")}
         </div>
@@ -103,7 +130,7 @@ function menuSheet() {
 function purseSheet() {
   return `
     <div class="sheet-panel" role="dialog" aria-modal="true" aria-label="Münzen">
-      <div class="sheet-header"><h2>Münzen</h2>${CLOSE_BUTTON}</div>
+      ${SHEET_HANDLE}<div class="sheet-header"><h2>Münzen</h2></div>
       ${scoreBoard()}
       ${openTasks().length ? `
         <span class="label">Geheime Aufgaben</span>

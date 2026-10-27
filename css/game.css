@@ -495,7 +495,7 @@ body.own-page main { padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px
 }
 .sheet-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .sheet-header h2 { font-size: 1.6rem; }
-.sheet-header .round { width: 40px; height: 40px; }
+.sheet-handle { width: 44px; height: 5px; border-radius: 3px; background: var(--line); margin: -8px auto 0; flex-shrink: 0; }
 .sheet-header .round svg { width: 20px; height: 20px; }
 @media (prefers-reduced-motion: no-preference) {
   .sheet .sheet-panel { animation: slide-up .22s ease-out; }

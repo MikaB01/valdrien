@@ -38,16 +38,6 @@ function screenOverview() {
         <span class="tile-title">Fähigkeit</span>
         <span class="tile-text">${ready ? `${ready} ${ready === 1 ? "Person kann" : "Personen können"} jetzt` : "Frei, sobald eine Rolle erraten ist"}</span>
       </button>
-      <button class="tile" onclick="drawMinigame(null, false)">
-        ${icon("minigame")}
-        <span class="tile-title">Minispiel</span>
-        <span class="tile-text">Eine kurze Herausforderung</span>
-      </button>
-      <button class="tile" onclick="show('roles')">
-        ${icon("roles")}
-        <span class="tile-title">Rollen</span>
-        <span class="tile-text">Alle Rollen im Spiel</span>
-      </button>
       <button class="tile tile-wide tile-secret" onclick="startMyRole()">
         ${icon("secret")}
         <span class="tile-body">
