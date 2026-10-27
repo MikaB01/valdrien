@@ -37,7 +37,6 @@ function setSetting(key, value) {
 
 let confirmFinish = false;
 let confirmRedraw = false;
-let correctionsOpen = false;
 let sheet = null;
 
 // The whole game state; saved to localStorage after every change.

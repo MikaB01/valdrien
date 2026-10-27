@@ -44,7 +44,7 @@ function screenOverview() {
         <span class="tile-title">Geheimkarte</span>
         <span class="tile-text">Für ${coinsText(RULES.privateCardCost)} kaufen</span>
       </button>
-      <button class="tile tile-compact tile-secret" onclick="startMyRole()">
+      <button class="tile tile-compact" onclick="startMyRole()">
         ${icon("secret")}
         <span class="tile-title">Nachsehen${unseenCount() ? ` <span class="chip chip-gold">${unseenCount()} neu</span>` : ""}</span>
         <span class="tile-text">Rolle, Münzen, Geheimes</span>
@@ -183,27 +183,30 @@ function screenCoins() {
         <span class="count">${s.coins}</span>
         <button aria-label="Eine Münze mehr für ${escapeName(s.name)}" onclick="changeCoins(${i}, 1)">+</button>
       </div>
-      <div class="ability-status">${statusChips(s)}</div>
-    </div>`).join("");
-
-  const corrections = state.players.map((s, i) => `
-    <div class="correction-row">
-      <strong>${escapeName(s.name)}</strong>
-      <label><input type="checkbox" id="revealed-${i}" ${s.revealed ? "checked" : ""}
-             onchange="state.players[${i}].revealed = this.checked; save(); render()"> Rolle erraten</label>
-      <label><input type="checkbox" id="used-${i}" ${s.abilityUsed ? "checked" : ""}
-             onchange="state.players[${i}].abilityUsed = this.checked; save(); render()"> Fähigkeit benutzt</label>
+      <div class="status-toggles" role="group" aria-label="Status von ${escapeName(s.name)}">
+        ${statusToggle(i, "revealed", "Rolle erraten", s.revealed)}
+        ${statusToggle(i, "abilityUsed", "Fähigkeit benutzt", s.abilityUsed, !s.revealed && !s.abilityUsed)}
+      </div>
     </div>`).join("");
 
   return `
     <h2>Münzen von Hand ändern</h2>
-    <p class="muted">Die App bucht Münzen selbst. Hier korrigiert ihr, falls etwas nicht stimmt.</p>
+    <p class="muted">Die App bucht Münzen und Status selbst. Stimmt etwas nicht, korrigiert ihr es hier.</p>
     <div class="player-list">${list}</div>
-    <details class="corrections" ${correctionsOpen ? "open" : ""} ontoggle="correctionsOpen = this.open">
-      <summary>Status von Hand korrigieren</summary>
-      ${corrections}
-    </details>
   `;
+}
+
+function statusToggle(i, key, text, on, disabled) {
+  return `
+    <button class="status-toggle" aria-pressed="${on}" ${disabled ? "disabled" : ""} onclick="toggleStatus(${i}, '${key}')">
+      <span class="status-mark" aria-hidden="true"></span>${text}
+    </button>`;
+}
+
+function toggleStatus(i, key) {
+  state.players[i][key] = !state.players[i][key];
+  save();
+  render();
 }
 
 function changeCoins(i, delta) {
