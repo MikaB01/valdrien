@@ -39,6 +39,7 @@ img { max-width: 100%; }
     --ground: #17241c; --path: #4f4a35;
   }
 }
+:root[data-theme="light"] { color-scheme: light; }
 :root[data-theme="dark"] {
   --bg: #141c16; --card: #1d2920; --text: #ebe2c8; --text-muted: #a49c84;
   --forest: #6f9a6c; --forest-light: #8db58a; --gold: #d9ad4f; --line: #34453a;

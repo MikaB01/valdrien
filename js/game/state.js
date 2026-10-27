@@ -6,7 +6,8 @@ let settings = {
   showTimer: true,
   speech: true,
   music: true,
-  musicVolume: 0.5
+  musicVolume: 0.5,
+  theme: "auto" // "auto" follows the phone, "light" or "dark" forces it
 };
 try { Object.assign(settings, JSON.parse(localStorage.getItem("valdrien-settings") || "{}")); } catch (e) {}
 function clampMinutes(m) { return Math.min(RULES.eventMinuteRange[1], Math.max(RULES.eventMinuteRange[0], Math.round(m))); }
@@ -16,12 +17,19 @@ function randomRange() {
   const hi = clampMinutes(Number(settings.randomMax) || RULES.randomMinutesDefault[1]);
   return [Math.min(lo, hi), Math.max(lo, hi)];
 }
+function applyTheme() {
+  const root = document.documentElement;
+  if (settings.theme === "light" || settings.theme === "dark") root.dataset.theme = settings.theme;
+  else delete root.dataset.theme;
+}
+applyTheme();
 function saveSettings() {
   try { localStorage.setItem("valdrien-settings", JSON.stringify(settings)); } catch (e) {}
 }
 function setSetting(key, value) {
   settings[key] = value;
   saveSettings();
+  if (key === "theme") applyTheme();
   render();
 }
 

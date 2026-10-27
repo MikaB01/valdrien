@@ -65,9 +65,21 @@ function screenSettings() {
   const segment = (pressed, action, text) => `<button aria-pressed="${pressed}" onclick="${action}">${text}</button>`;
   const slider = (key, value, label) => `<input type="range" min="${range[0]}" max="${range[1]}" step="1" value="${value}" aria-label="${label}"
     oninput="slideTime('${key}', this)" onchange="saveSettings()">`;
+  const theme = settings.theme === "light" || settings.theme === "dark" ? settings.theme : "auto";
   return `
     <h2>Einstellungen</h2>
     <div class="rules">
+      <section>
+        <h3>Darstellung</h3>
+        <div class="segmented" role="group" aria-label="Darstellung">
+          ${segment(theme === "auto", "setSetting('theme', 'auto')", "Automatisch")}
+          ${segment(theme === "light", "setSetting('theme', 'light')", "Hell")}
+          ${segment(theme === "dark", "setSetting('theme', 'dark')", "Dunkel")}
+        </div>
+        <p class="hint">${theme === "auto"
+          ? "Valdrien folgt der Einstellung deines Handys und wird abends dunkel, wenn das Handy es auch wird."
+          : "Gilt nur auf diesem Handy, egal wie das Handy selbst eingestellt ist."}</p>
+      </section>
       <section>
         <h3>Zeit zwischen zwei Ereignissen</h3>
         <div class="segmented" role="group" aria-label="Art der Ereignis-Uhr">
