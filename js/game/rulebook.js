@@ -1,5 +1,6 @@
 function screenQuickGuide() {
-  return `
+  return `<div class="speakable stack">
+    ${speakButton()}
     <div class="heading"><span class="eyebrow">Kurzanleitung</span><h2>In einer Minute erklärt</h2></div>
     <ol class="steps">
       <li><span><strong>Du hast ein Geheimnis.</strong>Jeder bekommt heimlich eine Rolle. Spiel sie durch dein Verhalten, aber nicht zu deutlich.</span></li>
@@ -9,13 +10,14 @@ function screenQuickGuide() {
       <li><span><strong>Am Ende wird gezählt.</strong>Deine Münzen plus der Bonus für deine geheime Aufgabe. Wer die meisten hat, gewinnt.</span></li>
     </ol>
     <p class="note">Die App rechnet alle Münzen mit. Ihr tippt nur an, was passiert ist.</p>
-  `;
+  </div>`;
 }
 
 function openQuickGuide() { openReference("quickGuide"); }
 
 function screenRules() {
-  return `
+  return `<div class="speakable stack">
+    ${speakButton()}
     <h2>Regelwerk</h2>
     <div class="rules">
       <section>
@@ -79,7 +81,7 @@ function screenRules() {
         </ul>
       </section>
 
-      <section class="open-points">
+      <section class="open-points no-speak">
         <h3>Noch offen</h3>
         <ul>
           <li>Wie lange dauert eine Partie?</li>
@@ -87,7 +89,7 @@ function screenRules() {
         </ul>
       </section>
     </div>
-  `;
+  </div>`;
 }
 
 function openRules() {

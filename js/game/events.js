@@ -23,7 +23,8 @@ function screenEvent() {
     ${e.automatic
       ? `<p class="menu-kicker" style="margin:0">Die Zeit ist um! Ein Ereignis tritt ein …</p>`
       : `<p class="muted" style="text-align:center">Ereigniskarte · noch ${state.eventDeck.length} im Stapel</p>`}
-    <article class="card drawn-card">
+    <article class="card drawn-card speakable">
+      ${speakButton()}
       <div class="title">
         <span class="label">${card.category}</span>
         <div class="card-name">${card.title}</div>

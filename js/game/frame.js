@@ -71,39 +71,12 @@ function openSheet(which) { sheet = sheet === which ? null : which; confirmFinis
 function closeSheet() { sheet = null; confirmFinish = false; renderFrame(); }
 document.addEventListener("keydown", e => { if (e.key === "Escape" && sheet) closeSheet(); });
 
-const SHEET_HANDLE = `<div class="sheet-handle" aria-hidden="true"></div>`;
-
-// Swipe a sheet down to close it (only when its content is scrolled to the top).
-(function sheetSwipe() {
-  const layer = document.getElementById("sheet");
-  if (!layer) return;
-  let startY = null, dy = 0, panel = null;
-  layer.addEventListener("touchstart", e => {
-    panel = layer.querySelector(".sheet-panel");
-    startY = panel && panel.scrollTop <= 0 ? e.touches[0].clientY : null;
-    dy = 0;
-  }, { passive: true });
-  layer.addEventListener("touchmove", e => {
-    if (startY === null) return;
-    dy = Math.max(0, e.touches[0].clientY - startY);
-    panel.style.transition = "none";
-    panel.style.transform = `translateY(${dy}px)`;
-  }, { passive: true });
-  layer.addEventListener("touchend", () => {
-    if (startY === null) return;
-    startY = null;
-    if (dy > 70) { closeSheet(); return; }
-    panel.style.transition = "transform .2s ease";
-    panel.style.transform = "";
-  });
-})();
-
 function menuSheet() {
   const entry = (iconSvg, text, action) => `<button class="menu-item" onclick="${action}">${iconSvg}<span>${text}</span></button>`;
   const inGame = state.running && state.players && state.players.length;
   return `
     <div class="sheet-panel" role="dialog" aria-modal="true" aria-label="Menü">
-      ${SHEET_HANDLE}<div class="sheet-header"><h2>Menü</h2></div>
+      <div class="sheet-header"><h2>Menü</h2></div>
       <div class="menu-list">
         ${entry(icon("rules"), "Regelwerk", "openReference('rules')")}
         ${entry(icon("lightning"), "In einer Minute erklärt", "openReference('quickGuide')")}
@@ -130,7 +103,7 @@ function menuSheet() {
 function purseSheet() {
   return `
     <div class="sheet-panel" role="dialog" aria-modal="true" aria-label="Münzen">
-      ${SHEET_HANDLE}<div class="sheet-header"><h2>Münzen</h2></div>
+      <div class="sheet-header"><h2>Münzen</h2></div>
       ${scoreBoard()}
       ${openTasks().length ? `
         <span class="label">Geheime Aufgaben</span>
@@ -159,8 +132,10 @@ function show(screen) {
 const SCREENS = {};
 function render() {
   const fn = SCREENS[state.screen] || screenStart;
+  stopSpeaking();
   document.getElementById("app").innerHTML = fn();
   document.getElementById("backdrop").hidden = !(state.screen === "intro" && currentAdventure() && currentAdventure().id === "forest");
   if (state.screen === "names") validateNames();
   renderFrame();
+  updateMusic();
 }

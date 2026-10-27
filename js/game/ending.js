@@ -29,7 +29,7 @@ function screenEnd() {
   const winnerText = winner.join(" & ");
 
   return `
-    ${currentAdventure().epilogue(winnerText, winner.length > 1)}
+    <div class="speakable epilogue">${speakButton()}${currentAdventure().epilogue(winnerText, winner.length > 1)}</div>
     ${winner.length > 1 ? `<p class="muted" style="text-align:center">Gleichstand! Die Regel dafür legt ihr noch fest.</p>` : ""}
     <div class="ranking">
       ${result.map(e => `<div><span>${escapeName(e.name)}</span><strong>${e.total} Münzen</strong></div>`).join("")}

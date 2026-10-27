@@ -13,7 +13,8 @@ function screenMinigame() {
 
   const header = loadedDice + `
     <p class="muted" style="text-align:center">${m.fromEvent ? "Ausgelöst durch die Ereigniskarte" : "Minispiel"}</p>
-    <article class="card drawn-card">
+    <article class="card drawn-card speakable">
+      ${speakButton()}
       <div class="title">
         <span class="label">${CATEGORY_NAMES[mg.category]}</span>
         <div class="card-name">${mg.title}</div>

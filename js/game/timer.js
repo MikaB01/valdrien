@@ -10,6 +10,7 @@ function resetTimer() {
   state.timerEnd = null;
   state.timerPaused = null;
   state.timerDuration = null;
+  state.timerWindow = null;
 }
 
 function nextInterval() {
@@ -20,6 +21,7 @@ function nextInterval() {
 
 function startRound() {
   state.timerDuration = nextInterval();
+  state.timerWindow = settings.timerMode === "random" ? randomRange() : null;
   state.timerEnd = Date.now() + state.timerDuration;
   state.timerPaused = null;
 }
@@ -55,6 +57,19 @@ function intervalText() {
   return lo === hi ? `Alle ${lo} Minuten` : `Alle ${lo} bis ${hi} Minuten`;
 }
 
+// With a hidden random timer only the remaining window is shown, e.g. "in 3 bis 13 Minuten".
+function windowText() {
+  const w = state.timerWindow;
+  if (!w) return "Nächstes Ereignis kommt bald";
+  const elapsed = roundMs() - remainingMs();
+  const lo = Math.max(0, Math.ceil((w[0] * 60000 - elapsed) / 60000));
+  const hi = Math.max(0, Math.ceil((w[1] * 60000 - elapsed) / 60000));
+  if (hi <= 1) return "Nächstes Ereignis kommt gleich";
+  if (lo <= 0) return `Nächstes Ereignis kommt in höchstens ${hi} Minuten`;
+  if (lo === hi) return `Nächstes Ereignis kommt in ${hi} Minuten`;
+  return `Nächstes Ereignis kommt in ${lo} bis ${hi} Minuten`;
+}
+
 const PAUSE_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12M15 6v12"/></svg>`;
 const PLAY_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>`;
 
@@ -68,8 +83,10 @@ function timerBar() {
       <button class="timer-toggle" onclick="toggleTimer()" aria-label="${paused ? "Uhr weiterlaufen lassen" : "Uhr anhalten"}">${paused ? PLAY_ICON : PAUSE_ICON}</button>
       <div class="timer-body">
         <div class="timer-line">
-          <span class="timer-label">${paused ? "Uhr angehalten" : visible ? "Nächstes Ereignis" : "Nächstes Ereignis kommt"}</span>
-          ${visible ? `<span class="timer-time" id="remaining">${timeText(remainingMs())}</span>` : `<span class="timer-time timer-hidden">${paused ? "" : "bald …"}</span>`}
+          ${paused ? `<span class="timer-label">Uhr angehalten</span>` : visible
+            ? `<span class="timer-label">Nächstes Ereignis</span>`
+            : `<span class="timer-label timer-window" id="timer-window">${windowText()}</span>`}
+          ${visible ? `<span class="timer-time" id="remaining">${timeText(remainingMs())}</span>` : ""}
         </div>
         ${visible ? `<div class="progress"><div id="progress-fill" style="width:${percent}%"></div></div>` : ""}
       </div>
@@ -80,6 +97,8 @@ function tick() {
   if (!state.running || !state.timerEnd || timerPaused()) return;
   const remaining = remainingMs();
 
+  const windowField = document.getElementById("timer-window");
+  if (windowField) windowField.textContent = windowText();
   const display = document.getElementById("remaining");
   if (display) {
     display.textContent = timeText(remaining);

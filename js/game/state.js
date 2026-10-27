@@ -3,25 +3,25 @@ let settings = {
   timerMode: "fixed", // or "random": a new random interval after every event card
   randomMin: RULES.randomMinutesDefault[0],
   randomMax: RULES.randomMinutesDefault[1],
-  showTimer: true
+  showTimer: true,
+  speech: true,
+  music: true,
+  musicVolume: 0.5
 };
 try { Object.assign(settings, JSON.parse(localStorage.getItem("valdrien-settings") || "{}")); } catch (e) {}
-function minutes() { return settings.minutes || RULES.eventMinutesDefault; }
+function clampMinutes(m) { return Math.min(RULES.eventMinuteRange[1], Math.max(RULES.eventMinuteRange[0], Math.round(m))); }
+function minutes() { return clampMinutes(Number(settings.minutes) || RULES.eventMinutesDefault); }
 function randomRange() {
-  const lo = Math.max(RULES.randomMinutesLimit[0], Number(settings.randomMin) || RULES.randomMinutesDefault[0]);
-  const hi = Math.min(RULES.randomMinutesLimit[1], Number(settings.randomMax) || RULES.randomMinutesDefault[1]);
+  const lo = clampMinutes(Number(settings.randomMin) || RULES.randomMinutesDefault[0]);
+  const hi = clampMinutes(Number(settings.randomMax) || RULES.randomMinutesDefault[1]);
   return [Math.min(lo, hi), Math.max(lo, hi)];
 }
-function stepRandom(key, delta) {
-  const [lo, hi] = randomRange();
-  const [min, max] = RULES.randomMinutesLimit;
-  if (key === "randomMin") settings.randomMin = Math.min(hi, Math.max(min, lo + delta));
-  else settings.randomMax = Math.max(lo, Math.min(max, hi + delta));
-  setSetting(key, settings[key]);
+function saveSettings() {
+  try { localStorage.setItem("valdrien-settings", JSON.stringify(settings)); } catch (e) {}
 }
 function setSetting(key, value) {
   settings[key] = value;
-  try { localStorage.setItem("valdrien-settings", JSON.stringify(settings)); } catch (e) {}
+  saveSettings();
   render();
 }
 
@@ -32,7 +32,7 @@ let sheet = null;
 // The whole game state; saved to localStorage after every change.
 // players[]: { name, role (index into ROLES), coins, revealed, abilityUsed, taskDone, accessCode, secrets[] }
 // Further fields are added during play: adventure, running, timerEnd, eventDeck (top = last), event, minigame,
-// timerPaused, timerDuration, guess, ability, peekRole, seersNight, freeGuesses, winBonus, lastWinnings, lastParticipants, slots, session.
+// timerPaused, timerDuration, timerWindow, guess, ability, peekRole, seersNight, freeGuesses, winBonus, lastWinnings, lastParticipants, slots, session.
 let state = {
   screen: "start",
   names: ["Anna", "Ben", "Clara", "David"],

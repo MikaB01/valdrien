@@ -42,6 +42,8 @@ No build step: plain `<script>` files loaded in order, all top-level declaration
 | `minigames.js` | Drawing minigames, line-ups, scoring. |
 | `ending.js` | Secret tasks, final count, play again. |
 | `player-page.js` | QR links, syncing seats to Supabase, the player's own page. |
+| `speech.js` | Read-aloud buttons via the browser's Web Speech API (on-device voices, no service). |
+| `music.js` | Background music while the timer runs, generated live with the Web Audio API (no audio files). |
 | `main.js` | Startup. |
 
 ### Common changes
