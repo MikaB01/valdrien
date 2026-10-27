@@ -2,15 +2,22 @@ function screenStart() {
   const running = state.running && state.players && state.players.length;
   return `
     <div class="menu">
-      ${forestArt(7)}
-      <p class="menu-kicker">Unterwegs in</p>
-      <h1 class="menu-title">${WORLD.name}</h1>
+      <div class="title-sign">
+        <p class="menu-kicker">Unterwegs in</p>
+        <h1 class="menu-title">${WORLD.name}</h1>
+      </div>
       <p class="menu-motto">${WORLD.motto}</p>
-      ${running ? `
-        <button class="btn btn-large" onclick="show('overview')">Partie fortsetzen</button>
-        <p class="muted" style="text-align:center; margin-top:-10px">${currentAdventure().title} · ${state.players.length} ${currentAdventure().plural}</p>
-        <button class="btn-quiet" onclick="show('adventures')">Neues Spiel starten</button>` : `
-        <button class="btn btn-large" onclick="show('adventures')">Spiel starten</button>`}
+      <div class="menu-actions">
+        ${running ? `
+          <button class="btn btn-large" onclick="show('overview')">Partie fortsetzen</button>
+          <p class="muted">${currentAdventure().title} · ${state.players.length} ${currentAdventure().plural}</p>
+          <button class="btn-quiet" onclick="show('adventures')">Neues Spiel starten</button>` : `
+          <button class="btn btn-large" onclick="show('adventures')">Spiel starten</button>`}
+        <div class="btn-row">
+          <button class="btn-quiet" onclick="openReference('rules')">Spielregeln</button>
+          <button class="btn-quiet" onclick="openReference('settings')">Einstellungen</button>
+        </div>
+      </div>
     </div>
   `;
 }
@@ -37,7 +44,7 @@ function slideTime(key, input) {
     const [a, b] = randomRange();
     track.style.setProperty("--from", sliderFraction(a, range));
     track.style.setProperty("--to", sliderFraction(b, range));
-    document.getElementById("time-hint").textContent = randomHint();
+    document.getElementById("hint-time").textContent = randomHint();
   } else {
     track.style.setProperty("--to", sliderFraction(value, range));
   }
@@ -48,6 +55,20 @@ function slideVolume(input) {
   setMusicVolume(input.value);
   document.getElementById("volume-range").style.setProperty("--to", input.value / 100);
   document.getElementById("volume-value").textContent = input.value + " %";
+}
+
+// Settings explanations stay folded behind an (i) button; toggled in place without a render.
+const openHints = new Set();
+function sectionHead(id, title) {
+  return `<div class="section-head"><h3>${title}</h3><button class="info" aria-label="Erklärung: ${title}" aria-expanded="${openHints.has(id)}"
+    onclick="toggleHint('${id}', this)">i</button></div>`;
+}
+function hint(id, text) { return `<p class="hint" id="hint-${id}" ${openHints.has(id) ? "" : "hidden"}>${text}</p>`; }
+function toggleHint(id, button) {
+  const open = !openHints.has(id);
+  if (open) openHints.add(id); else openHints.delete(id);
+  document.getElementById("hint-" + id).hidden = !open;
+  button.setAttribute("aria-expanded", open);
 }
 
 function randomHint() {
@@ -70,18 +91,19 @@ function screenSettings() {
     <h2>Einstellungen</h2>
     <div class="rules">
       <section>
-        <h3>Darstellung</h3>
+        ${sectionHead("theme", "Darstellung")}
+        ${hint("theme", theme === "auto"
+          ? "Valdrien folgt der Einstellung deines Handys und wird abends dunkel, wenn das Handy es auch wird."
+          : "Gilt nur auf diesem Handy, egal wie das Handy selbst eingestellt ist.")}
         <div class="segmented" role="group" aria-label="Darstellung">
           ${segment(theme === "auto", "setSetting('theme', 'auto')", "Automatisch")}
           ${segment(theme === "light", "setSetting('theme', 'light')", "Hell")}
           ${segment(theme === "dark", "setSetting('theme', 'dark')", "Dunkel")}
         </div>
-        <p class="hint">${theme === "auto"
-          ? "Valdrien folgt der Einstellung deines Handys und wird abends dunkel, wenn das Handy es auch wird."
-          : "Gilt nur auf diesem Handy, egal wie das Handy selbst eingestellt ist."}</p>
       </section>
       <section>
-        <h3>Zeit zwischen zwei Ereignissen</h3>
+        ${sectionHead("time", "Zeit bis zum Ereignis")}
+        ${hint("time", random ? randomHint() : "Nach Ablauf der Zeit deckt die App automatisch eine Ereigniskarte auf. Beim Wandern passen 15 Minuten gut, am Tisch eher 10.")}
         <div class="segmented" role="group" aria-label="Art der Ereignis-Uhr">
           ${segment(!random, "setSetting('timerMode', 'fixed')", "Feste Zeit")}
           ${segment(random, "setSetting('timerMode', 'random')", "Zufällige Zeit")}
@@ -94,32 +116,32 @@ function screenSettings() {
             : slider("minutes", minutes(), "Minuten zwischen zwei Ereignissen")}
         </div>
         <div class="range-scale"><span>${range[0]} Min.</span><span>${range[1]} Min.</span></div>
-        <p class="hint" id="time-hint">${random ? randomHint() : "Beim Wandern passen 15 Minuten gut, am Tisch eher 10."}</p>
       </section>
       <section>
-        <h3>Uhr auf der Hauptseite</h3>
+        ${sectionHead("clock", "Uhr auf der Hauptseite")}
+        ${hint("clock", visible
+          ? "Die Restzeit bis zum nächsten Ereignis steht oben auf der Hauptseite."
+          : random
+            ? "Die genaue Zeit bleibt geheim. Die Hauptseite zeigt nur, in wie vielen Minuten das nächste Ereignis ungefähr kommt. Anhalten und Weiterlaufen geht trotzdem."
+            : "Die Restzeit bleibt geheim. Anhalten und Weiterlaufen geht trotzdem über den kleinen Knopf.")}
         <div class="segmented" role="group" aria-label="Uhr auf der Hauptseite">
           ${segment(visible, "setSetting('showTimer', true)", "Anzeigen")}
           ${segment(!visible, "setSetting('showTimer', false)", "Verbergen")}
         </div>
-        <p class="hint">${visible
-          ? "Die Restzeit bis zum nächsten Ereignis steht oben auf der Hauptseite."
-          : random
-            ? "Die genaue Zeit bleibt geheim. Die Hauptseite zeigt nur, in wie vielen Minuten das nächste Ereignis ungefähr kommt. Anhalten und Weiterlaufen geht trotzdem."
-            : "Die Restzeit bleibt geheim. Anhalten und Weiterlaufen geht trotzdem über den kleinen Knopf."}</p>
       </section>
       <section>
-        <h3>Vorlesen</h3>
+        ${sectionHead("speech", "Vorlesen")}
+        ${hint("speech", speech.supported
+          ? "Geschichten, Ereignisse, Minispiele und das Regelwerk bekommen einen Lautsprecher-Knopf. Rollen und geheime Ereignisse werden nie vorgelesen. Die Stimme kommt kostenlos vom Handy selbst. Auf dem iPhone klingt sie besser, wenn unter Einstellungen › Bedienungshilfen › Gesprochene Inhalte › Stimmen eine deutsche Stimme in verbesserter Qualität geladen ist."
+          : "Dieser Browser kann leider nicht vorlesen.")}
         <div class="segmented" role="group" aria-label="Vorlesen">
           ${segment(settings.speech !== false, "setSetting('speech', true)", "An")}
           ${segment(settings.speech === false, "setSetting('speech', false)", "Aus")}
         </div>
-        <p class="hint">${speech.supported
-          ? "Geschichten, Ereignisse, Minispiele und das Regelwerk bekommen einen Lautsprecher-Knopf. Rollen und geheime Ereignisse werden nie vorgelesen. Die Stimme kommt kostenlos vom Handy selbst. Auf dem iPhone klingt sie besser, wenn unter Einstellungen › Bedienungshilfen › Gesprochene Inhalte › Stimmen eine deutsche Stimme in verbesserter Qualität geladen ist."
-          : "Dieser Browser kann leider nicht vorlesen."}</p>
       </section>
       <section>
-        <h3>Musik</h3>
+        ${sectionHead("music", "Musik")}
+        ${hint("music", "Solange die Ereignis-Uhr läuft, spielt hin und wieder ruhige Musik passend zum Abenteuer: Harfe und Flöte im Wald, Laute und Trommel in der Taverne. Die Musik entsteht live in der App, ganz ohne Dateien und Lizenzkosten. Beim iPhone muss der Stummschalter aus sein.")}
         <div class="segmented" role="group" aria-label="Musik">
           ${segment(musicOn, "setSetting('music', true)", "An")}
           ${segment(!musicOn, "setSetting('music', false)", "Aus")}
@@ -130,7 +152,6 @@ function screenSettings() {
             <input type="range" min="0" max="100" step="5" value="${volume}" aria-label="Lautstärke der Musik"
                    oninput="slideVolume(this)" onchange="saveSettings()">
           </div>` : ""}
-        <p class="hint">Solange die Ereignis-Uhr läuft, spielt hin und wieder ruhige Musik passend zum Abenteuer: Harfe und Flöte im Wald, Laute und Trommel in der Taverne. Die Musik entsteht live in der App, ganz ohne Dateien und Lizenzkosten. Beim iPhone muss der Stummschalter aus sein.</p>
       </section>
     </div>
   `;

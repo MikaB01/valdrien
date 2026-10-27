@@ -134,7 +134,9 @@ function render() {
   const fn = SCREENS[state.screen] || screenStart;
   stopSpeaking();
   document.getElementById("app").innerHTML = fn();
-  document.getElementById("backdrop").hidden = !(state.screen === "intro" && currentAdventure() && currentAdventure().id === "forest");
+  document.body.dataset.screen = state.screen;
+  const tavern = currentAdventure().id === "tavern" && !["start", "adventures"].includes(state.screen);
+  document.getElementById("backdrop").className = tavern ? "tavern" : state.screen === "intro" ? "intro" : "";
   if (state.screen === "names") validateNames();
   renderFrame();
   updateMusic();

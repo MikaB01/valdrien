@@ -168,7 +168,8 @@ function renderOwn() {
   document.getElementById("app").innerHTML = screenOwnPage();
   document.querySelector(".app-bar").hidden = true;
   document.body.classList.add("own-page");
-  document.getElementById("backdrop").hidden = true;
+  document.getElementById("backdrop").className = own.adventure === "tavern" ? "tavern" : "";
+  document.body.dataset.screen = "own";
 }
 
 function tickOwnClock() {

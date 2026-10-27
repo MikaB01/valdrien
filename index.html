@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Valdrien">
-<meta name="theme-color" content="#2f4a33">
+<meta name="theme-color" content="#2f2116">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=IM+Fell+English&family=Alegreya+Sans:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="css/game.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -16,7 +16,7 @@
 </head>
 <body>
 
-<div id="backdrop" hidden></div>
+<div id="backdrop"></div>
 <nav class="app-bar" aria-label="Spielsteuerung"><div class="app-bar-inner">
   <button class="bar-button" id="btn-back" aria-label="Zurück" onclick="goBack()">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 L8 12 L15 19"/></svg>
@@ -31,7 +31,7 @@
   </button>
 </div></nav>
 <div id="sheet" class="sheet" hidden onclick="if (event.target === this) closeSheet()"></div>
-<main id="app"></main>
+<main><div id="app"></div></main>
 
 <!-- Order matters: later scripts may use everything defined above them; main.js starts the app. -->
 <script src="js/shared/helpers.js"></script>

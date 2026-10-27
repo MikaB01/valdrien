@@ -28,6 +28,7 @@ function screenHandover() {
         <div class="dots" role="img" aria-label="Rolle ${state.current + 1} von ${state.players.length}">
           ${state.players.map((_, i) => `<span class="${i <= state.current ? "filled" : ""}"></span>`).join("")}
         </div>
+        <div class="emblem">${icon("role")}</div>
         <p class="muted">Gib das Handy an</p>
         <p class="name-large">${escapeName(s.name)}</p>
         <p class="muted">Nur ${escapeName(s.name)} darf jetzt hinsehen. Halte das Handy so, dass niemand mitliest.</p>

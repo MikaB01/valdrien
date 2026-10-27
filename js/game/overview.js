@@ -23,6 +23,7 @@ function screenOverview() {
   return `
     <div class="heading"><span class="eyebrow">${currentAdventure().title}</span><h2>Das Abenteuer</h2></div>
     ${timerBar()}
+    <div class="scene-banner">${adventureArt(currentAdventure().id, true)}</div>
     ${state.seersNight ? `<p class="note">Die Nacht der Seher: Bis zum nächsten Ereignis bringt ein Treffer beim Raten ${RULES.hitRewardSeers} Münzen.</p>` : ""}
     ${state.winBonus ? `<p class="note">Gewinnt ${playerName(state.winBonus.player)} das nächste Minispiel, gibt es ${state.winBonus.amount} Münzen extra.</p>` : ""}
     ${state.freeGuesses ? `<p class="note">Lose Zungen: Bis zum nächsten Ereignis kostet Raten keine Münze.</p>` : ""}
@@ -125,6 +126,7 @@ function screenMyRole() {
   if (!m.open) {
     return `
       <div class="handover">
+        <div class="emblem">${icon("role")}</div>
         <p class="muted">Gib das Handy an</p>
         <p class="name-large">${escapeName(s.name)}</p>
         <p class="muted">Nur ${escapeName(s.name)} darf jetzt hinsehen.</p>
