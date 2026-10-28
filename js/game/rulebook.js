@@ -7,12 +7,12 @@ function screenQuickGuide() {
       <li><span><strong>Rate, wer die anderen sind.</strong>Ein Tipp kostet ${coinsText(RULES.guessCost)}. Liegst du richtig, bekommst du ${coinsText(RULES.hitReward)}.</span></li>
       <li><span><strong>Erraten werden hat zwei Seiten.</strong>Deine Tarnung ist weg, dafür wird deine besondere Fähigkeit frei. Du darfst sie einmal einsetzen.</span></li>
       <li><span><strong>Unterwegs passiert etwas.</strong>${intervalText()} deckt die App ein Ereignis oder ein Minispiel auf. Ereignisse und Minispiele bringen oder kosten Münzen.</span></li>
-      <li><span><strong>Am Ende wird gezählt.</strong>Deine Münzen plus der Bonus für deine geheime Aufgabe. Wer die meisten hat, gewinnt.</span></li>
+      ${keysForGuide() ? keysStep() : `<li><span><strong>Am Ende wird gezählt.</strong>Deine Münzen plus der Bonus für deine geheime Aufgabe. Wer die meisten hat, gewinnt.</span></li>`}
     </ol>` : `<ol class="steps">
       <li><span><strong>Sammle Münzen.</strong>Jeder startet mit ${coinsText(RULES.startingCoinsFallback)}. Diesmal spielt ihr ohne geheime Rollen.</span></li>
       <li><span><strong>Unterwegs passiert etwas.</strong>${intervalText()} deckt die App ein Ereignis oder ein Minispiel auf. Ereignisse und Minispiele bringen oder kosten Münzen.</span></li>
       <li><span><strong>Manches bleibt geheim.</strong>Geheime Ereignisse gehen nur an einen von euch. Für ${coinsText(RULES.privateCardCost)} kann sich jeder selbst eine geheime Karte kaufen.</span></li>
-      <li><span><strong>Am Ende wird gezählt.</strong>Wer die meisten Münzen hat, gewinnt.</span></li>
+      ${keysForGuide() ? keysStep() : `<li><span><strong>Am Ende wird gezählt.</strong>Wer die meisten Münzen hat, gewinnt.</span></li>`}
     </ol>`}
     <p class="note">Die App rechnet alle Münzen mit. Ihr tippt nur an, was passiert ist.</p>
   </div>`;
@@ -20,6 +20,12 @@ function screenQuickGuide() {
 
 // During a game the dealt game decides, before it the settings.
 function rolesForGuide() { return state.running && state.players && state.players.length ? rolesOn() : settings.roles !== false; }
+
+// In a running game with the keys goal (Henkersmahl), the last step explains the breakout instead of the count.
+function keysForGuide() { return Boolean(state.running && state.players && state.players.length && keysGoal()); }
+function keysStep() {
+  return `<li><span><strong>Kauf dir die Freiheit.</strong>Ein Schlüssel kostet ${coinsText(RULES.keyCost)} und ist zufällig aus Eisen, Silber oder Knochen. Nur du siehst deine Schlüssel. Wer zuerst alle drei verschiedenen hat, bricht aus und gewinnt sofort.</span></li>`;
+}
 
 function openQuickGuide() { openReference("quickGuide"); }
 
@@ -37,13 +43,25 @@ function screenRules() {
     <div class="rules">
       <section>
         <h3>Ziel des Spiels</h3>
-        <p>Sammle bis zum Ende des Abenteuers die meisten Münzen. Wer am Ende vorne liegt, gewinnt: In der Waldgilde wird er aufgenommen, im Goldenen Krug wird er Stammgast.</p>
+        <p>Sammle bis zum Ende des Abenteuers die meisten Münzen. Wer am Ende vorne liegt, gewinnt: In der Waldgilde wird er aufgenommen, im Goldenen Krug wird er Stammgast. Im Verlies zählt etwas anderes, siehe unten.</p>
+      </section>
+
+      <section>
+        <h3>Das Henkersmahl im Verlies: Schlüssel statt Münzen</h3>
+        <ul>
+          <li><strong>Ziel:</strong> Wer zuerst einen Eisen-, einen Silber- und einen Knochenschlüssel besitzt, bricht aus und gewinnt. Die Partie endet in diesem Moment.</li>
+          <li><strong>Schlüssel kaufen:</strong> Jederzeit, für jeden, für ${coinsText(RULES.keyCost)} beim Kerkermeister (Knopf „Schlüssel kaufen“ auf der Hauptseite). Welcher Schlüssel herauskommt, ist Zufall: ${RULES.keys.map(k => `${k.name} ${Math.round(k.chance * 100)} %`).join(", ")}.</li>
+          <li><strong>Geheim:</strong> Nur der Käufer sieht, welchen Schlüssel er bekommt. Seine Schlüssel sieht jeder nur selbst unter „Nachsehen“ oder auf seinem eigenen Handy. Doppelte Schlüssel werden mitgezählt, öffnen aber keine weitere Tür.</li>
+          <li><strong>Münzen</strong> sind hier nur Mittel zum Zweck: Ereignisse, Minispiele, Raten und Fähigkeiten bringen sie, der Kerkermeister nimmt sie.</li>
+          <li><strong>Geheime Aufgabe:</strong> Weil das Ende plötzlich kommt, kassierst du den Bonus schon während des Spiels unter „Nachsehen“, sobald du die Aufgabe geschafft hast. Ehrensache unter Gefangenen.</li>
+          <li><strong>Kein Ausbruch:</strong> Beendet ihr die Nacht vorher („Der Henker kommt“ im Menü), gewinnt, wer die meisten verschiedenen Schlüssel hat, dann die meisten Schlüssel, dann die meisten Münzen.</li>
+        </ul>
       </section>
 
       <section>
         <h3>Vorbereitung</h3>
         <ol>
-          <li>Wählt ein Abenteuer. Dann geben ${RULES.minPlayers} bis 7 Spieler (Waldgilde) oder ${RULES.minPlayers} bis 8 Spieler (Taverne) ihre Namen ein.</li>
+          <li>Wählt ein Abenteuer. Dann geben ${RULES.minPlayers} Spieler bis so viele, wie das Abenteuer Rollen hat, ihre Namen ein (zum Beispiel 7 in der Waldgilde, 8 in der Taverne, 10 im Verlies).</li>
           <li>Die App verteilt die Rollen zufällig und geheim.</li>
           <li>Das Handy wird herumgereicht. Jeder sieht nur seine eigene Rolle mit Fähigkeit und geheimer Aufgabe.</li>
           <li>Gefällt dir deine Rolle nicht, darfst du sie weglegen und eine neue ziehen, so oft wie in den Einstellungen festgelegt. Eine weggelegte Rolle bekommt niemand mehr zu sehen. Reichen die übrigen Rollen nicht, damit jeder gleich oft neu ziehen kann, senkt die App die Zahl für alle gleich. Reicht es nicht einmal für eine zweite Rolle pro Kopf, weist die App darauf hin, und ihr klärt untereinander, wer neu ziehen darf.</li>
@@ -92,13 +110,14 @@ function screenRules() {
       </section>
 
       <section>
-        <h3>Regeln am Tisch (Taverne)</h3>
+        <h3>Regeln am Tisch (Taverne und Verlies)</h3>
         <ul>
           <li>Alkohol ist nie Pflicht, und es gibt kein Wetttrinken. Wasser oder Saft zählen immer genauso.</li>
           <li>Wer den Trunkenbold spielt, spielt ihn nur. Niemand muss dafür mehr trinken.</li>
           <li>Mit Essen wird nicht geworfen.</li>
           <li>Fotos und Videos von Mitspielern nur mit deren Zustimmung.</li>
           <li>Geliehene Gegenstände gehen nach dem Spiel an ihre Besitzer zurück.</li>
+          <li>Gruselig darf es werden, aber niemand wird erschreckt, festgehalten oder gegen seinen Willen angefasst.</li>
         </ul>
       </section>
 

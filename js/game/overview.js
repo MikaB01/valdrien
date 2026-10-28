@@ -27,28 +27,38 @@ function screenOverview() {
     ${state.seersNight ? `<p class="note">Die Nacht der Seher: Bis zum nächsten Ereignis bringt ein Treffer beim Raten ${RULES.hitRewardSeers} Münzen.</p>` : ""}
     ${state.winBonus ? `<p class="note">Gewinnt ${playerName(state.winBonus.player)} das nächste Minispiel, gibt es ${state.winBonus.amount} Münzen extra.</p>` : ""}
     ${state.freeGuesses ? `<p class="note">Lose Zungen: Bis zum nächsten Ereignis kostet Raten keine Münze.</p>` : ""}
+    ${tipNote()}
+    ${pauseNote()}
     ${openTasks().length ? `<p class="note">Offene geheime ${openTasks().length === 1 ? "Aufgabe" : "Aufgaben"}: ${playerNames([...new Set(openTasks().map(x => x.i))])}. Bestätigen über den Geldbeutel unten in der Mitte.</p>` : ""}
     <div class="tiles">
       ${rolesOn() ? `
-      <button class="tile" onclick="startGuess()">
+      <button class="tile ${keysGoal() ? "tile-compact" : ""}" onclick="startGuess()">
         ${icon("guess")}
         <span class="tile-title">Raten</span>
         <span class="tile-text">${state.freeGuesses ? "Gerade kostenlos" : `Kostet ${coinsText(RULES.guessCost)}`}, Treffer bringt ${hitReward()}</span>
       </button>
-      <button class="tile ${ready ? "tile-ready" : ""}" onclick="startAbility()">
+      <button class="tile ${ready ? "tile-ready" : ""} ${keysGoal() ? "tile-compact" : ""}" onclick="startAbility()">
         ${icon("ability")}
         <span class="tile-title">Fähigkeit</span>
         <span class="tile-text">${ready ? `${ready} ${ready === 1 ? "Person kann" : "Personen können"} jetzt` : "Frei, sobald eine Rolle erraten ist"}</span>
       </button>` : ""}
-      <button class="tile ${rolesOn() ? "tile-compact" : ""}" onclick="startBuyCard()">
+      ${keysGoal() ? `
+      <button class="tile tile-wide tile-keys" onclick="startBuyKey()">
+        <span class="key-icons" aria-hidden="true">${RULES.keys.map(k => `<img src="${k.image}" alt="">`).join("")}</span>
+        <span class="tile-body">
+          <span class="tile-title">Schlüssel kaufen</span>
+          <span class="tile-text">${coinsText(RULES.keyCost)} · Eisen, Silber oder Knochen</span>
+        </span>
+      </button>` : ""}
+      <button class="tile ${rolesOn() || keysGoal() ? "tile-compact" : ""}" onclick="startBuyCard()">
         ${icon("event")}
         <span class="tile-title">Geheimkarte</span>
         <span class="tile-text">Für ${coinsText(RULES.privateCardCost)} kaufen</span>
       </button>
-      <button class="tile ${rolesOn() ? "tile-compact" : ""}" onclick="startMyRole()">
+      <button class="tile ${rolesOn() || keysGoal() ? "tile-compact" : ""}" onclick="startMyRole()">
         ${icon("secret")}
         <span class="tile-title">Nachsehen${unseenCount() ? ` <span class="chip chip-gold">${unseenCount()} neu</span>` : ""}</span>
-        <span class="tile-text">${rolesOn() ? "Rolle, Münzen, Geheimes" : "Münzen, Geheimes"}</span>
+        <span class="tile-text">${keysGoal() ? (rolesOn() ? "Rolle, Schlüssel, Geheimes" : "Schlüssel, Geheimes") : rolesOn() ? "Rolle, Münzen, Geheimes" : "Münzen, Geheimes"}</span>
       </button>
     </div>
   `;
@@ -163,10 +173,12 @@ function screenMyRole() {
       ${rolesOn() ? `<div class="chips">${statusChips(s)}</div>` : ""}
     </div>
     ${notes}
+    ${keysGoal() ? `<span class="label">Deine Schlüssel</span>${keyStrip(keysOf(i))}` : ""}
     <span class="label">Geheime Ereignisse</span>
     ${secretEntries(i, m.fresh || [])}
     ${rolesOn() ? `<span class="label">Deine Rolle</span>
-    ${roleCard(ROLES[s.role])}` : ""}
+    ${roleCard(ROLES[s.role])}
+    ${taskCashIn(i)}` : ""}
     ${qrSection(i)}
     <button class="btn" onclick="closeMyRole()">Verbergen und zurückgeben</button>`;
 }

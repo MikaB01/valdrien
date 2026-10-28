@@ -123,7 +123,7 @@
           ],
           "ability": {
             "name": "Goldfinger",
-            "text": "Einmal im Spiel darf Finnian seine Belohnung aus einem Minispiel verdoppeln, höchstens um 3 zusätzliche Münzen.",
+            "text": "Direkt nachdem du ein Minispiel gewonnen hast, verdoppelst du deinen Gewinn.",
             "mechanic": "goldFinger"
           },
           "task": {
@@ -145,8 +145,8 @@
             "Spricht von Ehre, Mut und dem Einhalten von Versprechen."
           ],
           "ability": {
-            "name": "Präzisionsmeister",
-            "text": "Vor einem Minispiel kündigt Roderick seinen Sieg an. Schafft er es, erhält er 3 zusätzliche Münzen aus der Spielbank.",
+            "name": "Das Turnier",
+            "text": "Sobald ein Minispiel gezogen wurde, bei dem du mitspielst, und Regeln und Gegner feststehen, kündigst du deinen Sieg an. Gewinnst du, erhältst du zusätzlich zu deinem Gewinn 1 Münze von jedem Mitspieler des Minispiels. (Info: Bei jedem Minispiel, bei dem du mitspielst, erscheint vor dem Start ein Knopf, mit dem du die Fähigkeit aktivierst.)",
             "mechanic": "marksman"
           },
           "task": {
@@ -192,7 +192,7 @@
           ],
           "ability": {
             "name": "Glücksfee",
-            "text": "Einmal im Spiel wirft Liora eine Münze. Bei Erfolg erhält sie 4 Münzen aus der Spielbank, sonst keine. Vorher wird festgelegt, welche Seite Erfolg bedeutet.",
+            "text": "Du wählst Kopf oder Zahl, und die App wirft eine Münze. Liegst du richtig, nimmst du dem reichsten Mitspieler die Hälfte seiner Münzen weg (aufgerundet). Bist du selbst der Reichste, trifft es den Zweitreichsten. Bei Gleichstand wählst du einen davon aus. Liegst du falsch, verlierst du alle deine Münzen an die Bank.",
             "mechanic": "luckyFairy"
           },
           "task": {
@@ -597,7 +597,7 @@
           ],
           "ability": {
             "name": "Trinkgeld",
-            "text": "Einmal im Spiel erhält Mathilda nach einem Minispiel, bei dem sie mitgespielt hat, 2 Münzen, egal ob sie gewonnen oder verloren hat.",
+            "text": "Ab jetzt erhältst du für jede Ereigniskarte, die kein Minispiel ist, 1 Münze von der Bank. Kauft in dieser Zeit jemand eine geheime Ereigniskarte, erhältst du auch dafür 1 Münze. Das gilt, bis ein Minispiel gezogen wird.",
             "mechanic": "tip"
           },
           "task": {
@@ -689,7 +689,7 @@
           ],
           "ability": {
             "name": "Gezinkt",
-            "text": "Einmal im Spiel darf Fenja einen verlorenen Versuch in einem Minispiel wiederholen. Der Knopf dafür erscheint direkt beim Minispiel.",
+            "text": "Du lässt ein Minispiel wiederholen, egal ob du mitgespielt hast. Minispiel und Teilnehmer bleiben gleich. Der erste Versuch zählt nicht, Münzen werden erst nach dem zweiten Versuch verteilt. Der Knopf erscheint beim Minispiel, sobald deine Rolle erraten ist.",
             "mechanic": "loadedDice"
           },
           "task": {
@@ -735,7 +735,7 @@
           ],
           "ability": {
             "name": "Herausforderung",
-            "text": "Einmal im Spiel fordert Rudger einen Gegner seiner Wahl zum Duell. Gewinnt er, erhält er 2 zusätzliche Münzen.",
+            "text": "Du forderst einen Mitspieler deiner Wahl zum Duell. Gewinnst du, erhältst du die Hälfte seiner Münzen (aufgerundet). Verlierst du, erhält er die Hälfte deiner Münzen (aufgerundet).",
             "mechanic": "challenge"
           },
           "task": {
@@ -1013,6 +1013,692 @@
           "visibility": "public",
           "description": "Ein alter Hund trottet durch die Stube, schnüffelt an jedem Stuhl und legt sich vor den Kamin. Nichts geschieht.",
           "effect": "calm"
+        }
+      }
+    },
+    "dungeon": {
+      "pos": 30,
+      "name": "Das Henkersmahl im Verlies",
+      "setting": "Drinnen am Tisch · Halloween-Abenteuer: düster, gruselig und derb",
+      "goal": "keys",
+      "story": {
+        "title": "Das Henkersmahl im Verlies",
+        "paragraphs": [
+          "Tief unter Burg Schwarzfels, wo kein Licht hinkommt und die Ratten Namen haben, sitzt ihr in Ketten. Warum? Jeder von euch schwört, er sei unschuldig. Natürlich.",
+          "Einmal im Jahr, in der Nacht der Toten, dürfen die Gefangenen ihre Zellen verlassen und gemeinsam essen: das Henkersmahl. Ihr sitzt im Gemeinschaftsraum des Verlieses an einem langen, wackeligen Tisch. Der Eintopf ist grau, das Bier ist warm, und was da im Brot knirscht, will niemand so genau wissen. Die Wachen sind oben beim Fest, nur der alte Kerkermeister ist geblieben. Er sitzt mit am Tisch, und er trinkt mit. Krug um Krug.",
+          "Nach oben führt kein Weg hinaus. Dort feiern die Wachen in der großen Halle, und an ihnen kommt niemand vorbei. Der einzige Ausweg führt nach unten. Unter dem Verlies liegen die alten Katakomben, ein Labyrinth aus Gängen und Grabkammern, in das seit Jahrhunderten niemand mehr freiwillig hinabsteigt. Ganz am Ende der Katakomben, so erzählt man sich, mündet ein uralter Abflusstunnel in den Burggraben.",
+          "Der Weg dorthin führt durch drei Türen. Zuerst die rostige Eisentür, die vom Gemeinschaftsraum hinaus in den finsteren Wachgang führt. Am Ende des Gangs das Silbergitter, hinter dem eine schmale Wendeltreppe tief hinab in die Katakomben führt. Es ist aus Silber geschmiedet, damit nichts heraufkommt, was dort unten haust. Und am Ende der Katakomben, wo die Luft nach Moder und Grabwasser riecht, das Knochentor. Es ist gebaut aus den Gebeinen all jener, die es nicht hinausgeschafft haben. Dahinter liegt der Tunnel, und dahinter die Freiheit.",
+          "Die Schlüssel hängen alle am Gürtel des Kerkermeisters, ein riesiger, klirrender Bund. Eisenschlüssel hat er viele, Silberschlüssel schon weniger, und Knochenschlüssel nur eine Handvoll. Wer einen davon erwischt, hat Glück. Und der Kerkermeister ist bestechlich. Leider ist er inzwischen auch sternhagelvoll. Welcher Schlüssel welcher ist, weiß er längst nicht mehr. Wer ihm Münzen zuschiebt, bekommt einen Schlüssel, irgendeinen. „Der hier passt bestimmt“, lallt er und kichert.",
+          "Ein Schlüssel kostet 3 Münzen, und bei jedem Kauf bekommt ihr zufällig einen: Eisen oft, Silber seltener, Knochen selten. Welche Schlüssel ihr habt, weiß nur jeder selbst. Wer drei verschiedene Schlüssel besitzt, öffnet Eisentür, Silbergitter und Knochentor, flieht durch die Katakomben und bricht aus.",
+          "Wer hinauswill, muss also kaufen, bis er alle drei beisammen hat."
+        ],
+        "closing": "Und das schnell, denn im Morgengrauen kommt der Henker, und er hat heute eine lange Liste."
+      },
+      "epilogue": {
+        "title": "Der Ausbruch",
+        "before": [
+          "Der Kerkermeister schnarcht mit dem Kopf im Eintopf. Leise dreht sich ein Schlüssel in der Eisentür, dann einer im Silbergitter. Schritte hallen die Wendeltreppe hinab, und tief unten in den Katakomben knirscht das Knochentor. Draußen dämmert der Morgen, und ein einziger Schatten kriecht aus dem Tunnel in den Burggraben:"
+        ],
+        "after": [
+          "{winner} ist frei! Die anderen Gefangenen sitzen noch beim kalten Eintopf und probieren den zwölften Schlüssel an der Eisentür, als schwere Schritte die Treppe herunterkommen. Der Henker ist da, und er hat seine Liste dabei. Ein Name ist durchgestrichen."
+        ]
+      },
+      "terms": {
+        "question": "Wer sitzt mit am Henkersmahl?",
+        "player": "Gefangener",
+        "plural": "Gefangene",
+        "dative": "Gefangenen",
+        "finish": "Der Henker kommt"
+      },
+      "roles": {
+        "wolfram-der-werwolf": {
+          "pos": 10,
+          "name": "Wolfram",
+          "title": "der Werwolf",
+          "startingCoins": 3,
+          "background": "Wolfram ist Schweinehirt im Dorf unter der Burg, ein gutmütiger Kerl mit sehr viel Bart. Nur bei Vollmond wird er ein bisschen haariger. Beim Erntefest ging der Mond genau in dem Moment auf, als das Spanferkel des Burgherrn am Spieß drehte. Am Morgen wachte Wolfram nackt im Hühnerstall auf, ein Schweineohr im Mund und Federn an Stellen, die man nicht nennen will. Angeklagt wegen Spanferkelraubs und unsittlicher Entblößung. Er schwört, er ist unschuldig: Das war der Wolf.",
+          "character": "Schnupper an deinem Essen, bevor du isst, und ab und zu unauffällig an deinem Nachbarn.\nKratz dich hinter dem Ohr oder am Hals, als würde es dort jucken.\nFrag hin und wieder: „Ist heute eigentlich Vollmond?“\nÜbertreib es nicht: Ein kurzes Heulen am Abend reicht.",
+          "traits": [
+            "ist der Werwolf aus dem Dorf",
+            "schnuppert an Essen und Mitspielern",
+            "kratzt sich ständig hinter dem Ohr"
+          ],
+          "ability": {
+            "name": "Goldfinger",
+            "text": "Direkt nachdem du ein Minispiel gewonnen hast, verdoppelst du deinen Gewinn.",
+            "mechanic": "goldFinger"
+          },
+          "task": {
+            "name": "Das Rudel",
+            "text": "Bring zwei Mitspieler dazu, gemeinsam mit dir den Mond anzuheulen. Ein kurzes „Auuuu!“ reicht, aber beide müssen mitheulen.",
+            "bonus": 3
+          }
+        },
+        "roderick-der-ritter": {
+          "pos": 20,
+          "name": "Roderick",
+          "title": "der Ritter",
+          "startingCoins": 3,
+          "background": "Roderick ist ein fahrender Ritter mit verbeulter Rüstung und unverbeulter Ehre. Er rettet jede Dame, ob sie will oder nicht. Beim Fest oben sah er im Turmfenster eine Dame in Not, kletterte die Burgmauer hoch und warf sie sich über die Schulter. Es war die Schwiegermutter des Burgherrn, die nur Luft schnappen wollte. Sie zog ihm den Nachttopf über, er fiel in den Misthaufen und von dort direkt ins Verlies. Bei seiner Ehre: Er ist unschuldig. Sie hat sehr wohl „Hilfe!“ gerufen. Allerdings erst, als sie ihn sah.",
+          "character": "Sag oft „Bei meiner Ehre!“ und leg dabei die Hand aufs Herz.\nKündige vor Minispielen deinen Sieg an, als wäre es ein Turnier.\nVerbeug dich, wenn dir jemand etwas reicht.",
+          "traits": [
+            "ist ein fahrender Ritter",
+            "schwört „Bei meiner Ehre!“",
+            "kündigt vor Minispielen seinen Sieg an"
+          ],
+          "ability": {
+            "name": "Das Turnier",
+            "text": "Sobald ein Minispiel gezogen wurde, bei dem du mitspielst, und Regeln und Gegner feststehen, kündigst du deinen Sieg an. Gewinnst du, erhältst du zusätzlich zu deinem Gewinn 1 Münze von jedem Mitspieler des Minispiels. (Info: Bei jedem Minispiel, bei dem du mitspielst, erscheint vor dem Start ein Knopf, mit dem du die Fähigkeit aktivierst.)",
+            "mechanic": "marksman"
+          },
+          "task": {
+            "name": "Der Ritterschlag",
+            "text": "Schlag zwei Mitspieler zum Ritter: Sie neigen den Kopf, du tippst ihnen mit einem Löffel auf beide Schultern und gibst ihnen einen erfundenen Ritternamen.",
+            "bonus": 2
+          }
+        },
+        "zacharias-der-zocker": {
+          "pos": 30,
+          "name": "Zacharias",
+          "title": "der Zocker",
+          "startingCoins": 3,
+          "background": "Zacharias ist Spieler aus Leidenschaft und pleite aus Gewohnheit. Er hat schon Haus, Hof und einen Backenzahn verwettet. Beim Fest oben würfelte er gegen den Burgvogt und verlor alles: Geld, Pferd, Hose. Dann setzte er die Burg selbst, die ihm nicht gehörte, und gewann. Als er die Schlüssel abholen wollte, bekam er nur einen einzigen: den zu Zelle sieben. Er schwört, er ist unschuldig. Gewonnen ist gewonnen.",
+          "character": "Sag „Alles oder nichts!“, wann immer es um Münzen geht.\nLass eine Münze, einen Korken oder Kronkorken über deine Finger wandern oder klimpere damit.\nErzähl, dass du heute eine Glückssträhne spürst.",
+          "traits": [
+            "ist ein Zocker",
+            "sagt „Alles oder nichts!“",
+            "spielt ständig mit einer Münze oder einem Korken"
+          ],
+          "ability": {
+            "name": "Glücksfee",
+            "text": "Du wählst Kopf oder Zahl, und die App wirft eine Münze. Liegst du richtig, nimmst du dem reichsten Mitspieler die Hälfte seiner Münzen weg (aufgerundet). Bist du selbst der Reichste, trifft es den Zweitreichsten. Bei Gleichstand wählst du einen davon aus. Liegst du falsch, verlierst du alle deine Münzen an die Bank.",
+            "mechanic": "luckyFairy"
+          },
+          "task": {
+            "name": "Die Glückssträhne",
+            "text": "Schließ mit zwei verschiedenen Mitspielern je eine Wette ab (Einsatz: ein Bierdeckel, ein Korken oder Ähnliches) und gewinne mindestens eine davon.",
+            "bonus": 2
+          }
+        },
+        "magnus-der-mundschenk": {
+          "pos": 40,
+          "name": "Magnus",
+          "title": "der Mundschenk",
+          "startingCoins": 3,
+          "background": "Magnus ist Mundschenk des Burgherrn und nimmt seinen Beruf sehr ernst. Seine wichtigste Pflicht: jeden Becher vorkosten, damit niemand den Herrn vergiftet. Beim Herbstbankett kostete er so gründlich vor, dass für den Burgherrn nur ein leeres Fass blieb und Magnus singend unter der Tafel lag, die Hose auf dem Kopf. Angeklagt wegen Veruntreuung von zwölf Fässern Wein. Er schwört, er ist unschuldig: Es hätte ja Gift drin sein können.",
+          "character": "Schenk deinen Mitspielern nach, ob sie wollen oder nicht. Wasser zählt genauso, und niemand muss trinken.\nBring Trinksprüche aus, zum Beispiel: „Auf den Kerkermeister, möge er nie nüchtern werden!“\nPrüf jedes Getränk mit einem kleinen Schluck und einem Kennerblick.",
+          "traits": [
+            "ist der Mundschenk des Burgherrn",
+            "schenkt allen nach",
+            "bringt Trinksprüche aus"
+          ],
+          "ability": {
+            "name": "Trinkgeld",
+            "text": "Ab jetzt erhältst du für jede Ereigniskarte, die kein Minispiel ist, 1 Münze von der Bank. Kauft in dieser Zeit jemand eine geheime Ereigniskarte, erhältst du auch dafür 1 Münze. Das gilt, bis ein Minispiel gezogen wird.",
+            "mechanic": "tip"
+          },
+          "task": {
+            "name": "Der Trinkspruch",
+            "text": "Bring zwei Trinksprüche aus, bei denen jeweils mindestens drei Mitspieler mit dir anstoßen. Wasser zählt genauso.",
+            "bonus": 3
+          }
+        },
+        "hilda-die-hexe": {
+          "pos": 50,
+          "name": "Hilda",
+          "title": "die Hexe",
+          "startingCoins": 3,
+          "background": "Hilda ist Kräuterweib, Hebamme und Fluchexpertin aus dem Moor. Sie verkauft Liebestränke, Warzensalbe und Flüche nach Maß. Auf dem Herbstmarkt kaufte der Burgvogt einen Liebestrank für die Wirtin. Leider trank er ihn selbst, und leider stand gerade sein Ziegenbock daneben. Die beiden sind seitdem unzertrennlich, und Hilda sitzt wegen Hexerei. Sie schwört, sie ist unschuldig: Auf der Flasche stand groß „Nicht selbst trinken!“.",
+          "character": "Murmle leise Flüche und Zaubersprüche vor dich hin, gern gereimt.\nRühr in deinem Becher oder auf deinem Teller immer gegen den Uhrzeigersinn.\nKicher, wenn jemandem ein Missgeschick passiert: „Das war ich nicht. Vielleicht.“",
+          "traits": [
+            "ist eine Hexe aus dem Moor",
+            "murmelt Flüche und Zaubersprüche",
+            "rührt gegen den Uhrzeigersinn"
+          ],
+          "ability": {
+            "name": "Gezinkt",
+            "text": "Du lässt ein Minispiel wiederholen, egal ob du mitgespielt hast. Minispiel und Teilnehmer bleiben gleich. Der erste Versuch zählt nicht, Münzen werden erst nach dem zweiten Versuch verteilt. Der Knopf erscheint beim Minispiel, sobald deine Rolle erraten ist.",
+            "mechanic": "loadedDice"
+          },
+          "task": {
+            "name": "Der Zaubertrank",
+            "text": "Rühr murmelnd in einem Becher Wasser und bring zwei Mitspieler dazu, von deinem „Zaubertrank“ zu kosten.",
+            "bonus": 3
+          }
+        },
+        "vlad-der-vampir": {
+          "pos": 60,
+          "name": "Vlad",
+          "title": "der Vampir",
+          "startingCoins": 3,
+          "background": "Vlad ist ein Graf aus dem fernen Osten: sehr blass, sehr höflich und sehr durstig. Er reiste zum Fest auf Burg Schwarzfels, weil man ihm ein blutiges Steak versprochen hatte. Es kam durchgebraten. Enttäuscht biss er stattdessen der Gräfin in den Hals. Die Gräfin fand es aufregend, der Graf weniger. Jetzt sitzt Vlad hier unten, wo es endlich schön dunkel ist. Er schwört, er ist unschuldig: Er wollte ihr nur etwas ins Ohr flüstern und ist abgerutscht.",
+          "character": "Halt dir die Serviette wie einen Umhang vors Gesicht, wenn dich jemand ansieht.\nStarr ab und zu verträumt auf den Hals deines Nachbarn.\nMeide Licht: Rück von Kerzen und Lampen ab oder schirm deine Augen ab.",
+          "traits": [
+            "ist ein Vampirgraf aus dem Osten",
+            "starrt auf Hälse",
+            "versteckt sich hinter der Serviette wie hinter einem Umhang"
+          ],
+          "ability": {
+            "name": "Herausforderung",
+            "text": "Du forderst einen Mitspieler deiner Wahl zum Duell. Gewinnst du, erhältst du die Hälfte seiner Münzen (aufgerundet). Verlierst du, erhält er die Hälfte deiner Münzen (aufgerundet).",
+            "mechanic": "challenge"
+          },
+          "task": {
+            "name": "Die Blutspende",
+            "text": "Bring zwei Mitspieler dazu, dir etwas Rotes zu geben: Rotwein, Saft, eine Tomate, Ketchup oder eine rote Serviette.",
+            "bonus": 2
+          }
+        },
+        "dietrich-der-dieb": {
+          "pos": 70,
+          "name": "Dietrich",
+          "title": "der Dieb",
+          "startingCoins": 3,
+          "background": "Dietrich ist Taschendieb, Einbrecher und Hühnerdieb, je nach Tageszeit. Er hat flinke Finger und ein ehrliches Gesicht, das macht die Sache leichter. Beim Fest oben ließ er die Silberlöffel des Burgherrn mitgehen, alle achtundvierzig, versteckt in seiner Hose. Auf dem Weg hinaus klimperte er wie ein Glockenspiel, und die Wache tanzte noch eine Runde mit ihm, bevor sie ihn festnahm. Er schwört, er ist unschuldig: Die Löffel sind ihm von selbst in die Hose gefallen.",
+          "character": "Lass harmlose Kleinigkeiten vom Tisch mitgehen: Korken, Bierdeckel, Servietten. Nichts Wertvolles, kein Handy, kein Geld, keine Schlüssel.\nBeteuere bei jeder Gelegenheit: „Ich hab nichts genommen!“\nTast immer wieder deine Taschen ab, als würdest du nachzählen.",
+          "traits": [
+            "ist ein Dieb",
+            "lässt Kleinigkeiten vom Tisch mitgehen",
+            "beteuert „Ich hab nichts genommen!“"
+          ],
+          "ability": {
+            "name": "Langfinger",
+            "text": "Du wählst bis zu drei verschiedene Mitspieler und drehst für jeden einmal am Glücksrad. Das Rad hat vier gleich große Felder: −1, +1, +2 und +3. Bei einem Plus nimmst du diesem Mitspieler so viele Münzen weg. Bei −1 hat er dich beim Klauen erwischt, und du gibst ihm 1 Münze.",
+            "mechanic": "longFingers"
+          },
+          "task": {
+            "name": "Die Beute",
+            "text": "Sammle unbemerkt drei harmlose Kleinigkeiten von drei verschiedenen Mitspielern (Korken, Bierdeckel, Serviette). Nach dem Spiel gibst du alles zurück.",
+            "bonus": 3
+          }
+        },
+        "heinrich-der-harnharte": {
+          "pos": 80,
+          "name": "Heinrich",
+          "title": "der Harnharte",
+          "startingCoins": 3,
+          "background": "Heinrich ist ein geselliger Bürger mit sehr großem Durst und sehr kleiner Blase. Er war als Gast zum Fest oben in der Burg eingeladen. Nach dem dritten Krug musste er mal, wie immer. Die Abtritte waren besetzt, also stellte er sich in den Burghof und erleichterte sich ausgiebig an die Burgmauer. Leider genau unter dem Fenster des Burgherrn, der gerade frische Luft schnappen wollte. Jetzt sitzt Heinrich wegen „Beschmutzung herrschaftlichen Gemäuers“ im Verlies und schwört, er sei unschuldig. Die Mauer hätte schließlich im Weg gestanden.",
+          "character": "Sag immer wieder: „Ich muss mal wieder.“\nFrag in die Runde: „Muss noch wer?“\nRutsch unruhig auf deinem Platz herum, wenn es spannend wird.",
+          "traits": [
+            "war Gast beim Fest oben",
+            "muss ständig mal",
+            "fragt, ob noch wer muss"
+          ],
+          "ability": {
+            "name": "Pinkelpause",
+            "text": "Direkt nachdem eine Ereigniskarte gezogen wurde, kannst du aussetzen. Diese und alle weiteren Ereigniskarten gelten dann nicht für dich, bis du wieder einsteigst. Für jede am Stück ausgesetzte Ereigniskarte erhältst du 1 Münze von der Bank (höchstens 10). Sobald deine Rolle erraten ist, erscheint bei jeder Ereigniskarte ein Knopf zum Aussetzen und Wiedereinsteigen.",
+            "mechanic": "bathroomBreak"
+          },
+          "task": {
+            "name": "Die Pinkelgesellschaft",
+            "text": "Kündige mindestens dreimal an, dass du mal musst, und bring einen Mitspieler dazu, mit dir aufzustehen und bis zur Tür mitzugehen. Weiter muss niemand mit.",
+            "bonus": 2
+          }
+        },
+        "gregor-der-gelehrte": {
+          "pos": 90,
+          "name": "Gregor",
+          "title": "der Gelehrte",
+          "startingCoins": 3,
+          "background": "Gregor ist Medicus, Sterndeuter und Leichenaufschneider, alles im Namen der Wissenschaft. Er weiß viel und erzählt noch mehr. Als der Hofnarr der Burg starb, wollte Gregor endlich herausfinden, wo bei einem Narren der Witz sitzt. Er schlich nachts in die Gruft und schnitt nach. Den Witz fand er nicht, dafür fand ihn die Witwe des Narren. Jetzt sitzt er wegen Grabschändung hier und schwört, er ist unschuldig: Der Narr hätte es lustig gefunden.",
+          "character": "Fang Sätze an mit „Wusstet ihr eigentlich …?“ und erzähl dann eine Kerkerweisheit, gern erfunden.\nSag „Faszinierend!“, wenn etwas Ekliges oder Seltsames passiert.\nFrag die anderen neugierig nach den Einzelheiten ihrer Verbrechen.",
+          "traits": [
+            "ist ein Gelehrter und Medicus",
+            "beginnt Sätze mit „Wusstet ihr eigentlich …?“",
+            "sagt „Faszinierend!“"
+          ],
+          "ability": {
+            "name": "Neugiernase",
+            "text": "Du stellst einem Mitspieler heimlich eine Ja-Nein-Frage zu seiner Rolle, und er muss ehrlich antworten. Nach dem Rollennamen selbst darfst du nicht fragen. Errätst du seine Rolle später, erhältst du für den Treffer 6 statt 3 Münzen.",
+            "mechanic": "curiosity"
+          },
+          "task": {
+            "name": "Das Studienobjekt",
+            "text": "Bring zwei Mitspieler dazu, von sich aus „Faszinierend!“ zu sagen.",
+            "bonus": 2
+          }
+        },
+        "gunther-der-gaukler": {
+          "pos": 100,
+          "name": "Gunther",
+          "title": "der Gaukler",
+          "startingCoins": 3,
+          "background": "Gunther ist Gaukler, Feuerspucker und Witzeerzähler, wobei die Witze das Gefährlichste sind. Er sollte beim Fest den Burgherrn zum Lachen bringen. Er jonglierte mit drei Fackeln, verbrannte sich nur ein bisschen und erzählte dann den Witz über die Burgherrin und den Stallknecht. Der ganze Saal lachte. Nur der Burgherr nicht, und der Stallknecht auch nicht. Gunther schwört, er ist unschuldig: Woher sollte er wissen, dass der Witz wahr ist?",
+          "character": "Ruf „Tadaa!“, wenn dir etwas gelingt, und sei es nur, dass du dein Glas abstellst.\nErzähl schlechte Witze und lach selbst am lautesten.\nMach kleine Kunststückchen: einen Löffel balancieren, einen Korken verschwinden lassen.",
+          "traits": [
+            "ist ein Gaukler",
+            "ruft „Tadaa!“",
+            "erzählt schlechte Witze"
+          ],
+          "ability": {
+            "name": "Narrenrätsel",
+            "text": "Du wählst heimlich eine Zahl: 2, 4 oder 6. Ein Mitspieler deiner Wahl rät sie. Liegt er falsch, erhältst du so viele Münzen von der Bank. Liegt er richtig, erhält er die Hälfte der Zahl von der Bank.",
+            "mechanic": "foolsRiddle"
+          },
+          "task": {
+            "name": "Der Lacher",
+            "text": "Bring mit einem Witz oder Kunststück mindestens drei Mitspieler gleichzeitig zum Lachen.",
+            "bonus": 2
+          }
+        }
+      },
+      "minigames": {
+        "die-henkersgrimasse": {
+          "pos": 10,
+          "name": "Die Henkersgrimasse",
+          "category": "duel",
+          "description": "Ihr schaut euch über den Tisch in die Augen. Abwechselnd schneidet ihr die grausigste Fratze, die ihr könnt, jeder dreimal. Wer zuerst lacht oder grinst, verliert. Lacht keiner, gewinnt die gruseligere Fratze, darüber entscheidet die Gruppe per Handzeichen.",
+          "reward": {
+            "winner": 3
+          }
+        },
+        "der-loeffel-am-galgen": {
+          "pos": 20,
+          "name": "Der Löffel am Galgen",
+          "category": "duel",
+          "description": "Jeder hängt sich einen Löffel an die Nase. Auf „Los!“ zählt die Gruppe laut die Sekunden. Wessen Löffel länger hängen bleibt, gewinnt. Wer ihn mit der Hand berührt, verliert sofort. Jeder hat drei Versuche, der längste zählt.",
+          "reward": {
+            "winner": 3
+          }
+        },
+        "das-letzte-wort": {
+          "pos": 30,
+          "name": "Das letzte Wort",
+          "category": "duel",
+          "description": "Ihr nennt abwechselnd ein gruseliges Wort: Sarg, Galgen, Nebel, Leiche … Jedes neue Wort muss mit dem letzten Buchstaben des vorigen beginnen. Wer länger als fünf Sekunden zögert oder ein Wort wiederholt, verliert. Ob ein Wort gruselig genug ist, entscheidet die Gruppe.",
+          "reward": {
+            "winner": 3
+          }
+        },
+        "der-beste-kerkermeister": {
+          "pos": 40,
+          "name": "Der beste Kerkermeister",
+          "category": "duel",
+          "description": "Wer kann den betrunkenen Kerkermeister besser? Jeder hat zehn Sekunden: lallen, schwanken, den richtigen Schlüssel suchen, ein Lied anstimmen. Der Herausforderer beginnt. Danach stimmt die Gruppe per Handzeichen ab. Bei Gleichstand gibt es eine zweite Runde mit fünf Sekunden.",
+          "reward": {
+            "winner": 3
+          }
+        },
+        "die-henkersmahlzeit": {
+          "pos": 50,
+          "name": "Die Henkersmahlzeit",
+          "category": "all",
+          "description": "Jeder beschreibt in einem Satz seine letzte Mahlzeit vor dem Galgen, so köstlich oder so eklig, wie er will. Der Richter spielt den Kerkermeister, hört sich alles an und kürt das beste Henkersmahl. Sein Wort gilt.",
+          "reward": {
+            "winner": 3,
+            "judge": 1
+          }
+        },
+        "stellt-euch-tot": {
+          "pos": 60,
+          "name": "Stellt euch tot",
+          "category": "all",
+          "description": "Auf Kommando stirbt jeder einen dramatischen Tod und bleibt danach regungslos auf seinem Platz. Wer sich bewegt, lacht oder spricht, ist raus. Die Ausgeschiedenen dürfen die Übrigen mit Grimassen und Gruselgeräuschen zum Lachen bringen, aber niemanden anfassen. Wer zuletzt noch tot ist, gewinnt.",
+          "reward": {
+            "winner": 3
+          }
+        },
+        "das-rattenrennen": {
+          "pos": 70,
+          "name": "Das Rattenrennen",
+          "category": "all",
+          "description": "Stellt ein Glas als Käse in die Tischmitte. Jeder legt einen Korken oder Kronkorken als Ratte an die Tischkante vor sich. Reihum schnippt jeder seine Ratte zweimal in Richtung Käse. Wessen Ratte am Ende am nächsten am Käse liegt, gewinnt. Ratten, die vom Tisch fallen, sind tot. Bei Streit entscheidet die Gruppe.",
+          "reward": {
+            "winner": 3
+          }
+        },
+        "das-monsterverzeichnis": {
+          "pos": 80,
+          "name": "Das Monsterverzeichnis",
+          "category": "all",
+          "description": "Reihum nennt jeder ein Ungeheuer, eine Spukgestalt oder ein Gruselwesen: Vampir, Ghul, Schwiegermutter … Wer länger als fünf Sekunden zögert oder etwas wiederholt, ist raus. Wer zuletzt übrig bleibt, gewinnt. Ob etwas zählt, entscheidet die Gruppe per Handzeichen.",
+          "reward": {
+            "winner": 3
+          }
+        },
+        "wer-hat-den-schluessel": {
+          "pos": 90,
+          "name": "Wer hat den Schlüssel?",
+          "category": "oneVsAll",
+          "description": "Der Einzelne spielt den Kerkermeister und schließt die Augen. Die anderen geben unter dem Tisch einen Korken als Schlüssel herum, bis jemand „Fertig!“ ruft. Dann legen alle beide Fäuste auf den Tisch. Der Kerkermeister darf so oft raten, wie halb so viele Gefangene mitspielen (aufgerundet); jede Faust, auf die er zeigt, öffnet sich. Findet er den Schlüssel, gewinnt er, sonst gewinnt die Gruppe.",
+          "reward": {
+            "solo": 4,
+            "group": 1
+          }
+        },
+        "das-verhoer": {
+          "pos": 100,
+          "name": "Das Verhör",
+          "category": "oneVsAll",
+          "description": "Die Gruppe verhört den Einzelnen eine Minute lang mit schnellen Fragen. Er muss jede Frage beantworten, darf aber nie „Ja“ oder „Nein“ sagen, auch nicht „Jo“, „Nö“ oder nicken. Hält er die ganze Minute durch, gewinnt er. Rutscht ihm ein Ja oder Nein heraus, gewinnt die Gruppe. Die Zeit nimmt jemand mit dem Handy.",
+          "reward": {
+            "solo": 4,
+            "group": 1
+          }
+        },
+        "zehn-ausreden": {
+          "pos": 110,
+          "name": "Zehn Ausreden",
+          "category": "oneVsAll",
+          "description": "Der Einzelne hat eine Minute Zeit, zehn verschiedene Ausreden zu nennen, warum er völlig unschuldig im Verlies sitzt. Die Gruppe zählt laut mit, Wiederholungen zählen nicht. Schafft er zehn, gewinnt er. Sonst scheitert er. Bei Streit entscheidet die Gruppe per Handzeichen.",
+          "reward": {
+            "solo": 4,
+            "fail": -1
+          }
+        },
+        "galgenmaennchen": {
+          "pos": 120,
+          "name": "Galgenmännchen",
+          "category": "team",
+          "description": "Jedes Team denkt sich heimlich ein gruseliges Wort aus (Katakombe, Henkersmahl, Moder …) und nennt nur die Anzahl der Buchstaben. Abwechselnd raten die Teams einen Buchstaben im Wort der anderen. Jeder Fehlversuch bringt das ratende Team eine Stufe näher an den Galgen; zählt laut mit oder malt auf eine Serviette. Wer zuerst das ganze Wort der anderen errät, gewinnt. Nach acht Fehlversuchen hängt das Team und verliert.",
+          "reward": {
+            "team": 2
+          }
+        },
+        "kerkerfluesterpost": {
+          "pos": 130,
+          "name": "Kerkerflüsterpost",
+          "category": "team",
+          "description": "Jedes Team bekommt vom anderen Team einen gruseligen Satz mit mindestens acht Wörtern, geflüstert an die erste Person. Im Team wird der Satz von Ohr zu Ohr weitergeflüstert, jeder flüstert nur einmal. Die letzte Person sagt laut, was angekommen ist. Das Team, bei dem mehr Wörter richtig angekommen sind, gewinnt. Ist ein Team nur eine Person, hört sie den Satz einmal und wiederholt ihn.",
+          "reward": {
+            "team": 2
+          }
+        },
+        "galgen-beil-und-gift": {
+          "pos": 140,
+          "name": "Galgen, Beil und Gift",
+          "category": "uneven",
+          "description": "Wie Schere, Stein, Papier: Das Beil (Handkante) zerhackt den Galgen, der Galgen (flache Hand) schlägt das Gift, das Gift (Faust als Fläschchen) schlägt das Beil, denn der Henker kippt vorher um. Der Henker spielt gleichzeitig gegen beide Verurteilten. Auf „Eins, zwei, drei, tot!“ zeigen alle drei ihr Zeichen. Der Henker bekommt einen Punkt für jeden Verurteilten, den er schlägt, die Verurteilten bekommen einen Punkt für jedes Mal, das einer von ihnen den Henker schlägt. Wer zuerst fünf Punkte hat, gewinnt.",
+          "reward": {
+            "single": 4,
+            "pair": 2,
+            "singleName": "Henker",
+            "pairName": "Verurteilten"
+          }
+        },
+        "die-dreizehnte-stufe": {
+          "pos": 150,
+          "name": "Die dreizehnte Stufe",
+          "category": "uneven",
+          "description": "Der Galgen hat dreizehn Stufen. Ihr zählt laut von eins aufwärts, immer in dieser Reihenfolge: Kerkermeister, erster Ausbrecher, Kerkermeister, zweiter Ausbrecher. Wer dran ist, sagt eine, zwei oder drei Zahlen hintereinander. Wer die Dreizehn sagen muss, verliert die Runde. Gespielt wird, bis eine Seite zwei Runden gewonnen hat.",
+          "reward": {
+            "single": 4,
+            "pair": 2,
+            "singleName": "Kerkermeister",
+            "pairName": "Ausbrecher"
+          }
+        }
+      },
+      "events": {
+        "der-kerkermeister-wird-spendabel": {
+          "pos": 10,
+          "name": "Der Kerkermeister wird spendabel",
+          "category": "Segen",
+          "visibility": "public",
+          "description": "Der Kerkermeister hat einen Krug zu viel und wirft lallend eine Handvoll Münzen über den Tisch: „Für euch, meine Kinderchen!“ Alle erhalten 1 Münze.",
+          "effect": "goldRain",
+          "requiresRoles": false
+        },
+        "das-seilgeld": {
+          "pos": 20,
+          "name": "Das Seilgeld",
+          "category": "Fluch",
+          "visibility": "public",
+          "description": "Ein Bote des Henkers poltert herein: Jeder Gefangene zahlt seinen Anteil am Seil, gutes Hanfseil ist teuer. Alle zahlen 1 Münze an die Spielbank.",
+          "effect": "tax",
+          "requiresRoles": false
+        },
+        "die-kerkerkoechin-hat-ein-herz": {
+          "pos": 30,
+          "name": "Die Kerkerköchin hat ein Herz",
+          "category": "Segen",
+          "visibility": "public",
+          "description": "Die alte Kerkerköchin schöpft dem Ärmsten eine Extrakelle Eintopf, und am Boden der Kelle klimpert es. Wer die wenigsten Münzen hat, erhält 3 Münzen. Bei Gleichstand erhalten alle Gleichplatzierten je 3.",
+          "effect": "favor",
+          "requiresRoles": false
+        },
+        "gustav-hat-hunger": {
+          "pos": 40,
+          "name": "Gustav hat Hunger",
+          "category": "Fluch",
+          "visibility": "public",
+          "description": "Gustav, die fetteste Ratte des Verlieses, nagt sich durch den dicksten Geldbeutel am Tisch. Wer die meisten Münzen hat, verliert 2 Münzen. Bei Gleichstand trifft es alle Gleichplatzierten.",
+          "effect": "pickpocket",
+          "requiresRoles": false
+        },
+        "gerechtigkeit-unter-gefangenen": {
+          "pos": 50,
+          "name": "Gerechtigkeit unter Gefangenen",
+          "category": "Fluch",
+          "visibility": "public",
+          "description": "Im Verlies gilt nur ein Gesetz: Wer zu viel hat, teilt, oder wacht ohne Zähne auf. Wer die meisten Münzen hat, gibt 2 Münzen ab, und wer die wenigsten hat, erhält 2 Münzen. Bei Gleichstand sind alle Gleichplatzierten betroffen.",
+          "effect": "envy",
+          "requiresRoles": false
+        },
+        "peinliche-befragung": {
+          "pos": 60,
+          "name": "Peinliche Befragung",
+          "category": "Enthüllung",
+          "visibility": "public",
+          "description": "Der Kerkermeister befragt alle, die man schon durchschaut hat. Viel Geschrei, wenig Ergebnis, aber teuer. Alle, deren Rolle erraten wurde, verlieren 1 Münze.",
+          "effect": "exposed",
+          "requiresRoles": true
+        },
+        "im-dunkeln-sind-alle-ratten-grau": {
+          "pos": 70,
+          "name": "Im Dunkeln sind alle Ratten grau",
+          "category": "Segen",
+          "visibility": "public",
+          "description": "Eine Fackel verlöscht. Wer sich noch nicht verraten hat, nutzt die Dunkelheit und tastet unter dem Tisch nach verlorenen Münzen. Alle, deren Rolle noch nicht erraten wurde, erhalten 1 Münze.",
+          "effect": "disguise",
+          "requiresRoles": true
+        },
+        "streit-um-die-letzte-wurst": {
+          "pos": 80,
+          "name": "Streit um die letzte Wurst",
+          "category": "Duell",
+          "visibility": "public",
+          "description": "Es gibt nur noch eine Wurst, und zwei wollen sie: der Reichste und der Ärmste am Tisch. Wer die meisten und wer die wenigsten Münzen hat, treten im Duell gegeneinander an. Der Sieger erhält von jedem Verlierer 2 Münzen. Bei Gleichstand treten alle Gleichplatzierten gegeneinander an.",
+          "effect": "duel",
+          "requiresRoles": false
+        },
+        "das-kerkerturnier": {
+          "pos": 90,
+          "name": "Das Kerkerturnier",
+          "category": "Alle gegen alle",
+          "visibility": "public",
+          "description": "Der Kerkermeister will Unterhaltung und lallt: „Wer gewinnt, kriegt doppelt!“ Alle spielen ein Minispiel gegeneinander. Der Sieger erhält die doppelte Belohnung.",
+          "effect": "contest",
+          "requiresRoles": false
+        },
+        "zellenblock-gegen-zellenblock": {
+          "pos": 100,
+          "name": "Zellenblock gegen Zellenblock",
+          "category": "Team gegen Team",
+          "visibility": "public",
+          "description": "Ein alter Streit flammt auf: die Durchschauten gegen die Unerkannten. Alle, deren Rolle erraten wurde, spielen als Team gegen alle anderen. Jeder im Siegerteam erhält 1 Münze. Gibt es nur ein Lager, spielen alle gegeneinander, und der Sieger erhält 2 Münzen.",
+          "effect": "camps",
+          "requiresRoles": true
+        },
+        "der-kerkermeister-will-seinen-anteil": {
+          "pos": 110,
+          "name": "Der Kerkermeister will seinen Anteil",
+          "category": "Fluch mit Ausweg",
+          "visibility": "public",
+          "description": "Der Kerkermeister wankt zum reichsten Gefangenen und hält die Hand auf. Wer die meisten Münzen hat, verliert 2 Münzen, außer er gewinnt ein Duell gegen einen Herausforderer seiner Wahl.",
+          "effect": "purse",
+          "requiresRoles": false
+        },
+        "frischfleisch": {
+          "pos": 120,
+          "name": "Frischfleisch",
+          "category": "Einer gegen alle",
+          "visibility": "public",
+          "description": "Die Tür kracht auf, ein neuer Gefangener wird hereingeworfen und wettet sofort: der Reichste gegen den ganzen Rest. Wer die meisten Münzen hat, spielt allein gegen alle anderen. Gewinnt er, erhält er 3 Münzen. Gewinnt die Gruppe, erhält jeder in der Gruppe 1 Münze.",
+          "effect": "stranger",
+          "requiresRoles": false
+        },
+        "die-wahrsagerin-aus-zelle-dreizehn": {
+          "pos": 130,
+          "name": "Die Wahrsagerin aus Zelle dreizehn",
+          "category": "Enthüllung",
+          "visibility": "public",
+          "description": "Durch die Gitter krächzt eine alte Stimme: „Der Reiche soll sein Geheimnis lüften!“ Wer die meisten Münzen hat, verrät ein Erkennungsmerkmal seiner Rolle oder zahlt 2 Münzen an die Spielbank.",
+          "effect": "oracle",
+          "requiresRoles": true
+        },
+        "das-gnadengesuch": {
+          "pos": 140,
+          "name": "Das Gnadengesuch",
+          "category": "Entscheidung",
+          "visibility": "public",
+          "description": "Der Ärmste darf ein Gnadengesuch an den Kerkermeister richten, und der schnieft gerührt in seinen Bart. Wer die wenigsten Münzen hat, entscheidet: Alle erhalten 1 Münze, oder er selbst erhält 2 Münzen.",
+          "effect": "crossroads",
+          "requiresRoles": false
+        },
+        "die-letzte-brotkruste": {
+          "pos": 150,
+          "name": "Die letzte Brotkruste",
+          "category": "Entscheidung",
+          "visibility": "public",
+          "description": "Im Verlies teilt man, oder man wird geteilt. Wer die meisten Münzen hat, schenkt einem Mitspieler seiner Wahl 2 Münzen oder zahlt 3 Münzen an die Spielbank.",
+          "effect": "generosity",
+          "requiresRoles": false
+        },
+        "die-muenze-aus-dem-totenschaedel": {
+          "pos": 160,
+          "name": "Die Münze aus dem Totenschädel",
+          "category": "Glück",
+          "visibility": "public",
+          "description": "Der Kerkermeister fischt eine Münze aus einem Totenschädel und wirft sie für jeden Gefangenen einzeln. Für jeden wird eine Münze geworfen: Kopf bringt 1 Münze, Zahl kostet 1 Münze.",
+          "effect": "fate",
+          "requiresRoles": false
+        },
+        "der-kerkermeister-plaudert": {
+          "pos": 170,
+          "name": "Der Kerkermeister plaudert",
+          "category": "Segen, hält an",
+          "visibility": "public",
+          "description": "Der Kerkermeister ist so betrunken, dass er jedem alles erzählt, was er je gehört hat. Bis zum nächsten Ereignis kostet Raten keine Münze.",
+          "effect": "looseTongues",
+          "requiresRoles": true
+        },
+        "totenstille": {
+          "pos": 180,
+          "name": "Totenstille",
+          "category": "Ruhe",
+          "visibility": "public",
+          "description": "Der Kerkermeister schnarcht. Irgendwo tropft Wasser. Eine Ratte niest. Nichts geschieht.",
+          "effect": "calm",
+          "requiresRoles": false
+        },
+        "gustav-bringt-ein-geschenk": {
+          "pos": 190,
+          "name": "Gustav bringt ein Geschenk",
+          "category": "Glück",
+          "visibility": "public",
+          "description": "Gustav, die Ratte, schleppt einen Beutel aus den Katakomben heran und legt ihn vor einen Gefangenen. Wem, entscheidet nur die Ratte. Die App lost einen Gefangenen aus, er erhält 4 Münzen.",
+          "effect": "lottery",
+          "requiresRoles": false
+        },
+        "die-liste-des-henkers": {
+          "pos": 200,
+          "name": "Die Liste des Henkers",
+          "category": "Fluch",
+          "visibility": "public",
+          "description": "Von der Wendeltreppe weht ein Zettel herunter: die Liste des Henkers, ein Name dick unterstrichen. Die App lost einen Gefangenen aus, er verliert 2 Münzen. Die braucht er ohnehin nur noch für Kerzen bei der eigenen Beerdigung.",
+          "effect": "misfortune",
+          "requiresRoles": false
+        },
+        "fund-im-eintopf": {
+          "pos": 210,
+          "name": "Fund im Eintopf",
+          "category": "Glück",
+          "visibility": "private",
+          "description": "Du fischst etwas Hartes aus deinem Eintopf. Kein Zahn, sondern zwei Münzen! Wem sie vorher gehörten, fragst du lieber nicht. Du erhältst 2 Münzen.",
+          "privateType": "instant",
+          "privateCoins": 2
+        },
+        "rattenbiss": {
+          "pos": 220,
+          "name": "Rattenbiss",
+          "category": "Pech",
+          "visibility": "private",
+          "description": "Gustav, die Ratte, beißt dich in den großen Zeh und verschwindet mit einer deiner Münzen im Mauerloch. Du verlierst 1 Münze.",
+          "privateType": "instant",
+          "privateCoins": -1
+        },
+        "das-lose-mauerstueck": {
+          "pos": 230,
+          "name": "Das lose Mauerstück",
+          "category": "Glück",
+          "visibility": "private",
+          "description": "Hinter deinem Rücken wackelt ein Stein in der Wand. Dahinter liegt das Versteck eines früheren Gefangenen. Er braucht es nicht mehr. Du erhältst 3 Münzen.",
+          "privateType": "instant",
+          "privateCoins": 3
+        },
+        "der-henker-nimmt-mass": {
+          "pos": 240,
+          "name": "Der Henker nimmt Maß",
+          "category": "Pech",
+          "visibility": "private",
+          "description": "Der Henker schleicht vorbei und misst mit einem Seil deinen Hals ab. Vor Schreck lässt du zwei Münzen fallen, und eine Ratte ist schneller. Du verlierst 2 Münzen.",
+          "privateType": "instant",
+          "privateCoins": -2
+        },
+        "eine-verwechslung": {
+          "pos": 250,
+          "name": "Eine Verwechslung",
+          "category": "Glück",
+          "visibility": "private",
+          "description": "Der Kerkermeister hält dich für seine verstorbene Mutter, weint sich an deiner Schulter aus und steckt dir eine Münze zu. Lass ihn in dem Glauben. Du erhältst 1 Münze.",
+          "privateType": "instant",
+          "privateCoins": 1
+        },
+        "das-zauberwort": {
+          "pos": 260,
+          "name": "Das Zauberwort",
+          "category": "Geheimer Auftrag",
+          "visibility": "private",
+          "description": "Bring einen Mitspieler dazu, das Wort „Henker“ zu sagen, ohne dass du es vorher selbst sagst. Schaffst du es, erhältst du 2 Münzen.",
+          "privateType": "task",
+          "privateCoins": 2
+        },
+        "ein-hoch-auf-den-kerkermeister": {
+          "pos": 270,
+          "name": "Ein Hoch auf den Kerkermeister",
+          "category": "Geheimer Auftrag",
+          "visibility": "private",
+          "description": "Bring mindestens drei Mitspieler dazu, gleichzeitig mit dir auf den Kerkermeister anzustoßen. Wasser zählt genauso. Schaffst du es, erhältst du 3 Münzen.",
+          "privateType": "task",
+          "privateCoins": 3
+        },
+        "geisterstunde": {
+          "pos": 280,
+          "name": "Geisterstunde",
+          "category": "Geheimer Auftrag",
+          "visibility": "private",
+          "description": "Bring zwei Mitspieler dazu, gleichzeitig mit dir wie ein Gespenst „Huuuu!“ zu heulen. Schaffst du es, erhältst du 2 Münzen.",
+          "privateType": "task",
+          "privateCoins": 2
+        },
+        "mundraub": {
+          "pos": 290,
+          "name": "Mundraub",
+          "category": "Geheimer Auftrag",
+          "visibility": "private",
+          "description": "Bring einen Mitspieler dazu, dir freiwillig etwas von seinem Teller oder aus seinem Glas anzubieten. Schaffst du es, erhältst du 2 Münzen.",
+          "privateType": "task",
+          "privateCoins": 2
+        },
+        "unschuldig": {
+          "pos": 300,
+          "name": "Unschuldig!",
+          "category": "Geheimer Auftrag",
+          "visibility": "private",
+          "description": "Erzähl einem Mitspieler, warum du völlig zu Unrecht hier unten sitzt, bis er laut sagt, dass er dir glaubt. Schaffst du es, erhältst du 2 Münzen.",
+          "privateType": "task",
+          "privateCoins": 2
         }
       }
     }

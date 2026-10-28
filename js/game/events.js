@@ -35,6 +35,10 @@ function screenEvent() {
       </div>
       <p class="narrative">${card.text}</p>
     </article>
+    ${cardNotes(e.card)}
+    ${pauseControls()}
+    ${state.minigame && state.minigame.fromEvent && state.minigame.loadedDice !== undefined && e.minigameIndex !== null
+      ? `<p class="note">»Gezinkt«: Tragt erst das Ergebnis des zweiten Versuchs ein.</p>` : ""}
     ${effect.note ? `<p class="note">${effect.note}</p>` : ""}
     ${groups ? `<div class="actions">${groups}</div>` : ""}
     ${eventPending() ? "" : `<button class="btn" onclick="show('overview')">Weiter</button>`}
@@ -77,6 +81,7 @@ function drawEvent(automatic, fixedIndex) {
 
   resetTimer();
   if (state.minigame && state.minigame.fromEvent) state.minigame = null;
+  cardDrawn("event");
   if (EVENTS[index].isPrivate) { privateEvent(index, automatic); return; }
   // a new card ends everything that lasted "until the next event"
   state.seersNight = false;
@@ -91,6 +96,8 @@ function drawEvent(automatic, fixedIndex) {
     automatic: Boolean(automatic),
     done: {},
     minigameIndex: null,
+    card: state.cardCount,
+    random: Math.random(),
     snapshot: takeSnapshot()
   };
   show("event");
@@ -98,13 +105,30 @@ function drawEvent(automatic, fixedIndex) {
 
 // A private card goes to one player (preferably one with few so far) and read under "Geheim nachsehen" or on their own phone.
 function privateEvent(index, automatic) {
-  const counts = state.players.map(s => (s.secrets || []).length);
-  const fewest = Math.min(...counts);
-  const candidates = state.players.map((_, i) => i).filter(i => counts[i] === fewest);
-  const player = candidates[Math.floor(Math.random() * candidates.length)];
+  const player = privateCardTarget();
   const entry = givePrivateCard(index, player);
-  state.event = { index, automatic: Boolean(automatic), isPrivate: true, player, entryId: entry.id, done: {}, snapshot: takeSnapshot() };
+  state.event = { index, automatic: Boolean(automatic), isPrivate: true, player, entryId: entry.id, done: {}, card: state.cardCount, snapshot: takeSnapshot() };
   show("event");
+}
+
+function privateCardTarget() {
+  const pool = inPlay();
+  const counts = pool.map(i => (state.players[i].secrets || []).length);
+  const fewest = Math.min(...counts);
+  const candidates = pool.filter((_, k) => counts[k] === fewest);
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
+// Pinkelpause started right on a secret card for this player: the card goes to someone else.
+function passPrivateCard() {
+  const e = state.event;
+  const s = state.players[e.player];
+  const entry = (s.secrets || []).find(p => p.id === e.entryId);
+  if (!entry) return;
+  if (entry.kind === "instant" && entry.coins) addCoins([e.player], -entry.coins);
+  s.secrets = s.secrets.filter(p => p !== entry);
+  e.player = privateCardTarget();
+  e.entryId = givePrivateCard(e.index, e.player).id;
 }
 
 function givePrivateCard(index, player) {
@@ -189,6 +213,7 @@ function buyCard() {
   const unseen = cards.filter(k => !had.has(EVENTS[k].title));
   const pool = unseen.length ? unseen : cards;
   addCoins([i], -cost);
+  if (state.tip) { addCoins([state.tip.player], 1); state.tip.earned++; } // Trinkgeld
   givePrivateCard(pool[Math.floor(Math.random() * pool.length)], i);
   state.buyCard = null;
   startMyRole(i);
@@ -222,6 +247,8 @@ function screenPrivateEvent() {
       <p class="narrative">Nur ${playerName(i)} erfährt, was geschieht. Alle anderen wissen nur: Da ist etwas im Gange.</p>
     </article>
     <p class="note" id="connection-note" hidden></p>
+    ${cardNotes(e.card)}
+    ${pauseControls()}
     <button class="btn" onclick="startMyRole(${i})">${playerName(i)} sieht jetzt nach</button>
     <button class="btn-quiet" onclick="show('overview')">Später nachsehen</button>
   `;
@@ -257,7 +284,7 @@ function eventAction(gi, bi) {
     if (diff < 0) e.losses[i] = (e.losses[i] || 0) - diff;
   });
   if (button.winners) {
-    minigameFinished(button.winners, before, button.participants);
+    minigameFinished(button.winners, before, button.participants || eventParticipants());
     if (state.minigame && state.minigame.fromEvent) markMinigamePlayed();
   }
   e.done[gi] = bi;
@@ -270,6 +297,14 @@ function eventAction(gi, bi) {
     save();
     render();
   }
+}
+
+// Who plays the minigame of the current event card: an explicit list, otherwise everyone who could win.
+function eventParticipants() {
+  const groups = (eventEffect().groups || []).filter(g => g.buttons.some(k => k.winners));
+  const explicit = groups.flatMap(g => g.buttons).find(k => k.participants);
+  if (explicit) return explicit.participants;
+  return [...new Set(groups.flatMap(g => g.buttons.flatMap(k => k.winners || [])))];
 }
 
 function eventPending() {

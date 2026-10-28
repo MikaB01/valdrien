@@ -473,6 +473,7 @@ function adventureEditor() {
       <h3>Grunddaten</h3>
       ${field([...p, "name"], "Name", "text")}
       ${field([...p, "setting"], "Setting", "text", { help: "Wo und wie gespielt wird. Steht auf der Auswahlkarte, z. B. „Draußen · für Wanderungen“." })}
+      ${field([...p, "goal"], "Spielziel", "select", { values: CATALOG.goals, defaultValue: "coins", help: "Beim Schlüssel-Ziel kauft man beim Kerkermeister zufällig Eisen-, Silber- oder Knochenschlüssel. Wer drei verschiedene hat, gewinnt sofort." })}
     </div>
     <div class="group">
       <h3>Geschichte</h3>

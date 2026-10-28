@@ -88,7 +88,7 @@ function roleCard(r) {
       ${r.character ? `
       <div class="section">
         <span class="label">So spielst du die Rolle</span>
-        <p>${r.character}</p>
+        ${characterHtml(r.character)}
       </div>` : ""}
       <div class="section">
         <span class="label">Erkennungsmerkmale</span>
@@ -105,6 +105,12 @@ function roleCard(r) {
       </div>
       <p class="coin-line">Startkapital: ${r.startingCoins} Münzen</p>
     </article>`;
+}
+
+// "Charakter und Verhalten" holds one point per line.
+function characterHtml(text) {
+  const lines = text.split("\n").map(l => l.replace(/^[-•·]\s*/, "").trim()).filter(Boolean);
+  return lines.length > 1 ? `<ul class="character-list">${lines.map(l => `<li>${l}</li>`).join("")}</ul>` : `<p>${lines[0] || ""}</p>`;
 }
 
 function addName() {
@@ -156,7 +162,7 @@ function dealRoles() {
     name: name.trim(),
     role: state.roles ? shuffled[i] : null,
     coins: state.roles ? ROLES[shuffled[i]].startingCoins : RULES.startingCoinsFallback,
-    revealed: false, abilityUsed: false, taskDone: false, rerolls: 0,
+    revealed: false, abilityUsed: false, taskDone: false, rerolls: 0, keys: {},
     accessCode: randomCode()
   }));
   const plan = rerollPlan(state.players.length, roleCount(), state.roles ? rerollSetting() : 0);
@@ -181,6 +187,12 @@ function dealRoles() {
   state.freeGuesses = false;
   state.lastWinnings = {};
   state.lastParticipants = [];
+  state.escaped = null;
+  state.buyKey = null;
+  state.tip = null;
+  state.pause = null;
+  state.curiosity = null;
+  state.cardCount = 0;
   show(state.roles ? "handover" : "intro");
 }
 

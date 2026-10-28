@@ -91,6 +91,7 @@ function convertAdventure(id, a, before, slots) {
     id,
     title: escapeHtml(a.name || "Neues Abenteuer"),
     setting: escapeHtml(a.setting || ""),
+    goal: a.goal === "keys" ? "keys" : "coins",
     question: escapeHtml(w.question || "Wer spielt mit?"),
     player: escapeHtml(w.player || "Spieler"),
     plural: escapeHtml(w.plural || "Spieler"),

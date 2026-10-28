@@ -187,7 +187,7 @@ function screenSettings() {
       </section>
       <section>
         ${sectionHead("music", "Musik")}
-        ${hint("music", "Solange die Ereignis-Uhr läuft, spielt hin und wieder ruhige Musik passend zum Abenteuer: Harfe und Flöte im Wald, Laute und Trommel in der Taverne. Die Musik entsteht live in der App, ganz ohne Dateien und Lizenzkosten. Beim iPhone muss der Stummschalter aus sein.")}
+        ${hint("music", "Solange die Ereignis-Uhr läuft, spielt hin und wieder Musik passend zum Abenteuer: Harfe und Flöte im Wald, Laute und Trommel in der Taverne, ein beschwipster Totentanz mit Knochenxylophon und Glocke im Verlies. Die Musik entsteht live in der App, ganz ohne Dateien und Lizenzkosten. Beim iPhone muss der Stummschalter aus sein.")}
         <div class="segmented" role="group" aria-label="Musik">
           ${segment(musicOn, "setSetting('music', true)", "An")}
           ${segment(!musicOn, "setSetting('music', false)", "Aus")}
@@ -201,7 +201,7 @@ function screenSettings() {
       </section>
       <section>
         ${sectionHead("sound", "Signalton")}
-        ${hint("sound", "Ist die Zeit um, erklingt kurz ein passender Ton, sobald die neue Karte erscheint: eine Harfe im Wald, Laute und Glöckchen in der Taverne.")}
+        ${hint("sound", "Ist die Zeit um, erklingt kurz ein passender Ton, sobald die neue Karte erscheint: eine Harfe im Wald, Laute und Glöckchen in der Taverne, Totenglocke und Schlüsselbund im Verlies. Im Verlies klirrt auch der Schlüsselbund beim Kaufen.")}
         <div class="segmented" role="group" aria-label="Signalton">
           ${segment(settings.sound !== false, "setSetting('sound', true)", "An")}
           ${segment(settings.sound === false, "setSetting('sound', false)", "Aus")}

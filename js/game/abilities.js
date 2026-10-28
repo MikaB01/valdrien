@@ -132,32 +132,39 @@ ABILITIES.luckBringer = {
   }
 };
 
+// Doubles the whole gain of the minigame just won.
 ABILITIES.goldFinger = {
   show: (i, f, header) => {
-    const extra = Math.min((state.lastWinnings || {})[i] || 0, 3);
-    if (extra > 0) return header + abilityButton(`${playerName(i)} erhält ${extra} zusätzliche ${coinWord(extra)}`, "applyAbility()");
+    const extra = (state.lastWinnings || {})[i] || 0;
+    if (extra > 0) return header + abilityButton(`Gewinn verdoppeln: ${playerName(i)} erhält ${extra} zusätzliche ${coinWord(extra)}`, "applyAbility()");
     return header + abilityNote(`${playerName(i)} hat das letzte Minispiel nicht gewonnen. Die Fähigkeit wirkt direkt nach einem gewonnenen Minispiel.`);
   },
   apply: i => {
-    addCoins([i], Math.min((state.lastWinnings || {})[i] || 0, 3));
+    addCoins([i], (state.lastWinnings || {})[i] || 0);
     delete state.lastWinnings[i];
   }
 };
 
+// "Das Turnier": the button appears on every minigame this player takes part in (minigameAbilities).
 ABILITIES.marksman = {
-  show: (i, f, header) => header + `
-        <div class="action-group">
-          <span class="label">${playerName(i)} kündigt den Sieg an. Welches Minispiel?</span>
-          ${abilityButton(`Duell: ${playerName(i)} fordert heraus`, "startMarksman('duel')")}
-          ${abilityButton("Alle gegen alle", "startMarksman('all')")}
-          ${abilityButton(`Einer gegen alle: ${playerName(i)} allein`, "startMarksman('oneVsAll')")}
-        </div>`
+  show: (i, f, header) => header + abilityNote(`Diese Fähigkeit setzt ${playerName(i)} bei einem Minispiel ein, bei dem ${playerName(i)} mitspielt. Dort erscheint vor dem Start ein Knopf dafür.`)
 };
-function startMarksman(category) {
-  const i = state.ability.player;
-  state.winBonus = { player: i, amount: 3 };
+function announceTournament(i) {
+  const m = state.minigame;
+  if (!m || m.done || state.players[i].abilityUsed) return;
   state.players[i].abilityUsed = true;
-  drawMinigame(category, false, i);
+  m.tournament = i;
+  save();
+  render();
+}
+// Called with every minigame result: the announced winner gets 1 coin from each other participant.
+function tournamentPayout(winners, participants) {
+  const m = state.minigame;
+  const i = m && m.tournament;
+  if (i === undefined || i === null || m.tournamentPaid) return;
+  m.tournamentPaid = true;
+  if (!winners.includes(i)) return;
+  participants.filter(j => j !== i).forEach(j => transfer(j, i, 1));
 }
 
 ABILITIES.pathfinder = {
@@ -197,18 +204,28 @@ function fate(chosen, other) {
   drawEvent(false, chosen);
 }
 
+// Right: half of the richest other player's coins (rounded up). Wrong: all own coins go to the bank.
 ABILITIES.luckyFairy = {
   show: (i, f, header) => {
     if (f.flip) {
-      return header + `
+      const intro = `
           <div class="coin-flip">${f.flip}</div>
-          <p class="result-number">${f.won ? "+4 Münzen" : "Leider nichts"}</p>
-          <p class="narrative" style="text-align:center">${playerName(i)} hat auf ${f.side} gesetzt, die Münze zeigt ${f.flip}.</p>
+          <p class="narrative" style="text-align:center">${playerName(i)} hat auf ${f.side} gesetzt, die Münze zeigt ${f.flip}.</p>`;
+      if (!f.won) return header + intro + `<p class="result-number">Alles verloren</p>
+          <p class="muted" style="text-align:center">${coinsText(f.lost)} gehen an die Spielbank.</p>
+          <button class="btn" onclick="show('overview')">Weiter</button>`;
+      if (f.victim === undefined) return header + intro + `
+          <div class="action-group">
+            <span class="label">Gleichstand: Wen erleichtert ${playerName(i)}?</span>
+            ${f.candidates.map(j => abilityButton(`${playerName(j)} (${coinsText(state.players[j].coins)})`, `luckyFairyVictim(${j})`)).join("")}
+          </div>`;
+      return header + intro + `<p class="result-number">+${f.gain} ${coinWord(f.gain)}</p>
+          <p class="muted" style="text-align:center">${playerName(i)} nimmt ${playerName(f.victim)} die Hälfte der Münzen weg.</p>
           <button class="btn" onclick="show('overview')">Weiter</button>`;
     }
     return header + `
         <div class="action-group">
-          <span class="label">Welche Seite bedeutet Erfolg?</span>
+          <span class="label">${playerName(i)} wählt</span>
           ${abilityButton("Kopf", "luckyFairy('Kopf')")}
           ${abilityButton("Zahl", "luckyFairy('Zahl')")}
         </div>`;
@@ -217,13 +234,30 @@ ABILITIES.luckyFairy = {
 function luckyFairy(side) {
   const f = state.ability;
   const i = f.player;
+  if (f.flip || state.players[i].abilityUsed) return;
   f.side = side;
   f.flip = Math.random() < 0.5 ? "Kopf" : "Zahl";
   f.won = f.flip === side;
-  if (f.won) addCoins([i], 4);
   state.players[i].abilityUsed = true;
+  if (!f.won) {
+    f.lost = state.players[i].coins;
+    state.players[i].coins = 0;
+  } else {
+    const others = state.players.map((_, j) => j).filter(j => j !== i);
+    const max = Math.max(...others.map(j => state.players[j].coins));
+    f.candidates = others.filter(j => state.players[j].coins === max);
+    if (f.candidates.length === 1) luckyFairyVictim(f.candidates[0], true);
+  }
   save();
   render();
+}
+function luckyFairyVictim(j, quiet) {
+  const f = state.ability;
+  if (!f.won || f.victim !== undefined || !f.candidates.includes(j)) return;
+  f.victim = j;
+  f.gain = Math.ceil(state.players[j].coins / 2);
+  transfer(j, f.player, f.gain);
+  if (!quiet) { save(); render(); }
 }
 
 /* --- Golden tankard --- */
@@ -248,18 +282,16 @@ function houseRules(play) {
   show("overview");
 }
 
+// From now on 1 coin per event card that is not a minigame and per bought secret card, until a minigame is drawn.
 ABILITIES.tip = {
-  show: (i, f, header) => {
-    if ((state.lastParticipants || []).includes(i)) {
-      return header + abilityButton(`${playerName(i)} erhält 2 Münzen Trinkgeld`, "applyAbility()");
-    }
-    return header + abilityNote(`Die Fähigkeit wirkt direkt nach einem Minispiel, bei dem ${playerName(i)} mitgespielt hat.`);
-  },
-  apply: i => {
-    addCoins([i], 2);
-    state.lastParticipants = [];
-  }
+  show: (i, f, header) => header + abilityButton(`Ab jetzt kassiert ${playerName(i)} Trinkgeld`, "applyAbility()"),
+  apply: i => { state.tip = { player: i, earned: 0 }; }
 };
+function tipNote() {
+  const t = state.tip;
+  if (!t || !state.players[t.player]) return "";
+  return `<p class="note">Trinkgeld: ${playerName(t.player)} erhält für jede Ereigniskarte und jede gekaufte Geheimkarte 1 Münze, bis ein Minispiel gezogen wird${t.earned ? ` (bisher +${t.earned})` : ""}.</p>`;
+}
 
 ABILITIES.foolsLuck = {
   show: (i, f, header) => {
@@ -310,9 +342,9 @@ function encore(index) {
   startMinigame(index, false, i);
 }
 
-// The button for this ability appears on the minigame screen.
+// The button for this ability appears on the minigame screen (minigameAbilities).
 ABILITIES.loadedDice = {
-  show: (i, f, header) => header + abilityNote(`Diese Fähigkeit setzt ${playerName(i)} während eines Minispiels ein. Dort erscheint dann ein Knopf dafür.`)
+  show: (i, f, header) => header + abilityNote(`Diese Fähigkeit setzt ${playerName(i)} bei einem Minispiel ein, auch ohne mitzuspielen. Dort erscheint ein Knopf dafür.`)
 };
 function useLoadedDice(i) {
   if (state.players[i].abilityUsed) return;
@@ -340,14 +372,314 @@ function foresight(first, next) {
   show("overview");
 }
 
+// Duel against an opponent of choice; the winner gets half of the loser's coins (rounded up), nothing else.
 ABILITIES.challenge = {
   show: (i, f, header) => header + abilityButton(`${playerName(i)} fordert zum Duell`, "challenge()")
 };
 function challenge() {
   const i = state.ability.player;
-  state.winBonus = { player: i, amount: 2 };
   state.players[i].abilityUsed = true;
   drawMinigame("duel", false, i);
+  state.minigame.stakes = "half";
+  save();
+  render();
+}
+
+/* --- Henkersmahl im Verlies --- */
+
+function abilityHolders(mechanic) {
+  return state.players.map((_, i) => i).filter(i => roleOf(i) && roleOf(i).ability.mechanic === mechanic
+    && state.players[i].revealed && !state.players[i].abilityUsed);
+}
+
+// Buttons and notes on the minigame screen for "Gezinkt" (loadedDice) and "Das Turnier" (marksman).
+function minigameAbilities() {
+  const m = state.minigame;
+  if (!m || m.done) return "";
+  let html = "";
+  if (m.loadedDice !== undefined) {
+    html += abilityNote(`${playerName(m.loadedDice)} setzt »Gezinkt« ein: Das Minispiel wird mit denselben Teilnehmern wiederholt. Der erste Versuch zählt nicht. Tragt erst das Ergebnis des zweiten Versuchs ein.`);
+  } else {
+    html += abilityHolders("loadedDice").map(i =>
+      `<button class="btn-quiet" onclick="useLoadedDice(${i})">${playerName(i)}: »Gezinkt« – Minispiel wiederholen lassen</button>`).join("");
+  }
+  if (m.tournament !== undefined) {
+    const t = playerName(m.tournament);
+    html += abilityNote(`${t} hat beim »Turnier« den Sieg angekündigt. Gewinnt ${t}, zahlt jeder Mitspieler des Minispiels 1 Münze an ${t}.`);
+  } else {
+    html += abilityHolders("marksman").filter(tournamentReady).map(i =>
+      `<button class="btn-quiet" onclick="announceTournament(${i})">${playerName(i)}: »Das Turnier« – Sieg ankündigen</button>`).join("");
+  }
+  return html;
+}
+
+// Rules and opponents must be fixed and the player must take part.
+function tournamentReady(i) {
+  const m = state.minigame;
+  if (m.fromEvent) return Boolean(state.event) && eventParticipants().includes(i);
+  if (MINIGAMES[m.index].category === "duel" && m.opponent === undefined) return false;
+  return minigameParticipants().includes(i);
+}
+
+// Every drawn card (event card, secret card or minigame from the deck) passes here.
+function cardDrawn(kind) {
+  state.cardCount = (state.cardCount || 0) + 1;
+  const p = state.pause;
+  if (p && state.players[p.player] && p.coins < RULES.bathroomBreakMax) {
+    addCoins([p.player], 1);
+    p.coins++;
+    p.paidCard = state.cardCount;
+  }
+  const t = state.tip;
+  if (t && kind === "event" && state.players[t.player]) {
+    addCoins([t.player], 1);
+    t.earned++;
+    t.paidCard = state.cardCount;
+  }
+}
+
+function cardNotes(card) {
+  const notes = [];
+  const p = state.pause;
+  if (p && state.players[p.player]) {
+    notes.push(`Pinkelpause: Diese Karte gilt nicht für ${playerName(p.player)}.${p.paidCard === card ? ` ${playerName(p.player)} erhält 1 Münze (bisher +${p.coins}).` : ""}`);
+  }
+  const t = state.tip;
+  if (t && card && t.paidCard === card && state.players[t.player]) notes.push(`Trinkgeld: ${playerName(t.player)} erhält 1 Münze.`);
+  return notes.map(abilityNote).join("");
+}
+
+/* Pinkelpause (bathroomBreak): right after a card is drawn, the player sits out this and all following cards,
+   1 coin per card (at most RULES.bathroomBreakMax), until rejoining. Cards apply only to inPlay(). */
+ABILITIES.bathroomBreak = {
+  show: (i, f, header) => header + abilityNote(`Die Pinkelpause beginnt direkt nachdem eine Ereigniskarte gezogen wurde. Dort erscheint der Knopf zum Aussetzen.`)
+};
+
+function currentCard() {
+  const e = state.event;
+  if (state.screen === "event" && e) {
+    if (e.isPrivate) return { kind: "private", fresh: true };
+    return { kind: "event", fresh: !Object.keys(e.done || {}).length && e.minigameIndex === null };
+  }
+  const m = state.minigame;
+  if (state.screen === "minigame" && m && !m.fromEvent) return { kind: "minigame", fresh: !m.done && !m.byAbility };
+  return null;
+}
+
+function pauseControls() {
+  const card = currentCard();
+  if (!card) return "";
+  const p = state.pause;
+  if (p && state.players[p.player]) {
+    return `<button class="btn-quiet" onclick="endPause()">${playerName(p.player)} kommt von der Pinkelpause zurück</button>`;
+  }
+  if (!card.fresh) return "";
+  return abilityHolders("bathroomBreak").map(i =>
+    `<button class="btn-quiet" onclick="startPause(${i})">${playerName(i)}: »Pinkelpause« – ab jetzt aussetzen</button>`).join("");
+}
+
+function pauseNote() {
+  const p = state.pause;
+  if (!p || !state.players[p.player]) return "";
+  return `<div class="note note-action"><p>Pinkelpause: Ereigniskarten gelten nicht für ${playerName(p.player)} (bisher +${p.coins}).</p>
+    <button class="link-button" onclick="endPause()">${playerName(p.player)} steigt wieder ein</button></div>`;
+}
+
+function startPause(i) {
+  const card = currentCard();
+  if (!card || !card.fresh || state.pause || state.players[i].abilityUsed) return;
+  state.players[i].abilityUsed = true;
+  state.pause = { player: i, coins: 1, paidCard: state.cardCount };
+  addCoins([i], 1);
+  refreshCard(card);
+  save();
+  render();
+}
+
+// Rejoining on a card nothing was booked for yet: the card applies again and its coin goes back.
+function endPause() {
+  const p = state.pause;
+  if (!p) return;
+  const card = currentCard();
+  const back = card && card.fresh && card.kind !== "private";
+  if (back && p.paidCard === state.cardCount) addCoins([p.player], -1);
+  state.pause = null;
+  if (back) refreshCard(card);
+  save();
+  render();
+}
+
+function refreshCard(card) {
+  if (card.kind === "event") state.event.snapshot = takeSnapshot();
+  if (card.kind === "private" && state.pause && state.event.player === state.pause.player) passPrivateCard();
+  if (card.kind === "minigame") {
+    const m = state.minigame;
+    const keep = {};
+    ["request", "card", "automatic", "stakes", "tournament", "loadedDice"].forEach(k => { if (m[k] !== undefined) keep[k] = m[k]; });
+    startMinigame(m.index, false);
+    Object.assign(state.minigame, keep);
+  }
+}
+
+/* Langfinger (longFingers): up to three players, one spin each: −1, +1, +2, +3. */
+const WHEEL = [-1, 1, 2, 3];
+
+ABILITIES.longFingers = {
+  show: (i, f, header) => {
+    if (!f.targets) {
+      const chosen = f.chosen || [];
+      return header + `
+        <div class="action-group">
+          <span class="label">Bei wem greift ${playerName(i)} zu? Bis zu drei</span>
+          ${state.players.map((s, j) => j === i ? "" : `
+            <button class="action toggle ${chosen.includes(j) ? "chosen" : ""}" aria-pressed="${chosen.includes(j)}" onclick="toggleTheft(${j})"
+              ${!chosen.includes(j) && chosen.length >= 3 ? "disabled" : ""}>${chosen.includes(j) ? "✓ " : ""}${playerName(j)} · ${coinsText(s.coins)}</button>`).join("")}
+        </div>
+        <button class="btn" onclick="startTheft()" ${chosen.length ? "" : "disabled"}>Glücksrad drehen</button>`;
+    }
+    const done = f.spins.length;
+    const last = f.spins[done - 1];
+    const next = f.targets[done];
+    return `
+      <p class="muted" style="text-align:center">${playerName(i)} als ${roleOf(i).name}, ${roleOf(i).title}</p>
+      ${wheelHtml(f, Boolean(last))}
+      ${last ? `<p class="wheel-result">${theftText(i, last)}</p>` : `<p class="muted" style="text-align:center">Felder: −1, +1, +2 und +3. Bei −1 ist ${playerName(i)} erwischt worden.</p>`}
+      <div class="wheel-next">
+        ${next !== undefined
+          ? `<button class="btn" onclick="spinTheft()">Rad drehen für ${playerName(next)}</button>`
+          : `<button class="btn" onclick="show('overview')">Weiter</button>`}
+      </div>`;
+  }
+};
+
+function wheelHtml(f, spinning) {
+  const colors = ["wheel-bad", "wheel-a", "wheel-b", "wheel-c"];
+  const slice = (k) => {
+    const a0 = (k * 90 - 90) * Math.PI / 180, a1 = (k * 90) * Math.PI / 180;
+    const p = a => `${(50 + 48 * Math.cos(a)).toFixed(2)} ${(50 + 48 * Math.sin(a)).toFixed(2)}`;
+    const mid = (k * 90 - 45) * Math.PI / 180;
+    return `<path class="${colors[k]}" d="M50 50 L${p(a0)} A48 48 0 0 1 ${p(a1)} Z"/>
+      <text x="${(50 + 30 * Math.cos(mid)).toFixed(2)}" y="${(50 + 30 * Math.sin(mid)).toFixed(2)}" text-anchor="middle" dominant-baseline="central"
+        transform="rotate(${k * 90 + 45} ${(50 + 30 * Math.cos(mid)).toFixed(2)} ${(50 + 30 * Math.sin(mid)).toFixed(2)})">${WHEEL[k] > 0 ? "+" + WHEEL[k] : "−1"}</text>`;
+  };
+  return `
+    <div class="wheel">
+      <svg class="wheel-disc ${spinning ? "spin" : ""}" viewBox="0 0 100 100" style="--from:${f.from || 0}deg; --to:${f.angle || 0}deg; transform: rotate(${f.angle || 0}deg)" aria-hidden="true">
+        ${[0, 1, 2, 3].map(slice).join("")}
+        <circle cx="50" cy="50" r="7" class="wheel-hub"/>
+      </svg>
+      <svg class="wheel-pointer" viewBox="0 0 20 16" aria-hidden="true"><path d="M2 0 H18 L10 15 Z"/></svg>
+    </div>`;
+}
+
+function theftText(i, spin) {
+  const t = playerName(spin.target);
+  if (spin.value < 0) return spin.amount ? `Erwischt! ${playerName(i)} gibt ${t} 1 Münze.` : `Erwischt! Aber ${playerName(i)} hat nichts, was er ${t} geben könnte.`;
+  if (!spin.amount) return `+${spin.value}, aber bei ${t} ist nichts mehr zu holen.`;
+  return `${playerName(i)} nimmt ${t} ${coinsText(spin.amount)} weg.${spin.amount < spin.value ? " Mehr war nicht da." : ""}`;
+}
+
+function toggleTheft(j) {
+  const f = state.ability;
+  if (f.targets) return;
+  const chosen = f.chosen || [];
+  f.chosen = chosen.includes(j) ? chosen.filter(x => x !== j) : chosen.length < 3 ? chosen.concat(j) : chosen;
+  save();
+  render();
+}
+
+function startTheft() {
+  const f = state.ability;
+  if (f.targets || !(f.chosen || []).length) return;
+  f.targets = f.chosen.slice();
+  f.spins = [];
+  state.players[f.player].abilityUsed = true;
+  save();
+  render();
+}
+
+function spinTheft() {
+  const f = state.ability;
+  const i = f.player;
+  const target = f.targets[f.spins.length];
+  if (target === undefined) return;
+  const k = Math.floor(Math.random() * WHEEL.length);
+  const value = WHEEL[k];
+  let amount;
+  if (value > 0) { amount = Math.min(value, state.players[target].coins); transfer(target, i, value); }
+  else { amount = Math.min(1, state.players[i].coins); transfer(i, target, 1); }
+  f.spins.push({ target, value, amount });
+  f.from = f.angle || 0;
+  const turns = f.from - (f.from % 360) + 360 * 5;
+  f.angle = turns + ((-45 - k * 90) % 360 + 360) % 360; // segment k under the pointer at the top
+  save();
+  render();
+}
+
+/* Neugiernase (curiosity): a secret yes/no question; a later hit on that player pays RULES.curiosityHitReward. */
+ABILITIES.curiosity = {
+  show: (i, f, header) => {
+    if (f.target === undefined) {
+      const targets = state.players.map((_, j) => j).filter(j => j !== i && !state.players[j].revealed);
+      if (!targets.length) return header + abilityNote("Alle anderen Rollen sind schon erraten. Hier gibt es nichts mehr zu fragen.");
+      return header + `
+        <div class="action-group">
+          <span class="label">Wen fragt ${playerName(i)}?</span>
+          ${targets.map(j => abilityButton(playerName(j), `state.ability.target = ${j}; save(); render()`)).join("")}
+        </div>`;
+    }
+    const t = playerName(f.target);
+    return header + abilityNote(`${playerName(i)} stellt ${t} jetzt heimlich eine Ja-Nein-Frage zu ${t}s Rolle, geflüstert oder kurz zur Seite. ${t} antwortet ehrlich. Nach dem Rollennamen selbst darf nicht gefragt werden. Errät ${playerName(i)} die Rolle von ${t} später, gibt es ${RULES.curiosityHitReward} statt ${RULES.hitReward} Münzen.`)
+      + abilityButton("Die Frage ist gestellt", "applyAbility()");
+  },
+  apply: i => { state.curiosity = { player: i, target: state.ability.target }; }
+};
+
+/* Narrenrätsel (foolsRiddle): secretly 2, 4 or 6; a wrong guess pays the owner that many, a right one half to the guesser. */
+ABILITIES.foolsRiddle = {
+  show: (i, f, header) => {
+    if (f.opponent === undefined) return header + `
+        <div class="action-group">
+          <span class="label">Wer soll raten?</span>
+          ${state.players.map((_, j) => j === i ? "" : abilityButton(playerName(j), `state.ability.opponent = ${j}; save(); render()`)).join("")}
+        </div>`;
+    const o = playerName(f.opponent);
+    if (f.secret === undefined) return header + onlyYouLook(i) + `
+        <div class="action-group">
+          <span class="label">${playerName(i)}, welche Zahl soll ${o} raten?</span>
+          ${[2, 4, 6].map(n => abilityButton(String(n), `foolsRiddle(${n})`)).join("")}
+        </div>`;
+    if (f.guess === undefined) return `
+      <div class="handover">
+        <div class="emblem">${icon("guess")}</div>
+        <p class="muted">Gib das Handy an</p>
+        <p class="name-large">${o}</p>
+        <p class="muted">${playerName(i)} hat heimlich 2, 4 oder 6 gewählt. ${o}, welche Zahl ist es?</p>
+        <div class="number-row">${[2, 4, 6].map(n => `<button class="action" onclick="foolsGuess(${n})">${n}</button>`).join("")}</div>
+      </div>`;
+    const right = f.guess === f.secret;
+    return `
+      <div class="coin-flip">${f.secret}</div>
+      <p class="narrative" style="text-align:center">${o} hat auf ${f.guess} getippt. ${right ? `Richtig! ${o} erhält ${coinsText(f.secret / 2)}.` : `Daneben! ${playerName(i)} erhält ${coinsText(f.secret)}.`}</p>
+      <button class="btn" onclick="show('overview')">Weiter</button>`;
+  }
+};
+function foolsRiddle(n) {
+  const f = state.ability;
+  if (f.secret !== undefined) return;
+  f.secret = n;
+  state.players[f.player].abilityUsed = true;
+  save();
+  render();
+}
+function foolsGuess(n) {
+  const f = state.ability;
+  if (f.secret === undefined || f.guess !== undefined) return;
+  f.guess = n;
+  if (n === f.secret) addCoins([f.opponent], f.secret / 2);
+  else addCoins([f.player], f.secret);
+  save();
+  render();
 }
 
 Object.assign(SCREENS, {

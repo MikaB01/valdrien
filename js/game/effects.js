@@ -1,5 +1,5 @@
 // Event card mechanics, keyed like CATALOG.effects. A handler receives a toolkit k
-// (k.all, k.b = coin snapshot at draw time {most, fewest, revealed, hidden}, k.allEqual, k.e, k.winnerChoice)
+// (k.all = players the card applies to, k.b = coin snapshot at draw time {all, most, fewest, revealed, hidden}, k.allEqual, k.e, k.winnerChoice)
 // and returns { note, groups: [{ title, buttons: [{ text, apply, winners?, participants?, stay? } | { minigame: category }] }] }.
 // Exactly one button per group is pressed.
 const EFFECTS = {};
@@ -13,7 +13,7 @@ const EFFECTS_ON_DRAW = {
 function eventEffect() {
   const e = state.event;
   const b = e.snapshot;
-  const all = state.players.map((_, i) => i);
+  const all = b.all || state.players.map((_, i) => i);
   const k = {
     e, b, all,
     allEqual: b.most.length === all.length,
@@ -65,12 +65,28 @@ EFFECTS.disguise = ({ b }) => {
 
 EFFECTS.fate = ({ e, all }) => {
   if (e.flips) {
-    return { note: e.flips.map((w, i) => `${playerName(i)}: ${w} (${w === "Kopf" ? "+1" : "−1"})`).join("<br>") };
+    const list = Array.isArray(e.flips[0]) ? e.flips : e.flips.map((w, i) => [i, w]); // older saves: one entry per player
+    return { note: list.map(([i, w]) => `${playerName(i)}: ${w} (${w === "Kopf" ? "+1" : "−1"})`).join("<br>") };
   }
   return { groups: [{ buttons: [{ text: "Münzen für alle werfen", stay: true, apply: () => {
-    e.flips = all.map(() => Math.random() < 0.5 ? "Kopf" : "Zahl");
-    e.flips.forEach((w, i) => addCoins([i], w === "Kopf" ? 1 : -1));
+    e.flips = all.map(i => [i, Math.random() < 0.5 ? "Kopf" : "Zahl"]);
+    e.flips.forEach(([i, w]) => addCoins([i], w === "Kopf" ? 1 : -1));
   } }] }] };
+};
+
+// The app draws one player; e.random is fixed when the card is drawn, so the choice survives a reload.
+function luckyOne({ e, all }) { return all[Math.floor((e.random ?? 0) * all.length) % all.length]; }
+
+EFFECTS.lottery = k => {
+  const i = luckyOne(k);
+  return { note: `Das Los fällt auf ${playerName(i)}.`, groups: [{ buttons: [{
+    text: `${playerName(i)} erhält ${coinsText(RULES.lotteryWin)}`, apply: () => addCoins([i], RULES.lotteryWin) }] }] };
+};
+
+EFFECTS.misfortune = k => {
+  const i = luckyOne(k);
+  return { note: `Das Los fällt auf ${playerName(i)}.`, groups: [{ buttons: [{
+    text: `${playerName(i)} verliert ${coinsText(RULES.misfortuneLoss)}`, apply: () => addCoins([i], -RULES.misfortuneLoss) }] }] };
 };
 
 EFFECTS.duel = ({ b, all }) => {

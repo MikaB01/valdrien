@@ -1,3 +1,8 @@
 # Personal notes for Claude, not published
 CLAUDE.md
 .DS_Store
+
+# Local working files (source images, briefings, drafts), not published
+_local/
+# Files the Claude desktop app writes into this folder
+Claude outputs/

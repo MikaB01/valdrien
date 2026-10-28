@@ -102,7 +102,8 @@ function guessResult(correct) {
 
 function guessTarget(i) {
   if (state.players[i].revealed) return;
-  const bonus = hitReward();
+  const c = state.curiosity;
+  const bonus = c && c.player === state.guess.player && c.target === i ? Math.max(RULES.curiosityHitReward, hitReward()) : hitReward();
   state.players[state.guess.player].coins += bonus;
   state.guess.bonus = bonus;
   state.players[i].revealed = true;

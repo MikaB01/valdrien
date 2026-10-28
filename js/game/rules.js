@@ -20,5 +20,18 @@ const RULES = {
   eventMinutesDefault: 15,
   eventMinuteRange: [1, 30], // slider range in the settings
   randomMinutesDefault: [5, 15], // random timer mode: window in minutes
-  minigameShareDefault: 0.3 // when the time is up: share of minigames, the rest are event cards
+  minigameShareDefault: 0.3, // when the time is up: share of minigames, the rest are event cards
+
+  // Adventures with goal "keys": buy random keys, three different ones break out and win at once.
+  keyCost: 3,
+  keys: [
+    { id: "iron", name: "Eisenschlüssel", door: "Eisentür", chance: 0.5, image: "images/key-iron.webp" },
+    { id: "silver", name: "Silberschlüssel", door: "Silbergitter", chance: 0.35, image: "images/key-silver.webp" },
+    { id: "bone", name: "Knochenschlüssel", door: "Knochentor", chance: 0.15, image: "images/key-bone.webp" }
+  ],
+
+  lotteryWin: 4, // event effect "lottery"
+  misfortuneLoss: 2, // event effect "misfortune"
+  curiosityHitReward: 6, // Neugiernase: a later hit on the questioned player
+  bathroomBreakMax: 10 // Pinkelpause: at most this many coins
 };

@@ -50,7 +50,8 @@ let sheet = null;
 // players[]: { name, role (index into ROLES, null without roles), coins, revealed, abilityUsed, taskDone, accessCode, secrets[], rerolls }
 // roles: false for a game without roles (fixed when the game is dealt); rerollLimit, discardedRoles: drawing new roles at the handover.
 // Further fields are added during play: adventure, running, timerEnd, eventDeck (top = last), playedEvents, playedMinigames, event, minigame,
-// timerPaused, timerDuration, timerWindow, guess, ability, peekRole, seersNight, freeGuesses, winBonus, lastWinnings, lastParticipants, slots, session.
+// timerPaused, timerDuration, timerWindow, guess, ability, peekRole, seersNight, freeGuesses, winBonus, lastWinnings, lastParticipants, slots, session,
+// and for the newer abilities and the keys goal: players[].keys, buyKey, escaped, tip, pause, curiosity, cardCount.
 let state = {
   screen: "start",
   names: ["Anna", "Ben", "Clara", "David"],
@@ -71,12 +72,21 @@ function load() {
   selectAdventureData(state.adventure);
 }
 
+// Players event cards apply to: everyone except a player on "Pinkelpause" (state.pause).
+function inPlay() {
+  const all = state.players.map((_, i) => i);
+  const away = state.pause ? state.pause.player : -1;
+  const list = all.filter(i => i !== away);
+  return list.length ? list : all;
+}
+
 function takeSnapshot() {
   const coins = state.players.map(s => s.coins);
-  const max = Math.max(...coins);
-  const min = Math.min(...coins);
-  const all = state.players.map((_, i) => i);
+  const all = inPlay();
+  const max = Math.max(...all.map(i => coins[i]));
+  const min = Math.min(...all.map(i => coins[i]));
   return {
+    all,
     most: all.filter(i => coins[i] === max),
     fewest: all.filter(i => coins[i] === min),
     revealed: all.filter(i => state.players[i].revealed),

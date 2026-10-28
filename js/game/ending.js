@@ -19,6 +19,7 @@ function screenTasks() {
 }
 
 function screenEnd() {
+  if (keysGoal()) return screenKeysEnd();
   const result = state.players.map((s, i) => ({
     name: s.name,
     total: s.coins + (s.taskDone && roleOf(i) ? roleOf(i).task.bonus : 0)
@@ -42,10 +43,11 @@ function screenEnd() {
 function finishAdventure() {
   state.running = false;
   resetTimer();
-  show(rolesOn() ? "tasks" : "end");
+  show(rolesOn() && !keysGoal() ? "tasks" : "end");
 }
 
 function resumeAdventure() {
+  if (state.escaped !== undefined && state.escaped !== null) return;
   state.running = true;
   resetTimer();
   show("overview");
@@ -53,6 +55,7 @@ function resumeAdventure() {
 
 function playAgain() {
   state.running = false;
+  state.escaped = null;
   resetTimer();
   state.players = [];
   show("names");
@@ -60,6 +63,7 @@ function playAgain() {
 
 function newGame() {
   state.running = false;
+  state.escaped = null;
   resetTimer();
   state.players = [];
   show("start");

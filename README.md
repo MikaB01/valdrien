@@ -17,8 +17,8 @@ A social deduction party game with secret roles, events and minigames, plus a co
 | `js/cms/cms.js` | CMS code. |
 | `js/lib/qrcode.js` | Vendored QR code generator (MIT), do not modify. |
 | `css/` | `game.css`, `cms.css`. Color tokens at the top, light and dark theme. |
-| `images/` | Painted artwork, e.g. `forest-guild.jpg`. |
-| `content/` | Initial content of both adventures: `content.json` (backup) and `initial-content.js` (CMS preview mode and game fallback). |
+| `images/` | Painted artwork, e.g. `forest-guild.jpg`; dungeon pictures (`dungeon-*.jpg`) and key icons (`key-*.webp`) for the Halloween adventure. |
+| `content/` | Initial content of all adventures: `content.json` (backup) and `initial-content.js` (CMS preview mode and game fallback). |
 | `database/` | `setup.sql` (full Supabase setup, idempotent), `migrate-to-english.sql` (one-time upgrade from the old German schema). |
 
 No build step: plain `<script>` files loaded in order, all top-level declarations are global. Code that runs at load time may only use what earlier scripts defined. `js/game/main.js` is loaded last and starts the app.
@@ -40,6 +40,7 @@ No build step: plain `<script>` files loaded in order, all top-level declaration
 | `events.js` | Drawing and resolving event cards, private events. |
 | `effects.js` | `EFFECTS`: one handler per event effect. |
 | `minigames.js` | Drawing minigames, line-ups, scoring. |
+| `keys.js` | Adventures with goal `keys` (Henkersmahl): buying random keys, the secret key display, breakout and its end screen. |
 | `ending.js` | Secret tasks, final count, play again. |
 | `player-page.js` | QR links, syncing seats to Supabase, the player's own page. |
 | `speech.js` | Read-aloud buttons via the browser's Web Speech API (on-device voices, no service). |
@@ -59,7 +60,7 @@ No build step: plain `<script>` files loaded in order, all top-level declaration
 
 ```text
 { format: 2, world: { name, motto },
-  adventures: { <id>: { pos, name, setting,
+  adventures: { <id>: { pos, name, setting, goal (coins|keys, default coins),
     story: { title, paragraphs[], closing },
     epilogue: { title, before[], after[] },          ({winner} is replaced by the winner's name)
     terms: { question, player, plural, dative, finish },
@@ -70,6 +71,8 @@ No build step: plain `<script>` files loaded in order, all top-level declaration
     events: { <id>: { pos, name, category, visibility (public|private), description, effect,
                       privateType (instant|task), privateCoins, requiresRoles } } } } }
 ```
+
+`goal: "keys"` (Das Henkersmahl im Verlies): instead of counting coins at the end, players buy random keys for `RULES.keyCost`; the chances and key pictures are in `RULES.keys`. Whoever first holds all three kinds breaks out and wins at once; each player sees only their own keys. Role tasks are cashed in during the game under "Nachsehen", because the end comes without warning.
 
 `requiresRoles: true` keeps an event out of games played without roles (settings → "Geheime Rollen"). Events with an effect from `CATALOG.roleEffects` count as role events even without the field; the CMS sets it for them, and `database/setup.sql` adds it to existing content.
 

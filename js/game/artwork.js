@@ -79,6 +79,8 @@ function forestArt(seed) {
 }
 
 function adventureArt(id, small) {
+  if (id === "dungeon") return small ? `<span class="adventure-art adventure-art-dungeon"></span>`
+    : `<figure class="dungeon-art" role="img" aria-label="Burg Schwarzfels bei Vollmond, davor der Burggraben"></figure>`;
   if (id === "forest") return small ? `<span class="adventure-art adventure-art-forest"></span>` : "";
   if (id === "tavern") return small ? `<span class="adventure-art">${tavernArt(true)}</span>` : `<figure class="tavern-art">${tavernArt(false)}</figure>`;
   const seed = [...id].reduce((s, z) => s + z.charCodeAt(0), 0);

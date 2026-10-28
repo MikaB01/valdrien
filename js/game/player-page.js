@@ -52,6 +52,7 @@ function seatData(s) {
     roles: rolesOn(),
     revealed: Boolean(s.revealed),
     abilityUsed: Boolean(s.abilityUsed),
+    keys: keysGoal() ? Object.assign({}, s.keys || {}) : null,
     adventure: state.adventure || "forest",
     phase: state.running ? "running" : (["tasks", "end"].includes(state.screen) ? "end" : "start"),
     timerEnd: state.running && state.timerEnd && !timerPaused() && settings.showTimer !== false ? state.timerEnd : 0,
@@ -59,7 +60,8 @@ function seatData(s) {
     notes: [
       state.seersNight && `Die Nacht der Seher: Bis zum nächsten Ereignis bringt ein Treffer beim Raten ${RULES.hitRewardSeers} Münzen.`,
       state.freeGuesses && "Lose Zungen: Bis zum nächsten Ereignis kostet Raten keine Münze.",
-      state.winBonus && state.players[state.winBonus.player] === s && `Gewinnst du das nächste Minispiel, gibt es ${state.winBonus.amount} Münzen extra.`
+      state.winBonus && state.players[state.winBonus.player] === s && `Gewinnst du das nächste Minispiel, gibt es ${state.winBonus.amount} Münzen extra.`,
+      state.pause && state.players[state.pause.player] === s && "Du machst Pinkelpause: Ereigniskarten gelten nicht für dich, bis du am Spielleiter-Handy wieder einsteigst."
     ].filter(Boolean)
   };
 }
@@ -180,7 +182,8 @@ function renderOwn() {
   document.getElementById("app").innerHTML = screenOwnPage();
   document.querySelector(".app-bar").hidden = true;
   document.body.classList.add("own-page");
-  document.getElementById("backdrop").className = own.adventure === "tavern" ? "tavern" : "";
+  document.getElementById("backdrop").className = backdropClass(own.adventure);
+  setAdventureLook(own.adventure);
   document.body.dataset.screen = "own";
 }
 
@@ -231,6 +234,7 @@ function screenOwnPage() {
       <h1>${d && d.name ? escapeName(d.name) : noRole ? "Deine Seite" : "Deine Rolle"}</h1>
     </div>
     <div class="own-coins" aria-live="polite">${coinsHtml}</div>
+    ${d && d.keys ? `<span class="label">Deine Schlüssel</span>${keyStrip(d.keys)}` : ""}
     ${notes}
     ${secretsHtml(d)}
     ${noRole ? "" : own.open ? `

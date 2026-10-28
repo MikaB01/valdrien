@@ -15,18 +15,22 @@ const CATALOG = {
     treasureHunter: "Schatzsucher: sofort +3 Münzen",
     pathfinder:     "Pfadfinderin: nächste Ereigniskarte ansehen, spielen oder unter den Stapel",
     luckBringer:    "Glücksbringerin: nach Verlust durch ein Ereignis den Verlust zurück",
-    goldFinger:     "Goldfinger: nach gewonnenem Minispiel Gewinn verdoppeln (max. +3)",
-    marksman:       "Präzisionsmeister: Sieg ankündigen, Minispiel wählen, Sieg +3",
+    goldFinger:     "Goldfinger: direkt nach gewonnenem Minispiel den Gewinn verdoppeln",
+    marksman:       "Das Turnier: Knopf bei jedem Minispiel mit eigener Teilnahme, Sieg ankündigen, Sieg: 1 von jedem Mitspieler",
     fateTurner:     "Schicksalswender: 2 Ereigniskarten sehen, eine spielen",
-    luckyFairy:     "Glücksfee: Kopf oder Zahl, Treffer +4",
+    luckyFairy:     "Glücksfee: Kopf oder Zahl; richtig: dem Reichsten die Hälfte wegnehmen, falsch: alle eigenen Münzen weg",
     houseRules:     "Hausrecht: nächste Karte sehen, spielen (+1) oder unter den Stapel",
-    tip:            "Trinkgeld: nach Minispiel mit eigener Teilnahme +2",
+    tip:            "Trinkgeld: +1 je Ereigniskarte (kein Minispiel) und je gekaufter Geheimkarte, bis ein Minispiel kommt",
     foolsLuck:      "Glück des Narren: zufällig 1 bis 4 Münzen",
     heartySoup:     "Stärkende Suppe: nach Verlust durch ein Ereignis +3",
     encore:         "Zugabe: aus 3 Minispielen wählen und mitspielen, Sieg +2",
-    loadedDice:     "Gezinkt: verlorenen Minispielversuch wiederholen",
+    loadedDice:     "Gezinkt: Knopf beim Minispiel, Minispiel wiederholen lassen (auch ohne mitzuspielen)",
     foresight:      "Blick in die Zukunft: nächste 2 Karten sehen und Reihenfolge bestimmen",
-    challenge:      "Herausforderung: Duell gegen Gegner der Wahl, Sieg +2"
+    challenge:      "Herausforderung: Duell gegen Gegner der Wahl, Sieger erhält die Hälfte der Münzen des Verlierers",
+    longFingers:    "Langfinger: bis zu 3 Mitspieler, Glücksrad −1/+1/+2/+3 je Mitspieler",
+    bathroomBreak:  "Pinkelpause: Knopf bei jeder Ereigniskarte, aussetzen, +1 je Karte (max. 10)",
+    curiosity:      "Neugiernase: heimliche Ja-Nein-Frage, späterer Treffer bei ihm 6 statt 3",
+    foolsRiddle:    "Narrenrätsel: heimlich 2, 4 oder 6, Mitspieler rät; falsch: Zahl für dich, richtig: Hälfte für ihn"
   },
 
   effects: {
@@ -48,7 +52,15 @@ const CATALOG = {
     generosity:   "Meiste schenkt einem Mitspieler 2 oder zahlt 3",
     fate:         "Münzwurf für jeden: Kopf +1, Zahl −1",
     seers:        "Hält an: Treffer beim Raten bringt 5 statt 3",
-    looseTongues: "Hält an: Raten kostet nichts"
+    looseTongues: "Hält an: Raten kostet nichts",
+    lottery:      "Die App lost einen Spieler aus, er erhält 4",
+    misfortune:   "Die App lost einen Spieler aus, er verliert 2"
+  },
+
+  // adventure goals (CMS: "Spielziel")
+  goals: {
+    coins: "Die meisten Münzen am Ende",
+    keys: "Schlüssel kaufen: drei verschiedene brechen aus (3 Münzen je Schlüssel)"
   },
 
   // Effects that only make sense with roles (guessing, revealed/hidden, traits).

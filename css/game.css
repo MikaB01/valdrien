@@ -692,3 +692,118 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outl
 
 :root { --forest-image: url("../images/forest-guild.jpg"); }
 #backdrop { background-image: var(--forest-image); }
+
+/* Das Henkersmahl im Verlies: candlelit dungeon look. html[data-adventure="dungeon"] is set while this adventure is open.
+   Light = sooty parchment by candlelight, dark = black stone and embers. Buttons turn from moss to dried blood. */
+:root { --dungeon-hall: url("../images/dungeon-hall.jpg"); --dungeon-castle: url("../images/dungeon-castle.jpg"); }
+:root[data-adventure="dungeon"] {
+  --scene: #120b08; --page: #e2cfa8; --page-edge: #b99a6a; --paper: #efe1c2; --sunken: #d8c29a;
+  --text: #33231a; --text-muted: #6b5240; --title: #5c1f14; --gold: #93591d; --brass: #b7843f; --line: #c2a274;
+  --accent: #8e2c1d; --accent-top: #a23a26; --accent-bottom: #73201a; --accent-edge: #47100b; --on-accent: #fbecd6;
+  --shade: rgba(60, 25, 10, 0.32);
+  --vine: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 84'%3E%3Cg fill='none' stroke='%23e9e1d2' stroke-opacity='.75' stroke-width='1.1'%3E%3Cpath d='M2 2L118 82M2 2L80 82M2 2L44 82M2 2L118 46M2 2L118 14'/%3E%3Cpath d='M30 2Q22 12 2 16M58 2Q44 26 2 34M86 2Q66 40 2 54M114 4Q92 54 4 76'/%3E%3Cpath d='M118 30Q84 50 74 82M118 62Q106 70 104 82'/%3E%3C/g%3E%3Ccircle cx='70' cy='50' r='3.4' fill='%23241812'/%3E%3Cpath d='M70 50L64 44M70 50L76 44M70 50L63 53M70 50L77 53M70 50L66 58M70 50L74 58' stroke='%23241812' stroke-width='1.2'/%3E%3C/svg%3E");
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-adventure="dungeon"]:not([data-theme="light"]) {
+    --scene: #070404; --page: #1f1714; --page-edge: #120c0a; --paper: #2a1f1a; --sunken: #170f0c;
+    --text: #ecdcc4; --text-muted: #b39a80; --title: #e9a35b; --gold: #e0943f; --brass: #a8642c; --line: #4b3529;
+    --accent: #e2805f; --accent-top: #8f2a1b; --accent-bottom: #611810; --accent-edge: #330a06; --on-accent: #fbe8d0;
+    --shade: rgba(0, 0, 0, 0.55);
+  }
+}
+:root[data-adventure="dungeon"][data-theme="dark"] {
+  --scene: #070404; --page: #1f1714; --page-edge: #120c0a; --paper: #2a1f1a; --sunken: #170f0c;
+  --text: #ecdcc4; --text-muted: #b39a80; --title: #e9a35b; --gold: #e0943f; --brass: #a8642c; --line: #4b3529;
+  --accent: #e2805f; --accent-top: #8f2a1b; --accent-bottom: #611810; --accent-edge: #330a06; --on-accent: #fbe8d0;
+  --shade: rgba(0, 0, 0, 0.55);
+}
+:root[data-adventure="dungeon"] #app::before, :root[data-adventure="dungeon"] #app::after { filter: none; opacity: 0.8; }
+:root[data-adventure="dungeon"] #app { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 0 50px var(--shade), 0 0 60px rgba(214, 110, 40, 0.18); }
+#backdrop.dungeon { background-image: var(--dungeon-hall); }
+#backdrop.dungeon.intro { background-image: var(--dungeon-castle); }
+@media (prefers-reduced-motion: no-preference) {
+  #backdrop.dungeon:not(.intro)::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse 70% 50% at 50% 60%, rgba(255, 140, 50, 0.16), transparent 70%);
+    animation: candle 3.2s ease-in-out infinite alternate;
+  }
+  @keyframes candle { 0% { opacity: 0.55; } 40% { opacity: 1; } 55% { opacity: 0.7; } 100% { opacity: 0.95; } }
+}
+.adventure-art-dungeon { background: var(--dungeon-castle) center 30% / cover no-repeat; }
+.scene-banner .adventure-art-dungeon { background-image: var(--dungeon-hall); background-position: center 62%; }
+.dungeon-art { margin: 6px; border-radius: 8px; overflow: hidden; border: 1.5px solid var(--gold); aspect-ratio: 4 / 3; background: var(--dungeon-castle) center 35% / cover no-repeat; }
+
+/* Keys: the player's own collection, full color when owned, a dark silhouette while missing */
+.key-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.key-slot { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.key-image { position: relative; width: 100%; max-width: 104px; aspect-ratio: 1; }
+.key-image img { width: 100%; height: 100%; display: block; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.45)); }
+.key-slot.missing img { filter: grayscale(1) brightness(0.35) contrast(0.8); opacity: 0.45; }
+.key-count {
+  position: absolute; right: -4px; bottom: -2px; min-width: 30px; padding: 2px 7px; border-radius: 999px;
+  font-weight: 700; font-size: 1rem; line-height: 1.4; color: var(--on-accent);
+  background: linear-gradient(var(--accent-top), var(--accent-bottom)); border: 1.5px solid var(--brass);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+.key-slot figcaption { font-family: var(--font-title); font-size: 1.15rem; line-height: 1.1; color: var(--title); display: flex; flex-direction: column; gap: 2px; }
+.key-slot figcaption span { font-family: var(--font-body); font-size: 0.85rem; color: var(--text-muted); }
+.key-slot.missing figcaption { color: var(--text-muted); }
+.key-strip-small { grid-template-columns: repeat(3, 44px); justify-content: start; gap: 6px; }
+.key-strip-small .key-count { font-size: 0.75rem; min-width: 0; padding: 0 5px; right: -6px; bottom: -4px; }
+
+.tile-keys { border-color: var(--brass); background: linear-gradient(color-mix(in srgb, var(--accent) 12%, var(--paper)), color-mix(in srgb, var(--accent) 20%, var(--sunken))); padding: 10px 14px; }
+.tiles > .tile-keys { min-height: 0; }
+.key-icons { display: flex; flex-shrink: 0; }
+.key-icons img { width: 42px; height: 42px; margin-right: -12px; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4)); }
+.key-icons img:last-child { margin-right: 0; }
+
+.key-banner { margin: 0 6px; border-radius: 10px; overflow: hidden; border: 1.5px solid var(--brass); box-shadow: 0 6px 14px var(--shade); aspect-ratio: 16 / 7; }
+.key-banner img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.emblem-keys { background: url("../images/key-iron.webp") center / 84% no-repeat, radial-gradient(circle at 50% 35%, var(--paper), var(--sunken)); }
+.key-result { display: flex; flex-direction: column; gap: 14px; }
+.key-drawn { margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.key-drawn img { width: min(54vw, 200px); aspect-ratio: 1; filter: drop-shadow(0 0 18px rgba(255, 170, 70, 0.45)) drop-shadow(0 8px 10px rgba(0, 0, 0, 0.5)); }
+.key-drawn figcaption { font-family: var(--font-title); font-size: 2rem; color: var(--title); }
+.escape-title { text-align: center; color: var(--gold); font-size: 2.1rem; }
+.btn-escape { background: linear-gradient(#d9a441, #9b6a1c); color: #2a1606; text-shadow: 0 1px 0 rgba(255, 240, 200, 0.5); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 3px 0 #5e3d0d, 0 0 24px rgba(255, 180, 60, 0.45); }
+@media (prefers-reduced-motion: no-preference) {
+  .key-drawn img { animation: key-appear 1.1s cubic-bezier(.2, .9, .3, 1.2) both; }
+  .key-drawn figcaption { animation: fade-up .4s .8s both; }
+  @keyframes key-appear { 0% { transform: scale(0.2) rotate(-200deg); opacity: 0; } 60% { opacity: 1; } 100% { transform: none; } }
+  @keyframes fade-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .btn-escape { animation: escape-glow 1.6s ease-in-out infinite alternate; }
+  @keyframes escape-glow { to { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 3px 0 #5e3d0d, 0 0 40px rgba(255, 190, 70, 0.8); } }
+}
+
+.reveal-list { display: flex; flex-direction: column; gap: 8px; }
+.reveal-row { display: flex; flex-direction: column; gap: 6px; padding: 10px 14px; background: var(--paper); border: 1.5px solid var(--line); border-radius: 12px; }
+.reveal-winner { border-color: var(--brass); box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 30%, transparent); }
+.reveal-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.reveal-head .player-name { font-family: var(--font-title); font-size: 1.4rem; color: var(--title); }
+
+.note-action { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.note-action .link-button { min-height: 36px; }
+.number-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.number-row .action { font-size: 1.8rem; min-height: 64px; }
+.action.toggle.chosen { border-width: 2px; }
+
+/* Glücksrad (Langfinger) */
+.wheel { position: relative; width: min(72vw, 260px); margin: 6px auto 0; }
+.wheel-disc { display: block; width: 100%; height: auto; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.4)); }
+.wheel-disc path { stroke: var(--brass); stroke-width: 1; }
+.wheel-disc text { font-family: var(--font-title); font-size: 13px; fill: #fbecd6; }
+.wheel-bad { fill: #3a2a24; }
+.wheel-a { fill: #8e2c1d; }
+.wheel-b { fill: #a8642c; }
+.wheel-c { fill: #b8862e; }
+.wheel-hub { fill: var(--brass); }
+.wheel-pointer { position: absolute; top: -10px; left: 50%; width: 26px; transform: translateX(-50%); fill: var(--title); filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.4)); }
+.wheel-result { text-align: center; font-family: var(--font-story); font-size: 1.3rem; }
+.wheel-next { display: flex; flex-direction: column; }
+@media (prefers-reduced-motion: no-preference) {
+  .wheel-disc.spin { animation: wheel-spin 2.6s cubic-bezier(.12, .8, .2, 1) both; }
+  @keyframes wheel-spin { from { transform: rotate(var(--from)); } to { transform: rotate(var(--to)); } }
+  .wheel-disc.spin ~ .wheel-result, .wheel:has(.spin) + .wheel-result, .wheel:has(.spin) ~ .wheel-next { animation: fade-up .35s 2.6s both; }
+}
+.character-list { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 2px; }
+:root[data-adventure="dungeon"] .scene-banner { min-height: 72px; }

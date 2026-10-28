@@ -47,7 +47,15 @@ function backAction() {
     case "buyCard": return state.buyCard && state.buyCard.player !== null
       ? () => { state.buyCard.player = null; render(); } : go("overview");
     case "tasks": return resumeAdventure;
-    case "end": return rolesOn() ? go("tasks") : resumeAdventure;
+    case "end":
+      if (keysGoal()) return state.escaped !== undefined && state.escaped !== null ? null : resumeAdventure;
+      return rolesOn() ? go("tasks") : resumeAdventure;
+    case "buyKey": {
+      const b = state.buyKey || {};
+      if (b.step === "handover") return () => { state.buyKey = { step: "who", player: null }; render(); };
+      if (b.step === "result") return b.player !== undefined && hasAllKeys(b.player) ? null : () => { state.buyKey = null; show("overview"); };
+      return go("overview");
+    }
   }
   return null;
 }
@@ -136,6 +144,13 @@ function show(screen) {
   window.scrollTo(0, 0);
 }
 
+// Each adventure may bring its own look: a backdrop class and data-adventure on <html> (colors in game.css).
+function backdropClass(id) { return id === "tavern" || id === "dungeon" ? id : ""; }
+function setAdventureLook(id) {
+  const root = document.documentElement;
+  if (id === "dungeon") root.dataset.adventure = id; else delete root.dataset.adventure;
+}
+
 // Each screen file registers its render functions here: Object.assign(SCREENS, { name: fn }).
 const SCREENS = {};
 function render() {
@@ -143,8 +158,11 @@ function render() {
   stopSpeaking();
   document.getElementById("app").innerHTML = fn();
   document.body.dataset.screen = state.screen;
-  const tavern = currentAdventure().id === "tavern" && !["start", "adventures"].includes(state.screen);
-  document.getElementById("backdrop").className = tavern ? "tavern" : state.screen === "intro" ? "intro" : "";
+  const inAdventure = !["start", "adventures"].includes(state.screen);
+  const id = inAdventure ? currentAdventure().id : null;
+  const look = backdropClass(id);
+  document.getElementById("backdrop").className = look === "tavern" ? look : [look, state.screen === "intro" ? "intro" : ""].join(" ").trim();
+  setAdventureLook(id);
   if (state.screen === "names") validateNames();
   renderFrame();
   updateMusic();
