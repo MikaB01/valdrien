@@ -74,8 +74,16 @@ function applyAbility() {
   show("overview");
 }
 
+// Peeking needs enough event cards left; otherwise the ability waits until they are reshuffled.
+function peekBlocked(i, header) {
+  const n = abilityHandler(i).peek || 1;
+  if (upcomingEvents(n).length >= n) return "";
+  return header + abilityNote(`Im Stapel ${n === 1 ? "ist keine Ereigniskarte mehr" : `sind nicht mehr ${n} Ereigniskarten`}. Sobald die Ereignisse neu eingemischt sind, kann ${playerName(i)} die Fähigkeit einsetzen.`);
+}
+
 function abilityPeek() {
   const i = state.ability.player;
+  if (peekBlocked(i, "")) return;
   upcomingEvents(abilityHandler(i).peek || 1);
   state.players[i].abilityUsed = true;
   state.ability.step = "peek";
@@ -156,7 +164,7 @@ ABILITIES.pathfinder = {
   peek: 1,
   show: (i, f, header) => {
     if (f.step !== "peek") {
-      return header + onlyYouLook(i) + abilityButton("Nächste Ereigniskarte ansehen", "abilityPeek()");
+      return peekBlocked(i, header) || header + onlyYouLook(i) + abilityButton("Nächste Ereigniskarte ansehen", "abilityPeek()");
     }
     return eventPreview(upcomingEvents(1)[0]) + `
         <div class="action-group">
@@ -175,7 +183,7 @@ ABILITIES.fateTurner = {
   peek: 2,
   show: (i, f, header) => {
     if (f.step !== "peek") {
-      return header + onlyYouLook(i) + abilityButton("Zwei Ereigniskarten ziehen", "abilityPeek()");
+      return peekBlocked(i, header) || header + onlyYouLook(i) + abilityButton("Zwei Ereigniskarten ziehen", "abilityPeek()");
     }
     const [a, b] = upcomingEvents(2);
     return `<p class="muted" style="text-align:center">Welche Karte soll gespielt werden? Die andere kommt unter den Stapel.</p>`
@@ -224,7 +232,7 @@ ABILITIES.houseRules = {
   peek: 1,
   show: (i, f, header) => {
     if (f.step !== "peek") {
-      return header + onlyYouLook(i) + abilityButton("Nächste Ereigniskarte ansehen", "abilityPeek()");
+      return peekBlocked(i, header) || header + onlyYouLook(i) + abilityButton("Nächste Ereigniskarte ansehen", "abilityPeek()");
     }
     return eventPreview(upcomingEvents(1)[0]) + `
         <div class="action-group">
@@ -285,7 +293,10 @@ ABILITIES.heartySoup = {
 };
 
 ABILITIES.encore = {
-  prepare: (i, f) => { f.options = shuffle(activeIndices(MINIGAMES)).slice(0, 3); },
+  prepare: (i, f) => {
+    const fresh = shuffle(remainingMinigames());
+    f.options = fresh.concat(shuffle(activeIndices(MINIGAMES).filter(k => !fresh.includes(k)))).slice(0, 3);
+  },
   show: (i, f, header) => header + `
         <div class="action-group">
           <span class="label">Welches Minispiel spielt ${playerName(i)}?</span>
@@ -315,7 +326,7 @@ ABILITIES.foresight = {
   peek: 2,
   show: (i, f, header) => {
     if (f.step !== "peek") {
-      return header + onlyYouLook(i) + abilityButton("Zwei Ereigniskarten ansehen", "abilityPeek()");
+      return peekBlocked(i, header) || header + onlyYouLook(i) + abilityButton("Zwei Ereigniskarten ansehen", "abilityPeek()");
     }
     const [a, b] = upcomingEvents(2);
     return `<p class="muted" style="text-align:center">Welche Karte soll als Nächstes kommen? Die andere folgt danach.</p>`

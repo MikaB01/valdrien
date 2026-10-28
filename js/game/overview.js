@@ -23,7 +23,7 @@ function screenOverview() {
   return `
     <div class="heading"><span class="eyebrow">${currentAdventure().title}</span><h2>Das Abenteuer</h2></div>
     ${timerBar()}
-    <div class="scene-banner">${adventureArt(currentAdventure().id, true)}</div>
+    ${reshuffleBox() || `<div class="scene-banner">${adventureArt(currentAdventure().id, true)}</div>`}
     ${state.seersNight ? `<p class="note">Die Nacht der Seher: Bis zum nächsten Ereignis bringt ein Treffer beim Raten ${RULES.hitRewardSeers} Münzen.</p>` : ""}
     ${state.winBonus ? `<p class="note">Gewinnt ${playerName(state.winBonus.player)} das nächste Minispiel, gibt es ${state.winBonus.amount} Münzen extra.</p>` : ""}
     ${state.freeGuesses ? `<p class="note">Lose Zungen: Bis zum nächsten Ereignis kostet Raten keine Münze.</p>` : ""}
@@ -52,6 +52,24 @@ function screenOverview() {
       </button>
     </div>
   `;
+}
+
+// Shown instead of the picture once all event cards or all minigames are played; each button mixes only its own kind back in.
+function eventsUsedUp() { return playableEvents().length > 0 && !remainingEvents().length; }
+function minigamesUsedUp() { return activeIndices(MINIGAMES).length > 0 && !remainingMinigames().length; }
+
+function reshuffleBox() {
+  const events = eventsUsedUp(), minigames = minigamesUsedUp();
+  if (!events && !minigames) return "";
+  const text = events && minigames ? "Alle Ereigniskarten und Minispiele sind gespielt."
+    : events ? `Alle Ereigniskarten sind gespielt.${activeIndices(MINIGAMES).length ? " Es kommen nur noch Minispiele." : ""}`
+    : "Alle Minispiele sind gespielt. Es kommen nur noch Ereigniskarten.";
+  return `
+    <div class="reshuffle note">
+      <p>${text}</p>
+      ${events ? `<button class="btn-quiet" onclick="reshuffleEvents()">${minigames ? "Ereignisse" : "Ereignisse neu"} einmischen</button>` : ""}
+      ${minigames ? `<button class="btn-quiet" onclick="reshuffleMinigames()">${events ? "Minispiele" : "Minispiele neu"} einmischen</button>` : ""}
+    </div>`;
 }
 
 function unseenCount() {

@@ -168,6 +168,8 @@ function dealRoles() {
   state.current = 0;
   state.cardVisible = false;
   state.eventDeck = [];
+  state.playedEvents = [];
+  state.playedMinigames = [];
   // nothing from the last game stays open (indices may point past the new players)
   state.event = null;
   state.minigame = null;

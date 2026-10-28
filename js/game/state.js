@@ -49,7 +49,7 @@ let sheet = null;
 // The whole game state; saved to localStorage after every change.
 // players[]: { name, role (index into ROLES, null without roles), coins, revealed, abilityUsed, taskDone, accessCode, secrets[], rerolls }
 // roles: false for a game without roles (fixed when the game is dealt); rerollLimit, discardedRoles: drawing new roles at the handover.
-// Further fields are added during play: adventure, running, timerEnd, eventDeck (top = last), event, minigame,
+// Further fields are added during play: adventure, running, timerEnd, eventDeck (top = last), playedEvents, playedMinigames, event, minigame,
 // timerPaused, timerDuration, timerWindow, guess, ability, peekRole, seersNight, freeGuesses, winBonus, lastWinnings, lastParticipants, slots, session.
 let state = {
   screen: "start",

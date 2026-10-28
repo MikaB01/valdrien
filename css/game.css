@@ -387,6 +387,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outl
   border: 1.5px dashed var(--brass); border-radius: 10px; background: color-mix(in srgb, var(--paper) 50%, transparent);
 }
 
+.reshuffle { display: flex; flex-wrap: wrap; align-content: center; gap: 8px; padding: 8px 10px; font-size: 0.95rem; flex: 1; margin: 6px; }
+.reshuffle p { flex-basis: 100%; }
+.reshuffle .btn-quiet { flex: 1 1 0; min-height: 40px; padding: 6px 10px; font-size: 1.05rem; }
+
 /* Cards: role card, event and minigame cards */
 .card {
   background: var(--grain), var(--paper);

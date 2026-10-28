@@ -89,9 +89,13 @@ function menuSheet() {
         <span class="menu-divider">Dieses Abenteuer</span>
         <div class="menu-list">
           ${entry(icon("secret"), "Geheim nachsehen", "startMyRole()")}
-          ${entry(icon("minigame"), "Minispiel ziehen", "sheet = null; drawMinigame(null, false)")}
+          ${minigamesUsedUp()
+            ? entry(icon("minigame"), "Minispiele neu einmischen", "sheet = null; reshuffleMinigames()")
+            : entry(icon("minigame"), "Minispiel ziehen", "sheet = null; drawMinigame(null, false)")}
           ${rolesOn() ? entry(icon("roles"), "Alle Rollen ansehen", "show('roles')") : ""}
-          ${entry(icon("event"), "Ereigniskarte jetzt ziehen", "sheet = null; drawEvent(false)")}
+          ${eventsUsedUp()
+            ? entry(icon("event"), "Ereignisse neu einmischen", "sheet = null; reshuffleEvents()")
+            : entry(icon("event"), "Ereigniskarte jetzt ziehen", "sheet = null; drawEvent(false)")}
           ${confirmFinish ? "" : entry(icon("flag"), currentAdventure().finish, "confirmFinish = true; renderFrame()")}
         </div>
         ${confirmFinish ? `

@@ -77,6 +77,24 @@ function minigameBody() {
     </div>`;
 }
 
+// Minigames count as played once their result is entered; only reshuffleMinigames() brings them back.
+function remainingMinigames(category) {
+  const played = new Set(state.playedMinigames || []);
+  return activeIndices(MINIGAMES).filter(i => !played.has(i) && (!category || MINIGAMES[i].category === category));
+}
+
+function markMinigamePlayed() {
+  const m = state.minigame;
+  if (!m) return;
+  m.done = true;
+  state.playedMinigames = (state.playedMinigames || []).filter(i => i !== m.index).concat(m.index);
+}
+
+function reshuffleMinigames() {
+  state.playedMinigames = [];
+  show("overview");
+}
+
 // player: set when an ability makes this player the challenger or solo player.
 // An open minigame is shown again instead of drawing a new one; again = true draws anew (confirmed redraw).
 function drawMinigame(category, fromEvent, player, again) {
@@ -85,7 +103,12 @@ function drawMinigame(category, fromEvent, player, again) {
     ? open.fromEvent && state.event && state.event.minigameIndex === open.index
     : !open.done && !open.fromEvent && !open.byAbility && !category && player === undefined);
   if (resume) { show("minigame"); return; }
-  let options = activeIndices(MINIGAMES).filter(i => !category || MINIGAMES[i].category === category);
+  let options = remainingMinigames(category);
+  // an event card or ability still needs its minigame, even if all of that kind were played
+  if (!options.length && (fromEvent || category || player !== undefined)) {
+    options = activeIndices(MINIGAMES).filter(i => !category || MINIGAMES[i].category === category);
+  }
+  if (!options.length) { show("overview"); return; }
   if (options.length > 1 && state.minigame) options = options.filter(i => i !== state.minigame.index);
   const index = options[Math.floor(Math.random() * options.length)];
   startMinigame(index, fromEvent, player);
@@ -197,7 +220,7 @@ function scoreMinigame(k) {
   const before = state.players.map(s => s.coins);
   result.apply();
   minigameFinished(result.winners || [], before, minigameParticipants());
-  state.minigame.done = true;
+  markMinigamePlayed();
   show("overview");
 }
 

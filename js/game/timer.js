@@ -108,7 +108,11 @@ function tick() {
   if (remaining === 0) {
     // never interrupt a minigame or a running flow; the card comes once the overview is shown again
     const interruptible = ["overview", "coins", "rules", "quickGuide", "roles", "settings"].includes(state.screen);
-    if (interruptible && !sheet) {
+    if (interruptible && !sheet && !canDrawTimed()) { // everything played: start a new round quietly, the overview offers reshuffling
+      startRound();
+      save();
+      if (state.screen === "overview") render();
+    } else if (interruptible && !sheet) {
       try { if (navigator.vibrate) navigator.vibrate([300, 150, 300]); } catch (e) {}
       drawTimedCard();
       playChime();

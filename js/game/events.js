@@ -41,16 +41,39 @@ function screenEvent() {
   `;
 }
 
-// Cards come from a shuffled deck, so every card shows up once before any repeats.
+// Played cards leave the game; only reshuffleEvents() brings them back, once none are left.
+function remainingEvents() {
+  const played = new Set(state.playedEvents || []);
+  return playableEvents().filter(i => !played.has(i));
+}
+
+// Keeps the deck (top = last) equal to the remaining cards; cards added in the CMS go in at random positions.
+function syncEventDeck() {
+  const deck = Array.isArray(state.eventDeck) ? state.eventDeck : [];
+  if (!Array.isArray(state.playedEvents)) { // game saved before cards were taken out
+    state.playedEvents = deck.length ? playableEvents().filter(i => !deck.includes(i)) : [];
+  }
+  const remaining = remainingEvents();
+  const kept = deck.filter(i => remaining.includes(i));
+  shuffle(remaining.filter(i => !kept.includes(i)))
+    .forEach(i => kept.splice(Math.floor(Math.random() * (kept.length + 1)), 0, i));
+  state.eventDeck = kept;
+  return kept;
+}
+
+function reshuffleEvents() {
+  state.playedEvents = [];
+  state.eventDeck = [];
+  syncEventDeck();
+  show("overview");
+}
+
 function drawEvent(automatic, fixedIndex) {
-  if (fixedIndex === undefined && (!state.eventDeck || state.eventDeck.length === 0)) {
-    state.eventDeck = shuffle(playableEvents());
-  }
-  let index = fixedIndex !== undefined ? fixedIndex : state.eventDeck.pop();
-  if (!EVENTS[index] || (fixedIndex === undefined && !playableEvents().includes(index))) { // stale deck
-    state.eventDeck = shuffle(playableEvents());
-    index = state.eventDeck.pop();
-  }
+  const deck = syncEventDeck();
+  const index = fixedIndex !== undefined ? fixedIndex : deck[deck.length - 1];
+  if (index === undefined || !EVENTS[index]) { show("overview"); return; }
+  state.eventDeck = deck.filter(i => i !== index);
+  state.playedEvents.push(index);
 
   resetTimer();
   if (state.minigame && state.minigame.fromEvent) state.minigame = null;
@@ -101,10 +124,13 @@ function givePrivateCard(index, player) {
   return entry;
 }
 
-// When the time is up: an event card or, by the share set in the settings, a minigame.
+// When the time is up: an event card or, by the share set in the settings, a minigame; only what is left can come.
+function canDrawTimed() { return remainingEvents().length > 0 || remainingMinigames().length > 0; }
+
 function drawTimedCard() {
   const share = settings.minigameShare ?? RULES.minigameShareDefault;
-  if (activeIndices(MINIGAMES).length && Math.random() < share) {
+  const minigames = remainingMinigames().length > 0;
+  if (minigames && (!remainingEvents().length || Math.random() < share)) {
     resetTimer();
     drawMinigame(null, false);
     state.minigame.automatic = true;
@@ -232,7 +258,7 @@ function eventAction(gi, bi) {
   });
   if (button.winners) {
     minigameFinished(button.winners, before, button.participants);
-    if (state.minigame && state.minigame.fromEvent) state.minigame.done = true;
+    if (state.minigame && state.minigame.fromEvent) markMinigamePlayed();
   }
   e.done[gi] = bi;
 
@@ -253,14 +279,9 @@ function eventPending() {
     a.buttons.some(k => !k.minigame) && e.done[i] === undefined);
 }
 
-// Top n cards of the deck (top first) without drawing them; refills from below if needed.
+// Top n cards of the deck (top first) without drawing them; fewer if fewer are left.
 function upcomingEvents(n) {
-  const deck = state.eventDeck || [];
-  if (deck.length < n) {
-    const fresh = shuffle(playableEvents().filter(i => !deck.includes(i)));
-    state.eventDeck = fresh.concat(deck);
-  }
-  return state.eventDeck.slice(-n).reverse();
+  return syncEventDeck().slice(-n).reverse();
 }
 
 function moveTopCardToBottom() {

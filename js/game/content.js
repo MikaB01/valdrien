@@ -140,7 +140,7 @@ function applyContent(data, source) {
   selectAdventureData(state.adventure);
   if (running) {
     rememberSlots();
-    if (Array.isArray(state.eventDeck)) state.eventDeck = state.eventDeck.filter(index => playableEvents().includes(index));
+    if (Array.isArray(state.eventDeck)) syncEventDeck();
   }
   return true;
 }
