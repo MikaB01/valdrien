@@ -47,7 +47,7 @@ function backAction() {
     case "buyCard": return state.buyCard && state.buyCard.player !== null
       ? () => { state.buyCard.player = null; render(); } : go("overview");
     case "tasks": return resumeAdventure;
-    case "end": return go("tasks");
+    case "end": return rolesOn() ? go("tasks") : resumeAdventure;
   }
   return null;
 }
@@ -90,14 +90,14 @@ function menuSheet() {
         <div class="menu-list">
           ${entry(icon("secret"), "Geheim nachsehen", "startMyRole()")}
           ${entry(icon("minigame"), "Minispiel ziehen", "sheet = null; drawMinigame(null, false)")}
-          ${entry(icon("roles"), "Alle Rollen ansehen", "show('roles')")}
+          ${rolesOn() ? entry(icon("roles"), "Alle Rollen ansehen", "show('roles')") : ""}
           ${entry(icon("event"), "Ereigniskarte jetzt ziehen", "sheet = null; drawEvent(false)")}
           ${confirmFinish ? "" : entry(icon("flag"), currentAdventure().finish, "confirmFinish = true; renderFrame()")}
         </div>
         ${confirmFinish ? `
           <div class="confirm" role="alertdialog" aria-labelledby="confirm-title">
             <strong id="confirm-title">${currentAdventure().finish}?</strong>
-            <p class="muted">Danach werden alle Rollen aufgedeckt und die Münzen gezählt.</p>
+            <p class="muted">${rolesOn() ? "Danach werden alle Rollen aufgedeckt und die Münzen gezählt." : "Danach werden die Münzen gezählt."}</p>
             <button class="btn" onclick="finishAdventure()">Ja, jetzt beenden</button>
           </div>` : ""}` : ""}
     </div>`;

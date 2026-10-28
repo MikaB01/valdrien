@@ -29,6 +29,7 @@ function screenOverview() {
     ${state.freeGuesses ? `<p class="note">Lose Zungen: Bis zum nächsten Ereignis kostet Raten keine Münze.</p>` : ""}
     ${openTasks().length ? `<p class="note">Offene geheime ${openTasks().length === 1 ? "Aufgabe" : "Aufgaben"}: ${playerNames([...new Set(openTasks().map(x => x.i))])}. Bestätigen über den Geldbeutel unten in der Mitte.</p>` : ""}
     <div class="tiles">
+      ${rolesOn() ? `
       <button class="tile" onclick="startGuess()">
         ${icon("guess")}
         <span class="tile-title">Raten</span>
@@ -38,16 +39,16 @@ function screenOverview() {
         ${icon("ability")}
         <span class="tile-title">Fähigkeit</span>
         <span class="tile-text">${ready ? `${ready} ${ready === 1 ? "Person kann" : "Personen können"} jetzt` : "Frei, sobald eine Rolle erraten ist"}</span>
-      </button>
-      <button class="tile tile-compact" onclick="startBuyCard()">
+      </button>` : ""}
+      <button class="tile ${rolesOn() ? "tile-compact" : ""}" onclick="startBuyCard()">
         ${icon("event")}
         <span class="tile-title">Geheimkarte</span>
         <span class="tile-text">Für ${coinsText(RULES.privateCardCost)} kaufen</span>
       </button>
-      <button class="tile tile-compact" onclick="startMyRole()">
+      <button class="tile ${rolesOn() ? "tile-compact" : ""}" onclick="startMyRole()">
         ${icon("secret")}
         <span class="tile-title">Nachsehen${unseenCount() ? ` <span class="chip chip-gold">${unseenCount()} neu</span>` : ""}</span>
-        <span class="tile-text">Rolle, Münzen, Geheimes</span>
+        <span class="tile-text">${rolesOn() ? "Rolle, Münzen, Geheimes" : "Münzen, Geheimes"}</span>
       </button>
     </div>
   `;
@@ -112,7 +113,7 @@ function screenMyRole() {
   if (m.player === null || !state.players[m.player]) {
     return `
       <div class="heading"><span class="eyebrow">Geheim</span><h2>Wer möchte nachsehen?</h2></div>
-      <p class="muted">Rolle, Münzen und geheime Ereignisse. Danach sieht nur diese Person aufs Handy.</p>
+      <p class="muted">${rolesOn() ? "Rolle, Münzen" : "Münzen"} und geheime Ereignisse. Danach sieht nur diese Person aufs Handy.</p>
       <div class="choices">
         ${state.players.map((s, i) => {
           const unseen = (s.secrets || []).filter(p => !p.seen).length;
@@ -141,13 +142,13 @@ function screenMyRole() {
     <div class="own-header"><span class="eyebrow">Nur für dich</span><h1>${escapeName(s.name)}</h1></div>
     <div class="own-coins">
       <span class="own-count">${s.coins}<span class="coin-icon" aria-hidden="true"></span></span>
-      <div class="chips">${statusChips(s)}</div>
+      ${rolesOn() ? `<div class="chips">${statusChips(s)}</div>` : ""}
     </div>
     ${notes}
     <span class="label">Geheime Ereignisse</span>
     ${secretEntries(i, m.fresh || [])}
-    <span class="label">Deine Rolle</span>
-    ${roleCard(ROLES[s.role])}
+    ${rolesOn() ? `<span class="label">Deine Rolle</span>
+    ${roleCard(ROLES[s.role])}` : ""}
     ${qrSection(i)}
     <button class="btn" onclick="closeMyRole()">Verbergen und zurückgeben</button>`;
 }
@@ -159,7 +160,7 @@ function screenRoles() {
   return `
     <div class="heading"><span class="eyebrow">${currentAdventure().title}</span><h2>Rollen</h2></div>
     <button class="btn" onclick="startMyRole()">Geheim nachsehen</button>
-    <p class="muted">Diese ${maxPlayers()} Rollen gibt es in diesem Abenteuer. ${playerCount < maxPlayers()
+    <p class="muted">Diese ${roleCount()} Rollen gibt es in diesem Abenteuer. ${playerCount < roleCount()
       ? `Ihr seid ${playerCount}, also sind nicht alle im Spiel.`
       : "Jede Rolle ist vergeben."} Fähigkeiten und Aufgaben bleiben geheim.</p>
     <div class="role-list">
@@ -183,15 +184,16 @@ function screenCoins() {
         <span class="count">${s.coins}</span>
         <button aria-label="Eine Münze mehr für ${escapeName(s.name)}" onclick="changeCoins(${i}, 1)">+</button>
       </div>
+      ${rolesOn() ? `
       <div class="status-toggles" role="group" aria-label="Status von ${escapeName(s.name)}">
         ${statusToggle(i, "revealed", "Rolle erraten", s.revealed)}
         ${statusToggle(i, "abilityUsed", "Fähigkeit benutzt", s.abilityUsed, !s.revealed && !s.abilityUsed)}
-      </div>
+      </div>` : ""}
     </div>`).join("");
 
   return `
     <h2>Münzen von Hand ändern</h2>
-    <p class="muted">Die App bucht Münzen und Status selbst. Stimmt etwas nicht, korrigiert ihr es hier.</p>
+    <p class="muted">Die App bucht ${rolesOn() ? "Münzen und Status" : "Münzen"} selbst. Stimmt etwas nicht, korrigiert ihr es hier.</p>
     <div class="player-list">${list}</div>
   `;
 }

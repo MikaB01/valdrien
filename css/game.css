@@ -288,6 +288,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outl
   min-height: 44px; padding: 6px 12px; background: none; border: none; align-self: center;
   color: var(--accent); font-weight: 700; text-decoration: underline; text-underline-offset: 3px;
 }
+.mode-line .link-button { min-height: 0; padding: 0 0 0 4px; }
+.reroll { display: flex; flex-direction: column; gap: 8px; }
+.reroll .muted, .reroll-line { text-align: center; font-size: 0.92rem; }
 .menu-actions { margin-top: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 6px; }
 .menu-actions .muted { color: #efe2c2; text-align: center; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); margin-top: -4px; }
 

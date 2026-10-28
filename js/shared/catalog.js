@@ -49,5 +49,15 @@ const CATALOG = {
     fate:         "Münzwurf für jeden: Kopf +1, Zahl −1",
     seers:        "Hält an: Treffer beim Raten bringt 5 statt 3",
     looseTongues: "Hält an: Raten kostet nichts"
-  }
+  },
+
+  // Effects that only make sense with roles (guessing, revealed/hidden, traits).
+  // Events with one of these, or with requiresRoles: true, are left out of games without roles.
+  roleEffects: ["exposed", "disguise", "camps", "oracle", "seers", "looseTongues"]
 };
+
+// e: an event as stored in the content JSON
+function eventRequiresRoles(e) {
+  if (!e) return false;
+  return e.requiresRoles === true || (e.visibility !== "private" && CATALOG.roleEffects.includes(e.effect));
+}

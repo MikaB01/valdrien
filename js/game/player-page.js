@@ -1,6 +1,8 @@
 // Game master phone: writes each player's coins and secrets to a "seat" in Supabase (seatData, syncSeats).
 // Player phone: opens #v.<adventure>.<roleId>.<accessCode> via QR code and reads only its own seat.
+// Without roles the roleId is NO_ROLE_ID.
 const PLAYER_LINK = location.origin + location.pathname;
+const NO_ROLE_ID = "-";
 
 let seatsEnabled = null;
 let lastSynced = {};
@@ -10,7 +12,8 @@ let own = null;
 function playerUrl(i) {
   const s = state.players[i];
   if (!s.accessCode) { s.accessCode = randomCode(); save(); }
-  return `${PLAYER_LINK}#v.${currentAdventure().id}.${ROLES[s.role].id}.${s.accessCode}`;
+  const role = roleOf(i);
+  return `${PLAYER_LINK}#v.${currentAdventure().id}.${role ? role.id : NO_ROLE_ID}.${s.accessCode}`;
 }
 
 function qrSvg(text) {
@@ -36,7 +39,7 @@ function qrSection(i) {
       <summary>Optional: aufs eigene Handy holen</summary>
       <div class="qr-box">
         ${art}
-        <p>Scanne den Code mit deiner Kamera. Dann siehst du Rolle, Münzen und geheime Ereignisse auch auf deinem Handy. Nicht nötig: Alles steht auch hier unter „Geheim nachsehen“.</p>
+        <p>Scanne den Code mit deiner Kamera. Dann siehst du ${rolesOn() ? "Rolle, Münzen" : "Münzen"} und geheime Ereignisse auch auf deinem Handy. Nicht nötig: Alles steht auch hier unter „Geheim nachsehen“.</p>
       </div>
     </details>`;
 }
@@ -46,6 +49,7 @@ function seatData(s) {
   return {
     name: s.name,
     coins: s.coins,
+    roles: rolesOn(),
     revealed: Boolean(s.revealed),
     abilityUsed: Boolean(s.abilityUsed),
     adventure: state.adventure || "forest",
@@ -77,6 +81,14 @@ async function syncSeats() {
         await rpc("seat_write", { p_session: state.session.id, p_secret: state.session.secret, p_access: s.accessCode, p_data: Object.assign(data, { updatedAt: Date.now() }) });
         lastSynced[s.accessCode] = json;
       } catch (e) { /* offline: retried on the next sync */ }
+    }
+    // links of roles that were put back while dealing
+    for (const code of state.retiredCodes || []) {
+      if (lastSynced[code] === "replaced") continue;
+      try {
+        await rpc("seat_write", { p_session: state.session.id, p_secret: state.session.secret, p_access: code, p_data: { replaced: true, updatedAt: Date.now() } });
+        lastSynced[code] = "replaced";
+      } catch (e) {}
     }
   } finally {
     syncRunning = false;
@@ -180,9 +192,13 @@ function tickOwnClock() {
 
 function screenOwnPage() {
   const a = ADVENTURES[own.adventure];
-  const r = a && a.roles.find(x => x.id === own.roleId);
+  const noRole = own.roleId === NO_ROLE_ID;
+  const r = a && !noRole && a.roles.find(x => x.id === own.roleId);
   const d = own.data;
-  if (!a || !r) return `
+  if (d && d.replaced) return `
+    <div class="own-header"><span class="eyebrow">Valdrien</span><h1>Neue Rolle</h1></div>
+    <p class="note">Diese Rolle wurde beim Verteilen weggelegt. Lass dir am Spielleiter-Handy den QR-Code deiner neuen Rolle zeigen.</p>`;
+  if (!a || (!r && !noRole)) return `
     <div class="own-header"><span class="eyebrow">Valdrien</span><h1>Deine Rolle</h1></div>
     <p class="note">${contentSource === "live" ? "Diese Rolle gibt es nicht mehr. Frag am Tisch nach einem neuen QR-Code." : "Die Rolle wird geladen …"}</p>`;
 
@@ -196,7 +212,7 @@ function screenOwnPage() {
   } else if (own.status === "offline") {
     coinsHtml = `<p class="muted">Gerade keine Verbindung. Deine Münzen erscheinen, sobald wieder Netz da ist.</p>`;
   } else {
-    const status = !d.revealed ? `<span class="chip">noch nicht erraten</span>`
+    const status = d.roles === false ? "" : !d.revealed ? `<span class="chip">noch nicht erraten</span>`
       : d.abilityUsed ? `<span class="chip">erraten</span><span class="chip">Fähigkeit benutzt</span>`
       : `<span class="chip">erraten</span><span class="chip chip-forest">Fähigkeit bereit</span>`;
     coinsHtml = `
@@ -212,12 +228,12 @@ function screenOwnPage() {
   return `
     <div class="own-header">
       <span class="eyebrow">${a.title}</span>
-      <h1>${d && d.name ? escapeName(d.name) : "Deine Rolle"}</h1>
+      <h1>${d && d.name ? escapeName(d.name) : noRole ? "Deine Seite" : "Deine Rolle"}</h1>
     </div>
     <div class="own-coins" aria-live="polite">${coinsHtml}</div>
     ${notes}
     ${secretsHtml(d)}
-    ${own.open ? `
+    ${noRole ? "" : own.open ? `
       ${roleCard(r)}
       <button class="btn-quiet" onclick="own.open = false; renderOwn()">Rolle verdecken</button>` : `
       <div class="covered">

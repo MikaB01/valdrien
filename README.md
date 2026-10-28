@@ -68,8 +68,10 @@ No build step: plain `<script>` files loaded in order, all top-level declaration
     minigames: { <id>: { pos, name, category (duel|all|oneVsAll|team|uneven), description,
                          reward: { winner, loser, judge, solo, group, fail, team, single, pair, singleName, pairName } } },
     events: { <id>: { pos, name, category, visibility (public|private), description, effect,
-                      privateType (instant|task), privateCoins } } } } }
+                      privateType (instant|task), privateCoins, requiresRoles } } } } }
 ```
+
+`requiresRoles: true` keeps an event out of games played without roles (settings → "Geheime Rollen"). Events with an effect from `CATALOG.roleEffects` count as role events even without the field; the CMS sets it for them, and `database/setup.sql` adds it to existing content.
 
 Entries are objects keyed by id (not arrays) so several editors can add and reorder entries at the same time; order comes from `pos`. Old format-1 files (German keys) are converted automatically by `upgradeContent()`.
 

@@ -87,6 +87,29 @@ function randomHint() {
   return `Nach jeder neu gezogenen Ereigniskarte würfelt die App eine neue Zeit zwischen ${lo} und ${hi} Minuten aus. So weiß niemand genau, wann das nächste Ereignis kommt. Gilt ab der nächsten Karte.`;
 }
 
+function rolesSection(segment) {
+  const on = settings.roles !== false;
+  const rerolls = rerollSetting();
+  const inGame = state.running && state.players && state.players.length;
+  return `
+      <section>
+        ${sectionHead("roles", "Geheime Rollen")}
+        ${hint("roles", on
+          ? `Jeder bekommt heimlich eine Rolle mit Fähigkeit und geheimer Aufgabe. Gefällt sie nicht, darf man beim Verteilen eine neue ziehen, so oft wie hier eingestellt. Eine weggelegte Rolle bekommt niemand sonst zu sehen. Gibt es zu wenige Rollen, damit jeder gleich oft neu ziehen kann, senkt die App die Zahl für alle gleich.`
+          : `Ohne Rollen gibt es kein Raten, keine Fähigkeiten und keine geheimen Aufgaben. Ereigniskarten, die Rollen brauchen, bleiben aus dem Stapel. Jeder startet mit ${coinsText(RULES.startingCoinsFallback)}, am Ende zählen nur die Münzen.`)}
+        <div class="segmented" role="group" aria-label="Geheime Rollen verteilen">
+          ${segment(on, "setSetting('roles', true)", "Mit Rollen")}
+          ${segment(!on, "setSetting('roles', false)", "Ohne Rollen")}
+        </div>
+        ${on ? `
+          <p class="slider-value"><span>Neue Rolle ziehen</span> <span>${rerolls ? `bis zu ${rerolls}× pro Spieler` : "nicht erlaubt"}</span></p>
+          <div class="segmented" role="group" aria-label="Wie oft darf jeder eine neue Rolle ziehen?">
+            ${RULES.rerollOptions.map(n => segment(rerolls === n, `setSetting('rerolls', ${n})`, n ? n + "×" : "Nie")).join("")}
+          </div>` : ""}
+        ${inGame ? `<p class="muted">Gilt ab dem nächsten Spiel. Die laufende Partie wird ${rolesOn() ? "mit" : "ohne"} Rollen gespielt.</p>` : ""}
+      </section>`;
+}
+
 function screenSettings() {
   const random = settings.timerMode === "random";
   const visible = settings.showTimer !== false;
@@ -113,6 +136,7 @@ function screenSettings() {
           ${segment(theme === "dark", "setSetting('theme', 'dark')", "Dunkel")}
         </div>
       </section>
+      ${rolesSection(segment)}
       <section>
         ${sectionHead("time", "Zeit bis zum Ereignis")}
         ${hint("time", random ? randomHint() : "Nach Ablauf der Zeit deckt die App automatisch eine Ereigniskarte auf. Beim Wandern passen 15 Minuten gut, am Tisch eher 10.")}
@@ -193,16 +217,23 @@ function screenAdventures() {
     <h2>Wähle ein Abenteuer</h2>
     <div class="adventure-list">
       ${list.map(a => `
-        <button class="adventure-card" ${a.playable ? `onclick="chooseAdventure('${a.id}')"` : "disabled"}>
+        <button class="adventure-card" ${playable(a) ? `onclick="chooseAdventure('${a.id}')"` : "disabled"}>
           ${adventureArt(a.id, true)}
           <span class="adventure-text">
             <span class="tile-title">${a.title}</span>
-            <span class="tile-text">${a.playable ? a.setting : `In Arbeit: braucht mindestens ${RULES.adventureMinRoles} Rollen und ${RULES.adventureMinEvents} ${RULES.adventureMinEvents === 1 ? "Ereignis" : "Ereignisse"}`}</span>
+            <span class="tile-text">${playable(a) ? a.setting : unplayableText()}</span>
           </span>
         </button>`).join("")}
     </div>
     ${contentSource === "builtin" ? `<p class="muted" style="text-align:center">Ohne Verbindung: Es werden die eingebauten Inhalte gezeigt.</p>` : ""}
   `;
+}
+
+function unplayableText() {
+  const events = `${RULES.adventureMinEvents} ${RULES.adventureMinEvents === 1 ? "Ereignis" : "Ereignisse"}`;
+  return settings.roles !== false
+    ? `In Arbeit: braucht mindestens ${RULES.adventureMinRoles} Rollen und ${events}`
+    : `Ohne Rollen nicht spielbar: braucht mindestens ${events}, das keine Rollen voraussetzt`;
 }
 
 function screenIntro() {
@@ -226,7 +257,7 @@ function screenIntro() {
 function chooseAdventure(id) {
   state.adventure = id;
   selectAdventureData(id);
-  state.names = state.names.slice(0, maxPlayers());
+  state.names = state.names.slice(0, Math.max(RULES.minPlayers, maxPlayers()));
   show("names");
 }
 

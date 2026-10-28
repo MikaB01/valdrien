@@ -36,6 +36,7 @@ function convertEvent(id, e) {
     effect: e.effect || "calm",
     text: escapeHtml(e.description || ""),
     isPrivate: e.visibility === "private",
+    requiresRoles: eventRequiresRoles(e),
     privateType: e.privateType === "task" ? "task" : "instant",
     privateCoins: num(e.privateCoins, 0)
   };
@@ -114,7 +115,9 @@ function convertAdventure(id, a, before, slots) {
   };
   const activeRoles = adventure.roles.filter(r => !r.deleted).length;
   const activeEvents = adventure.events.filter(e => !e.deleted).length;
-  adventure.playable = activeRoles >= RULES.adventureMinRoles && activeEvents >= RULES.adventureMinEvents;
+  const eventsWithoutRoles = adventure.events.filter(e => !e.deleted && !e.requiresRoles).length;
+  adventure.playableWithRoles = activeRoles >= RULES.adventureMinRoles && activeEvents >= RULES.adventureMinEvents;
+  adventure.playableWithoutRoles = eventsWithoutRoles >= RULES.adventureMinEvents;
   return adventure;
 }
 
@@ -137,7 +140,7 @@ function applyContent(data, source) {
   selectAdventureData(state.adventure);
   if (running) {
     rememberSlots();
-    if (Array.isArray(state.eventDeck)) state.eventDeck = state.eventDeck.filter(index => EVENTS[index] && !EVENTS[index].deleted);
+    if (Array.isArray(state.eventDeck)) state.eventDeck = state.eventDeck.filter(index => playableEvents().includes(index));
   }
   return true;
 }
@@ -152,6 +155,8 @@ function rememberSlots() {
 }
 
 function activeIndices(list) { return list.map((_, i) => i).filter(i => !list[i].deleted); }
+// Event cards that may be drawn in this game: without roles, role events stay out.
+function playableEvents() { return activeIndices(EVENTS).filter(i => rolesOn() || !EVENTS[i].requiresRoles); }
 
 let ROLES = [];
 let EVENTS = [];
@@ -169,7 +174,10 @@ function selectAdventureData(id) {
 
 function currentAdventure() { return ADVENTURES[state.adventure] || firstAdventure(); }
 
-function maxPlayers() { return activeIndices(ROLES).length; }
+function roleCount() { return activeIndices(ROLES).length; }
+// Before dealing, the settings decide whether roles are dealt.
+function maxPlayers() { return settings.roles !== false ? roleCount() : RULES.maxPlayersWithoutRoles; }
+function playable(a) { return settings.roles !== false ? a.playableWithRoles : a.playableWithoutRoles; }
 
 function afterContentUpdate() {
   if (own) { renderOwn(); return; }

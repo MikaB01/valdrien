@@ -431,7 +431,8 @@
           "category": "Fluch",
           "visibility": "public",
           "description": "Wer sein Geheimnis verloren hat, ist verwundbar. Alle, deren Rolle schon erraten wurde, verlieren 1 Münze.",
-          "effect": "exposed"
+          "effect": "exposed",
+          "requiresRoles": true
         },
         "meister-der-tarnung": {
           "pos": 60,
@@ -439,7 +440,8 @@
           "category": "Segen",
           "visibility": "public",
           "description": "Alle, deren Rolle noch nicht erraten wurde, erhalten 1 Münze.",
-          "effect": "disguise"
+          "effect": "disguise",
+          "requiresRoles": true
         },
         "das-duell-an-der-bruecke": {
           "pos": 70,
@@ -463,7 +465,8 @@
           "category": "Team gegen Team",
           "visibility": "public",
           "description": "Die Entdeckten, deren Rolle erraten wurde, treten als Team gegen die Unentdeckten an. Jeder im Siegerteam erhält 1 Münze. Gibt es nur ein Lager, wird ein Alle-gegen-alle daraus, und der Sieger erhält 2 Münzen.",
-          "effect": "camps"
+          "effect": "camps",
+          "requiresRoles": true
         },
         "der-verfluchte-beutel": {
           "pos": 100,
@@ -479,7 +482,8 @@
           "category": "Enthüllung",
           "visibility": "public",
           "description": "Wer die meisten Münzen hat, muss ein wahres Erkennungsmerkmal seiner Rolle verraten oder 2 Münzen an die Spielbank zahlen. Bei Gleichstand sind alle Gleichplatzierten betroffen.",
-          "effect": "oracle"
+          "effect": "oracle",
+          "requiresRoles": true
         },
         "am-scheideweg": {
           "pos": 120,
@@ -495,7 +499,8 @@
           "category": "Segen, hält an",
           "visibility": "public",
           "description": "Bis zum nächsten Ereignis bringt ein richtiger Tipp beim Raten 5 statt 3 Münzen.",
-          "effect": "seers"
+          "effect": "seers",
+          "requiresRoles": true
         },
         "stille-lichtung": {
           "pos": 140,
@@ -931,7 +936,8 @@
           "category": "Fluch",
           "visibility": "public",
           "description": "Die Leute tuscheln über euch. Alle, deren Rolle schon erraten wurde, verlieren 1 Münze.",
-          "effect": "exposed"
+          "effect": "exposed",
+          "requiresRoles": true
         },
         "inkognito": {
           "pos": 70,
@@ -939,7 +945,8 @@
           "category": "Segen",
           "visibility": "public",
           "description": "Wer unerkannt bleibt, hat es leichter. Alle, deren Rolle noch nicht erraten wurde, erhalten 1 Münze.",
-          "effect": "disguise"
+          "effect": "disguise",
+          "requiresRoles": true
         },
         "tisch-gegen-tisch": {
           "pos": 80,
@@ -947,7 +954,8 @@
           "category": "Team gegen Team",
           "visibility": "public",
           "description": "Die Entdeckten, deren Rolle erraten wurde, treten als Team gegen die Unentdeckten an. Jeder im Siegerteam erhält 1 Münze. Gibt es nur ein Lager, wird ein Alle-gegen-alle daraus, und der Sieger erhält 2 Münzen.",
-          "effect": "camps"
+          "effect": "camps",
+          "requiresRoles": true
         },
         "der-spielmann-fordert-zum-wettstreit": {
           "pos": 90,
@@ -987,7 +995,8 @@
           "category": "Segen, hält an",
           "visibility": "public",
           "description": "Der Abend wird lang, und die Zungen werden locker. Bis zum nächsten Ereignis kostet Raten keine Münze.",
-          "effect": "looseTongues"
+          "effect": "looseTongues",
+          "requiresRoles": true
         },
         "ein-gemuetlicher-abend": {
           "pos": 140,

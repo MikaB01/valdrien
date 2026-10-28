@@ -44,11 +44,11 @@ function screenEvent() {
 // Cards come from a shuffled deck, so every card shows up once before any repeats.
 function drawEvent(automatic, fixedIndex) {
   if (fixedIndex === undefined && (!state.eventDeck || state.eventDeck.length === 0)) {
-    state.eventDeck = shuffle(activeIndices(EVENTS));
+    state.eventDeck = shuffle(playableEvents());
   }
   let index = fixedIndex !== undefined ? fixedIndex : state.eventDeck.pop();
-  if (!EVENTS[index] || (fixedIndex === undefined && EVENTS[index].deleted)) { // stale deck
-    state.eventDeck = shuffle(activeIndices(EVENTS));
+  if (!EVENTS[index] || (fixedIndex === undefined && !playableEvents().includes(index))) { // stale deck
+    state.eventDeck = shuffle(playableEvents());
     index = state.eventDeck.pop();
   }
 
@@ -116,7 +116,7 @@ function drawTimedCard() {
 }
 
 // A player buys a secret event card: coins go to the bank, the card goes to the secret view.
-function privateCards() { return activeIndices(EVENTS).filter(i => EVENTS[i].isPrivate); }
+function privateCards() { return playableEvents().filter(i => EVENTS[i].isPrivate); }
 
 function startBuyCard() {
   state.buyCard = { player: null };
@@ -257,7 +257,7 @@ function eventPending() {
 function upcomingEvents(n) {
   const deck = state.eventDeck || [];
   if (deck.length < n) {
-    const fresh = shuffle(activeIndices(EVENTS).filter(i => !deck.includes(i)));
+    const fresh = shuffle(playableEvents().filter(i => !deck.includes(i)));
     state.eventDeck = fresh.concat(deck);
   }
   return state.eventDeck.slice(-n).reverse();

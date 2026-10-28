@@ -26,7 +26,7 @@ function minigameBody() {
   const mg = m && MINIGAMES[m.index];
   if (!mg) return screenOverview();
 
-  const cheat = state.players.map((_, i) => i).find(i => ROLES[state.players[i].role].ability.mechanic === "loadedDice"
+  const cheat = state.players.map((_, i) => i).find(i => roleOf(i) && roleOf(i).ability.mechanic === "loadedDice"
     && state.players[i].revealed && !state.players[i].abilityUsed);
   const loadedDice = m.loadedDice !== undefined
     ? `<p class="note">${playerName(m.loadedDice)} setzt »Gezinkt« ein und darf den verlorenen Versuch wiederholen.</p>`

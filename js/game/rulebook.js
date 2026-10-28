@@ -2,16 +2,24 @@ function screenQuickGuide() {
   return `<div class="speakable stack">
     ${speakButton()}
     <div class="heading"><span class="eyebrow">Kurzanleitung</span><h2>In einer Minute erklärt</h2></div>
-    <ol class="steps">
+    ${rolesForGuide() ? `<ol class="steps">
       <li><span><strong>Du hast ein Geheimnis.</strong>Jeder bekommt heimlich eine Rolle. Spiel sie durch dein Verhalten, aber nicht zu deutlich.</span></li>
       <li><span><strong>Rate, wer die anderen sind.</strong>Ein Tipp kostet ${coinsText(RULES.guessCost)}. Liegst du richtig, bekommst du ${coinsText(RULES.hitReward)}.</span></li>
       <li><span><strong>Erraten werden hat zwei Seiten.</strong>Deine Tarnung ist weg, dafür wird deine besondere Fähigkeit frei. Du darfst sie einmal einsetzen.</span></li>
       <li><span><strong>Unterwegs passiert etwas.</strong>${intervalText()} deckt die App ein Ereignis oder ein Minispiel auf. Ereignisse und Minispiele bringen oder kosten Münzen.</span></li>
       <li><span><strong>Am Ende wird gezählt.</strong>Deine Münzen plus der Bonus für deine geheime Aufgabe. Wer die meisten hat, gewinnt.</span></li>
-    </ol>
+    </ol>` : `<ol class="steps">
+      <li><span><strong>Sammle Münzen.</strong>Jeder startet mit ${coinsText(RULES.startingCoinsFallback)}. Diesmal spielt ihr ohne geheime Rollen.</span></li>
+      <li><span><strong>Unterwegs passiert etwas.</strong>${intervalText()} deckt die App ein Ereignis oder ein Minispiel auf. Ereignisse und Minispiele bringen oder kosten Münzen.</span></li>
+      <li><span><strong>Manches bleibt geheim.</strong>Geheime Ereignisse gehen nur an einen von euch. Für ${coinsText(RULES.privateCardCost)} kann sich jeder selbst eine geheime Karte kaufen.</span></li>
+      <li><span><strong>Am Ende wird gezählt.</strong>Wer die meisten Münzen hat, gewinnt.</span></li>
+    </ol>`}
     <p class="note">Die App rechnet alle Münzen mit. Ihr tippt nur an, was passiert ist.</p>
   </div>`;
 }
+
+// During a game the dealt game decides, before it the settings.
+function rolesForGuide() { return state.running && state.players && state.players.length ? rolesOn() : settings.roles !== false; }
 
 function openQuickGuide() { openReference("quickGuide"); }
 
@@ -38,8 +46,14 @@ function screenRules() {
           <li>Wählt ein Abenteuer. Dann geben ${RULES.minPlayers} bis 7 Spieler (Waldgilde) oder ${RULES.minPlayers} bis 8 Spieler (Taverne) ihre Namen ein.</li>
           <li>Die App verteilt die Rollen zufällig und geheim.</li>
           <li>Das Handy wird herumgereicht. Jeder sieht nur seine eigene Rolle mit Fähigkeit und geheimer Aufgabe.</li>
+          <li>Gefällt dir deine Rolle nicht, darfst du sie weglegen und eine neue ziehen, so oft wie in den Einstellungen festgelegt. Eine weggelegte Rolle bekommt niemand mehr zu sehen. Reichen die übrigen Rollen nicht, damit jeder gleich oft neu ziehen kann, senkt die App die Zahl für alle gleich. Reicht es nicht einmal für eine zweite Rolle pro Kopf, weist die App darauf hin, und ihr klärt untereinander, wer neu ziehen darf.</li>
           <li>Jeder startet mit dem Startkapital seiner Rolle (3 bis 5 Münzen).</li>
         </ol>
+      </section>
+
+      <section>
+        <h3>Ohne Rollen spielen</h3>
+        <p>In den Einstellungen lassen sich die geheimen Rollen vor einer Partie abschalten. Dann gibt es kein Raten, keine Fähigkeiten und keine geheimen Aufgaben. Ereigniskarten, die Rollen brauchen, bleiben aus dem Stapel. Jeder startet mit ${coinsText(RULES.startingCoinsFallback)}, es spielen ${RULES.minPlayers} bis ${RULES.maxPlayersWithoutRoles} Spieler, und am Ende zählen nur die Münzen.</p>
       </section>
 
       <section>

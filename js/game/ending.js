@@ -19,9 +19,9 @@ function screenTasks() {
 }
 
 function screenEnd() {
-  const result = state.players.map(s => ({
+  const result = state.players.map((s, i) => ({
     name: s.name,
-    total: s.coins + (s.taskDone ? ROLES[s.role].task.bonus : 0)
+    total: s.coins + (s.taskDone && roleOf(i) ? roleOf(i).task.bonus : 0)
   })).sort((a, b) => b.total - a.total);
 
   const best = result[0].total;
@@ -42,7 +42,7 @@ function screenEnd() {
 function finishAdventure() {
   state.running = false;
   resetTimer();
-  show("tasks");
+  show(rolesOn() ? "tasks" : "end");
 }
 
 function resumeAdventure() {

@@ -278,6 +278,7 @@ function refreshFields() {
 function editorSignature() {
   const e = currentEntry();
   return [cms.adventure, cms.section, cms.entry || "", e ? "present" : "gone", e?.category || "", e?.visibility || "",
+    e?.effect || "", String(e?.requiresRoles === true),
     cms.dialog ? JSON.stringify(cms.dialog) : ""].join("|");
 }
 
@@ -332,6 +333,7 @@ function renderList() {
           <span class="sub">${escapeHtml(subtitle(e))}</span>
           <span class="right">
             ${cms.section === "events" && e.visibility === "private" ? `<span class="chip private">privat</span>` : ""}
+            ${cms.section === "events" && eventRequiresRoles(e) ? `<span class="chip" title="Nur in Partien mit Rollen">Rollen</span>` : ""}
             ${here.map(p => `<span class="here-badge" title="${escapeHtml(p.email)} arbeitet hier">${escapeHtml(initials(p.email))}</span>`).join("")}
           </span>
         </button>`;
@@ -398,7 +400,7 @@ function headerHtml(eyebrow, title, tools) {
     ${cms.dialog ? confirmHtml() : ""}`;
 }
 
-// type: text | number | textarea | narrative | paragraphs | lines | select | segment
+// type: text | number | textarea | narrative | paragraphs | lines | select | segment | flag (segment with false/true)
 function field(fullPath, label, type, options = {}) {
   const key = fullPath.join("\u0001");
   const id = "f-" + fullPath.map(slug).join("-");
@@ -408,12 +410,12 @@ function field(fullPath, label, type, options = {}) {
   let input;
   if (type === "number") input = `<input type="number" inputmode="numeric" step="1" ${attr} value="${escapeHtml(text)}">`;
   else if (type === "select") input = `<select ${attr}>${Object.entries(options.values).map(([w, n]) => `<option value="${escapeHtml(w)}" ${w === text ? "selected" : ""}>${escapeHtml(n)}</option>`).join("")}${!(text in options.values) ? `<option value="${escapeHtml(text)}" selected>${escapeHtml(text || "(leer)")}</option>` : ""}</select>`;
-  else if (type === "segment") input = `<div class="segment" role="radiogroup" aria-label="${escapeHtml(label)}">${Object.entries(options.values).map(([w, n]) => `<label><input type="radio" name="${id}" value="${escapeHtml(w)}" data-path="${escapeHtml(key)}" data-type="segment" ${w === text ? "checked" : ""}>${escapeHtml(n)}</label>`).join("")}</div>`;
+  else if (type === "segment" || type === "flag") input = `<div class="segment" role="radiogroup" aria-label="${escapeHtml(label)}">${Object.entries(options.values).map(([w, n]) => `<label><input type="radio" name="${id}" value="${escapeHtml(w)}" data-path="${escapeHtml(key)}" data-type="${type}" ${w === text ? "checked" : ""}>${escapeHtml(n)}</label>`).join("")}</div>`;
   else if (["textarea", "narrative", "paragraphs", "lines"].includes(type)) input = `<textarea ${attr} rows="${options.rows || 4}" class="${type === "narrative" || type === "paragraphs" ? "narrative" : ""}">${escapeHtml(text)}</textarea>`;
   else input = `<input type="text" ${attr} value="${escapeHtml(text)}" ${options.list ? `list="${options.list}"` : ""} autocomplete="off">`;
   return `
     <div class="field" data-key="${escapeHtml(key)}">
-      ${type === "segment" ? `<span class="label">${escapeHtml(label)}</span>` : `<label for="${id}">${escapeHtml(label)}</label>`}
+      ${type === "segment" || type === "flag" ? `<span class="label">${escapeHtml(label)}</span>` : `<label for="${id}">${escapeHtml(label)}</label>`}
       ${options.help ? `<span class="help">${escapeHtml(options.help)}</span>` : ""}
       ${input}
       ${options.after || ""}
@@ -430,6 +432,7 @@ function textToValue(text, type) {
   if (type === "number") { if (String(text).trim() === "") return null; const n = Number(text); return Number.isFinite(n) ? Math.round(n) : undefined; }
   if (type === "paragraphs") return String(text).split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
   if (type === "lines") return String(text).split("\n").map(s => s.trim()).filter(Boolean);
+  if (type === "flag") return text === "true";
   return String(text);
 }
 
@@ -440,8 +443,14 @@ document.addEventListener("input", e => {
   const value = textToValue(el.value, type);
   if (value === undefined) return;
   const path = el.dataset.path.split("\u0001");
-  const structural = type === "select" || type === "segment";
+  const structural = type === "select" || type === "segment" || type === "flag";
+  const before = getPath(cms.content, path);
   change(path, value, structural);
+  // an effect that needs roles marks the event, so the stored content says it too; switching away clears the mark again
+  if (path[path.length - 1] === "effect") {
+    const roleEffect = v => CATALOG.roleEffects.includes(v);
+    if (roleEffect(value) !== roleEffect(before)) change([...path.slice(0, -1), "requiresRoles"], roleEffect(value), true);
+  }
   if (path[path.length - 1] === "name") {
     const title = document.getElementById("editor-title");
     if (title && path.length >= 3) title.textContent = value || "Ohne Namen";
@@ -495,12 +504,19 @@ function checkHtml() {
   const minigameList = Object.values(a.minigames || {});
   const eventList = Object.values(a.events || {});
   const problems = [], notes = [];
-  if (roles.length < 3) problems.push(`Es gibt ${roles.length} Rollen. Für eine Partie braucht es mindestens 3.`);
+  if (roles.length < 3) {
+    const withoutRoles = eventList.filter(e => !eventRequiresRoles(e)).length;
+    if (withoutRoles) notes.push(`Es gibt ${roles.length} Rollen. Mit Rollen braucht eine Partie mindestens 3, ohne Rollen ist das Abenteuer schon spielbar.`);
+    else problems.push(`Es gibt ${roles.length} Rollen. Für eine Partie mit Rollen braucht es mindestens 3.`);
+  }
   if (!eventList.length) problems.push("Es gibt noch keine Ereignisse.");
   Object.entries(CATEGORIES).forEach(([k, d]) => { if (!minigameList.some(m => m.category === k)) notes.push(`Kein Minispiel in der Kategorie „${d.name}“. Ereignisse oder Fähigkeiten, die so ein Minispiel brauchen, finden dann keins.`); });
   const withoutMechanic = roles.filter(r => !r.ability?.mechanic).map(r => r.name || "Ohne Namen");
   if (withoutMechanic.length) notes.push(`Ohne Spielmechanik (Münzen von Hand): ${withoutMechanic.join(", ")}.`);
   const privateCount = eventList.filter(e => e.visibility === "private").length;
+  const roleEvents = eventList.filter(eventRequiresRoles).length;
+  if (roleEvents && roleEvents === eventList.length) notes.push(`Alle Ereignisse brauchen Rollen. Ohne Rollen ist das Abenteuer nicht spielbar.`);
+  else if (roleEvents) notes.push(`${roleEvents} ${roleEvents === 1 ? "Ereignis kommt" : "Ereignisse kommen"} nur in Partien mit Rollen vor. Ohne Rollen bleiben ${eventList.length - roleEvents}.`);
   if (privateCount) notes.push(`${privateCount} private ${privateCount === 1 ? "Ereignis geht" : "Ereignisse gehen"} jeweils an einen einzelnen Spieler auf seine QR-Seite.`);
   if (!problems.length && !notes.length) return `<div class="message">Spielbereit: ${roles.length} Rollen, ${minigameList.length} Minispiele, ${eventList.length} Ereignisse.</div>`;
   return `
@@ -591,6 +607,15 @@ function entryEditor() {
             : "Sofort: Die App bucht die Münzen, sobald das Ereignis eintritt. Bei 0 ist es nur eine geheime Information."}</p>
           ${field([...p, "privateCoins"], "Münzen für den Spieler", "number", { help: "Minus heißt Verlust, z. B. −2" })}`
         : field([...p, "effect"], "Was die App dabei tut", "select", { values: EFFECT_MECHANICS, help: "Die App kann nur diese Wirkungen. Neue müssen programmiert werden." })}
+      </div>
+      <div class="group">
+        <h3>Partien ohne Rollen</h3>
+        ${e.visibility !== "private" && CATALOG.roleEffects.includes(e.effect)
+          ? `<p class="explain">Diese Wirkung braucht Rollen (Raten, Erratene, Erkennungsmerkmale). Das Ereignis kommt deshalb nur in Partien mit Rollen vor.</p>`
+          : `${field([...p, "requiresRoles"], "Wann kommt das Ereignis vor?", "flag", { values: { false: "Immer", true: "Nur mit Rollen" }, defaultValue: false })}
+            <p class="explain">${e.requiresRoles === true
+              ? "Nur mit Rollen: In Partien, die ohne Rollen gespielt werden, bleibt die Karte aus dem Stapel."
+              : "Immer: Die Karte kommt auch in Partien ohne Rollen vor. Bezieht sich der Text auf Rollen, stell hier „Nur mit Rollen“ ein."}</p>`}
       </div>`;
   }
   return html;
@@ -664,6 +689,7 @@ function teamHtml() {
 const FIELD_LABELS = { privateType: "Wann Münzen", privateCoins: "Münzen", name: "Name", startingCoins: "Startkapital", background: "Hintergrundgeschichte", character: "Charakter",
   traits: "Erkennungsmerkmale", ability: "Fähigkeit", task: "Geheime Aufgabe", text: "Beschreibung", mechanic: "Mechanik", bonus: "Bonus",
   category: "Kategorie", description: "Beschreibung", reward: "Belohnung", visibility: "Sichtbarkeit", effect: "Wirkung", setting: "Setting",
+  requiresRoles: "Nur mit Rollen",
   story: "Geschichte", epilogue: "Schlusstext", terms: "Begriffe", title: "Überschrift", paragraphs: "Text", closing: "Letzter Satz",
   before: "Text vorher", after: "Text nachher", pos: "Reihenfolge" };
 function historyText(v) {
@@ -794,7 +820,7 @@ const TEMPLATES = {
   roles: () => ({ name: "Neue Rolle", title: "", startingCoins: 4, background: "", character: "", traits: [],
     ability: { name: "", text: "", mechanic: "" }, task: { name: "", text: "", bonus: 2 } }),
   minigames: () => ({ name: "Neues Minispiel", category: "all", description: "", reward: { winner: 2 } }),
-  events: () => ({ name: "Neues Ereignis", category: "", visibility: "public", description: "", effect: "calm" })
+  events: () => ({ name: "Neues Ereignis", category: "", visibility: "public", description: "", effect: "calm", requiresRoles: false })
 };
 
 function nextPos(collection) { return Math.max(0, ...Object.values(collection || {}).map(e => e.pos || 0)) + 10; }

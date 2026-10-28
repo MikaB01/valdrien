@@ -9,7 +9,9 @@ let settings = {
   musicVolume: 0.5,
   theme: "auto", // "auto" follows the phone, "light" or "dark" forces it
   minigameShare: RULES.minigameShareDefault,
-  sound: true // short reward sound when the time is up
+  sound: true, // short reward sound when the time is up
+  roles: true, // deal secret roles; without them guessing, abilities, tasks and role events are left out
+  rerolls: RULES.rerollsDefault // how often each player may draw a new role during the handover
 };
 try { Object.assign(settings, JSON.parse(localStorage.getItem("valdrien-settings") || "{}")); } catch (e) {}
 function clampMinutes(m) { return Math.min(RULES.eventMinuteRange[1], Math.max(RULES.eventMinuteRange[0], Math.round(m))); }
@@ -35,12 +37,18 @@ function setSetting(key, value) {
   render();
 }
 
+function rerollSetting() {
+  const n = Math.round(Number(settings.rerolls));
+  return Number.isFinite(n) ? Math.max(0, Math.min(Math.max(...RULES.rerollOptions), n)) : RULES.rerollsDefault;
+}
+
 let confirmFinish = false;
 let confirmRedraw = false;
 let sheet = null;
 
 // The whole game state; saved to localStorage after every change.
-// players[]: { name, role (index into ROLES), coins, revealed, abilityUsed, taskDone, accessCode, secrets[] }
+// players[]: { name, role (index into ROLES, null without roles), coins, revealed, abilityUsed, taskDone, accessCode, secrets[], rerolls }
+// roles: false for a game without roles (fixed when the game is dealt); rerollLimit, discardedRoles: drawing new roles at the handover.
 // Further fields are added during play: adventure, running, timerEnd, eventDeck (top = last), event, minigame,
 // timerPaused, timerDuration, timerWindow, guess, ability, peekRole, seersNight, freeGuesses, winBonus, lastWinnings, lastParticipants, slots, session.
 let state = {
@@ -75,6 +83,10 @@ function takeSnapshot() {
     hidden: all.filter(i => !state.players[i].revealed)
   };
 }
+
+// Settings change only the next game; a running game keeps what it was dealt with.
+function rolesOn() { return state.roles !== false; }
+function roleOf(i) { return rolesOn() && state.players[i] ? ROLES[state.players[i].role] || null : null; }
 
 function playerName(i) { return escapeName(state.players[i].name); }
 function playerNames(list) {
