@@ -68,6 +68,17 @@ function slideVolume(input) {
   document.getElementById("volume-value").textContent = input.value + " %";
 }
 
+// Opens the settings with one section marked (e.g. "Ändern" on the names screen); the mark stays until another screen opens.
+let settingsFocus = null;
+function openSettingsAt(id) {
+  openReference("settings");
+  settingsFocus = id;
+  openHints.add(id);
+  render();
+  const section = document.getElementById("settings-" + id);
+  if (section) section.scrollIntoView({ block: "center" });
+}
+
 // Settings explanations stay folded behind an (i) button; toggled in place without a render.
 const openHints = new Set();
 function sectionHead(id, title) {
@@ -92,7 +103,7 @@ function rolesSection(segment) {
   const rerolls = rerollSetting();
   const inGame = state.running && state.players && state.players.length;
   return `
-      <section>
+      <section id="settings-roles" class="${settingsFocus === "roles" ? "focus" : ""}">
         ${sectionHead("roles", "Geheime Rollen")}
         ${hint("roles", on
           ? `Jeder bekommt heimlich eine Rolle mit Fähigkeit und geheimer Aufgabe. Gefällt sie nicht, darf man beim Verteilen eine neue ziehen, so oft wie hier eingestellt. Eine weggelegte Rolle bekommt niemand sonst zu sehen. Gibt es zu wenige Rollen, damit jeder gleich oft neu ziehen kann, senkt die App die Zahl für alle gleich.`
@@ -155,7 +166,7 @@ function screenSettings() {
       </section>
       <section>
         ${sectionHead("mix", "Ereignisse und Minispiele")}
-        ${hint("mix", "Ist die Zeit um, zieht die App zufällig eine Ereigniskarte oder ein Minispiel. Unabhängig davon lösen manche Ereigniskarten selbst ein Minispiel mit besonderem Dreh aus.")}
+        ${hint("mix", "Ist die Zeit um, zieht die App zufällig eine Ereigniskarte oder ein Minispiel. Eine Ereigniskarte löst nie selbst ein Minispiel aus.")}
         <p class="slider-value" id="mix-value">${mixLabel()}</p>
         <div class="range" id="mix-range" style="--from:0; --to:${eventShare / 100}">
           <input type="range" min="0" max="100" step="10" value="${eventShare}" aria-label="Anteil der Ereigniskarten in Prozent"
@@ -166,10 +177,10 @@ function screenSettings() {
       <section>
         ${sectionHead("clock", "Uhr auf der Hauptseite")}
         ${hint("clock", visible
-          ? "Die Restzeit bis zum nächsten Ereignis steht oben auf der Hauptseite."
+          ? "Die Restzeit bis zum nächsten Ereignis steht oben rechts auf der Hauptseite. Ein Tipp darauf hält die Uhr an."
           : random
-            ? "Die genaue Zeit bleibt geheim. Die Hauptseite zeigt nur, in wie vielen Minuten das nächste Ereignis ungefähr kommt. Anhalten und Weiterlaufen geht trotzdem."
-            : "Die Restzeit bleibt geheim. Anhalten und Weiterlaufen geht trotzdem über den kleinen Knopf.")}
+            ? "Die genaue Zeit bleibt geheim. Die Uhr oben rechts zeigt nur, in wie vielen Minuten das nächste Ereignis ungefähr kommt. Anhalten und Weiterlaufen geht trotzdem mit einem Tipp darauf."
+            : "Die Restzeit bleibt geheim. Anhalten und Weiterlaufen geht trotzdem mit einem Tipp auf die Uhr oben rechts.")}
         <div class="segmented" role="group" aria-label="Uhr auf der Hauptseite">
           ${segment(visible, "setSetting('showTimer', true)", "Anzeigen")}
           ${segment(!visible, "setSetting('showTimer', false)", "Verbergen")}
@@ -187,7 +198,7 @@ function screenSettings() {
       </section>
       <section>
         ${sectionHead("music", "Musik")}
-        ${hint("music", "Solange die Ereignis-Uhr läuft, spielt hin und wieder Musik passend zum Abenteuer: Harfe und Flöte im Wald, Laute und Trommel in der Taverne, ein beschwipster Totentanz mit Knochenxylophon und Glocke im Verlies. Die Musik entsteht live in der App, ganz ohne Dateien und Lizenzkosten. Beim iPhone muss der Stummschalter aus sein.")}
+        ${hint("music", "Solange die Ereignis-Uhr läuft, spielt hin und wieder düstere Musik passend zum Abenteuer: Harfe, Flöte und Wind im Wald bei Dämmerung, Laute und Trommel in der Sturmnacht, ein langsamer Totentanz mit Grabglocke und Knochenxylophon im Verlies. Die Musik entsteht live in der App, ganz ohne Dateien und Lizenzkosten. Beim iPhone muss der Stummschalter aus sein.")}
         <div class="segmented" role="group" aria-label="Musik">
           ${segment(musicOn, "setSetting('music', true)", "An")}
           ${segment(!musicOn, "setSetting('music', false)", "Aus")}
@@ -201,7 +212,7 @@ function screenSettings() {
       </section>
       <section>
         ${sectionHead("sound", "Signalton")}
-        ${hint("sound", "Ist die Zeit um, erklingt kurz ein passender Ton, sobald die neue Karte erscheint: eine Harfe im Wald, Laute und Glöckchen in der Taverne, Totenglocke und Schlüsselbund im Verlies. Im Verlies klirrt auch der Schlüsselbund beim Kaufen.")}
+        ${hint("sound", "Ist die Zeit um, erklingt kurz ein passender Ton, sobald die neue Karte erscheint: eine dunkle Harfe im Wald, Laute und Glocke in der Taverne, Totenglocke und Schlüsselbund im Verlies. Im Verlies klirrt auch der Schlüsselbund beim Kaufen.")}
         <div class="segmented" role="group" aria-label="Signalton">
           ${segment(settings.sound !== false, "setSetting('sound', true)", "An")}
           ${segment(settings.sound === false, "setSetting('sound', false)", "Aus")}
@@ -255,8 +266,11 @@ function screenIntro() {
 }
 
 function chooseAdventure(id) {
-  state.adventure = id;
-  selectAdventureData(id);
+  state.setupAdventure = id;
+  if (!(state.players && state.players.length)) {
+    state.adventure = id;
+    selectAdventureData(id);
+  }
   state.names = state.names.slice(0, Math.max(RULES.minPlayers, maxPlayers()));
   show("names");
 }

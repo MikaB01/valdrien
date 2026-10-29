@@ -160,7 +160,8 @@ function icon(name) {
     roles: `<rect x="5" y="10" width="15" height="21" rx="2" transform="rotate(-12 12.5 20.5)"/><rect x="20" y="10" width="15" height="21" rx="2" transform="rotate(12 27.5 20.5)"/><rect x="12.5" y="7" width="15" height="23" rx="2" style="fill: var(--card)"/>`,
     secret: `<path d="M8 18 V13 a12 12 0 0 1 24 0 V18"/><rect x="5" y="18" width="30" height="18" rx="3"/><circle class="filled" cx="20" cy="26" r="2.6"/><path d="M20 28 V31"/>`,
     lightning: `<path d="M22 4 L11 22 H19 L17 36 L29 16 H21 Z"/>`,
-    gear: `<circle cx="20" cy="20" r="5"/><path d="M20 5v5M20 30v5M35 20h-5M10 20H5M30.6 9.4l-3.5 3.5M12.9 27.1l-3.5 3.5M30.6 30.6l-3.5-3.5M12.9 12.9L9.4 9.4"/>`,
+    settings: `<g transform="scale(1.6667)" stroke-width="1.1"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v2.6M12 18.9v2.6M21.5 12h-2.6M5.1 12H2.5M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8M18.7 18.7l-1.8-1.8M7.1 7.1L5.3 5.3"/><circle cx="12" cy="12" r="6.6"/></g>`,
+    redraw: `<path d="M32 21a12 12 0 1 1-3.5-8.5"/><path d="M30 5v8h-8"/>`,
     flag: `<path d="M11 35 V6"/><path d="M11 7 C17 3 22 11 30 7 V21 C22 25 17 17 11 21"/>`,
     rules: `<path d="M20 11 C15 8 10 8 6 9 V31 C10 30 15 30 20 33 C25 30 30 30 34 31 V9 C30 8 25 8 20 11 Z M20 11 V33"/>`
   };

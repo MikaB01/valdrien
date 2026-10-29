@@ -34,7 +34,7 @@ No build step: plain `<script>` files loaded in order, all top-level declaration
 | `artwork.js` | Drawn forest and tavern artwork, icons. |
 | `frame.js` | `show(screen)`, `render()`, `SCREENS` registry, bottom app bar (back, purse, menu) and its sheets. |
 | `menu.js`, `rulebook.js`, `setup.js`, `overview.js` | Screens before and around play. |
-| `timer.js` | Countdown to the next event card: fixed or random interval, pause/play, timer bar. |
+| `timer.js` | Countdown to the next event card: fixed or random interval; the clock in the corner of the main screen is the pause/play button. |
 | `guessing.js` | Guessing a role. |
 | `abilities.js` | `ABILITIES`: one handler per ability mechanic. |
 | `events.js` | Drawing and resolving event cards, private events. |
@@ -73,6 +73,8 @@ No build step: plain `<script>` files loaded in order, all top-level declaration
 ```
 
 `goal: "keys"` (Das Henkersmahl im Verlies): instead of counting coins at the end, players buy random keys for `RULES.keyCost`; the chances and key pictures are in `RULES.keys`. Whoever first holds all three kinds breaks out and wins at once; each player sees only their own keys. Role tasks are cashed in during the game under "Nachsehen", because the end comes without warning.
+
+Event cards never start a minigame: when the time is up the app draws either an event card or a minigame. Events still set to one of the former minigame effects (`CATALOG.retiredEffects`) or to any unknown effect stay out of the deck (`retired`); the CMS marks them so another effect can be chosen.
 
 `requiresRoles: true` keeps an event out of games played without roles (settings → "Geheime Rollen"). Events with an effect from `CATALOG.roleEffects` count as role events even without the field; the CMS sets it for them, and `database/setup.sql` adds it to existing content.
 

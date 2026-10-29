@@ -42,11 +42,6 @@ const CATALOG = {
     envy:         "Reichste geben je 2 an die Ärmsten",
     exposed:      "Alle Erratenen verlieren 1",
     disguise:     "Alle Unerratenen erhalten 1",
-    duel:         "Meiste gegen Wenigste im Duell, Sieger erhält von jedem Verlierer 2",
-    contest:      "Alle gegen alle, Sieger erhält doppelte Belohnung",
-    camps:        "Erratene gegen Unerratene, Siegerteam je +1",
-    purse:        "Meiste verliert 2, außer er gewinnt ein Duell",
-    stranger:     "Meiste allein gegen alle",
     oracle:       "Meiste verrät ein Erkennungsmerkmal oder zahlt 2",
     crossroads:   "Wenigste wählt: alle +1 oder selbst +2",
     generosity:   "Meiste schenkt einem Mitspieler 2 oder zahlt 3",
@@ -57,6 +52,16 @@ const CATALOG = {
     misfortune:   "Die App lost einen Spieler aus, er verliert 2"
   },
 
+  // Effects that started a minigame. Event cards no longer do that: the app draws either an event card or a minigame.
+  // Events still set to one of these stay out of the deck until another effect is chosen in the CMS.
+  retiredEffects: {
+    duel:     "Duell zwischen Meisten und Wenigsten",
+    contest:  "Alle gegen alle mit doppelter Belohnung",
+    camps:    "Erratene gegen Unerratene",
+    purse:    "Duell um den verfluchten Beutel",
+    stranger: "Meiste allein gegen alle"
+  },
+
   // adventure goals (CMS: "Spielziel")
   goals: {
     coins: "Die meisten Münzen am Ende",
@@ -65,10 +70,13 @@ const CATALOG = {
 
   // Effects that only make sense with roles (guessing, revealed/hidden, traits).
   // Events with one of these, or with requiresRoles: true, are left out of games without roles.
-  roleEffects: ["exposed", "disguise", "camps", "oracle", "seers", "looseTongues"]
+  roleEffects: ["exposed", "disguise", "oracle", "seers", "looseTongues"]
 };
 
 // e: an event as stored in the content JSON
+function eventRetired(e) {
+  return Boolean(e) && e.visibility !== "private" && !CATALOG.effects[e.effect || "calm"];
+}
 function eventRequiresRoles(e) {
   if (!e) return false;
   return e.requiresRoles === true || (e.visibility !== "private" && CATALOG.roleEffects.includes(e.effect));

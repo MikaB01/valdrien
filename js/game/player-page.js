@@ -162,16 +162,12 @@ function secretsHtml(d) {
       <span class="label">Nur für dich</span>
       ${list.map(p => {
         const fresh = !seen.includes(p.id);
-        const consequence = p.kind === "task"
-          ? (p.status === "open" ? `Geheime Aufgabe: Schaffst du es, gibt es ${signed(p.coins)} Münzen. Sag dem Spielleiter Bescheid, wenn du es geschafft hast.`
-            : p.status === "done" ? `Geschafft: ${signed(p.coins)} Münzen gebucht.` : "Nicht geschafft.")
-          : (p.coins ? `${signed(p.coins)} Münzen, schon gebucht.` : "");
         return `
         <article class="secret-card ${fresh ? "new" : ""}">
           ${fresh ? `<span class="chip chip-gold">Neu</span>` : ""}
           <strong class="secret-title">${escapeName(p.title || "")}</strong>
           <p>${escapeName(p.text || "")}</p>
-          ${consequence ? `<p class="muted">${consequence}</p>` : ""}
+          ${secretOutcome(p)}
           ${fresh ? `<button class="btn-quiet" onclick="markSecretSeen('${escapeName(p.id)}')">Gelesen</button>` : ""}
         </article>`;
       }).join("")}

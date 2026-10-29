@@ -1,38 +1,11 @@
 function screenMinigame() {
-  return minigameBody() + redrawBlock();
-}
-
-function redrawBlock() {
-  const m = state.minigame;
-  if (!m || m.done || !MINIGAMES[m.index]) return "";
-  return confirmRedraw ? `
-    <div class="confirm" role="alertdialog" aria-labelledby="redraw-title">
-      <strong id="redraw-title">Wirklich ein anderes Minispiel ziehen?</strong>
-      <p class="muted">Das aktuelle Minispiel wird verworfen.</p>
-      <button class="btn" onclick="redrawMinigame()">Ja, neu ziehen</button>
-      <button class="link-button" onclick="confirmRedraw = false; render()">Abbrechen</button>
-    </div>` : `<button class="link-button" onclick="confirmRedraw = true; render()">Anderes Minispiel ziehen</button>`;
-}
-
-function redrawMinigame() {
-  const m = state.minigame;
-  const r = m.request || {};
-  confirmRedraw = false;
-  drawMinigame(r.category || null, m.fromEvent, r.player === null || r.player === undefined ? undefined : r.player, true);
-  // abilities announced for the discarded minigame carry over to the new one
-  ["stakes", "tournament", "loadedDice"].forEach(key => { if (m[key] !== undefined && state.minigame) state.minigame[key] = m[key]; });
-  save();
-  render();
-}
-
-function minigameBody() {
   const m = state.minigame;
   const mg = m && MINIGAMES[m.index];
   if (!mg) return screenOverview();
 
-  const header = minigameAbilities() + `
-    ${m.automatic ? `<p class="kicker">Die Zeit ist um! Ein Minispiel beginnt …</p>`
-      : `<p class="muted" style="text-align:center">${m.fromEvent ? "Ausgelöst durch die Ereigniskarte" : "Minispiel"}</p>`}
+  const kicker = minigameAbilities()
+    + (m.automatic ? `<p class="kicker">Die Zeit ist um! Ein Minispiel beginnt …</p>` : `<p class="muted" style="text-align:center">Minispiel</p>`);
+  const card = `
     <article class="card drawn-card speakable">
       ${speakButton()}
       <div class="title">
@@ -40,38 +13,84 @@ function minigameBody() {
         <div class="card-name">${mg.title}</div>
       </div>
       <p class="narrative">${mg.text}</p>
-      <p class="coin-line">${m.fromEvent ? "Die Belohnung bestimmt die Ereigniskarte." : m.stakes === "half" ? "Einsatz: Der Sieger erhält die Hälfte der Münzen des Verlierers (aufgerundet)." : rewardText(mg)}</p>
-    </article>
-    ${m.fromEvent ? "" : cardNotes(m.card) + pauseControls()}`;
-
-  if (m.fromEvent) {
-    return header + `<button class="btn" onclick="show('event')">Ergebnis eintragen</button>`;
-  }
-
+      <p class="coin-line">${m.stakes === "half" ? "Einsatz: Der Sieger erhält die Hälfte der Münzen des Verlierers (aufgerundet)." : rewardText(mg)}</p>
+    </article>`;
+  const notes = cardNotes(m.card) + pauseControls();
 
   if (mg.category === "duel" && m.opponent === undefined) {
-    return header + `
+    return kicker + lineup("Wer spielt mit?", [{ label: "Fordert heraus", players: [m.challenger] }], m.byAbility ? "" : coinReason(m.challenger, m.pool, "fewest")) + card + notes + `
       <div class="action-group">
-        <span class="label">${playerName(m.challenger)} ${m.byAbility ? "" : "hat die wenigsten Münzen und "}fordert heraus. Wen?</span>
+        <span class="label">Wen fordert ${playerName(m.challenger)} heraus?</span>
         ${(m.pool || state.players.map((_, i) => i)).map(i => i === m.challenger ? "" :
           `<button class="action" onclick="chooseOpponent(${i})">${playerName(i)}</button>`).join("")}
       </div>`;
   }
 
-  let lineup = "";
-  if (mg.category === "duel") lineup = `Es treten an: ${playerName(m.challenger)} gegen ${playerName(m.opponent)}`;
-  if (mg.category === "oneVsAll") lineup = `Der Einzelne ist ${playerName(m.soloPlayer)}${m.byAbility ? "" : " (die meisten Münzen)"}`;
-  if (mg.category === "uneven") lineup = `${mg.singleName}: ${playerName(m.singlePlayer)} · ${mg.pairName}: ${playerNames(m.pairPlayers)}`;
-  if (mg.category === "team") lineup = `Team 1: ${playerNames(m.teams[0])}<br>Team 2: ${playerNames(m.teams[1])}`;
-  if (mg.category === "all" && mg.judge) lineup = `Richter: ${playerName(m.judge)} (die wenigsten Münzen)`;
-
-  return header + `
-    ${lineup ? `<p class="note">${lineup}</p>` : ""}
+  return kicker + minigameLineup() + card + notes + `
     <div class="action-group">
       <span class="label">Wie ist es ausgegangen?</span>
       ${minigameOutcomes().map((e, k) =>
         `<button class="action" onclick="scoreMinigame(${k})">${e.text}</button>`).join("")}
     </div>`;
+}
+
+// Who plays, shown prominently above the card; says why the app picked someone (and when it was a tie).
+function minigameLineup() {
+  const m = state.minigame;
+  const mg = MINIGAMES[m.index];
+  const all = m.pool || state.players.map((_, i) => i);
+  const why = (i, kind) => m.byAbility ? "" : coinReason(i, all, kind);
+  switch (mg.category) {
+    case "duel": return lineup("Wer spielt mit?", [
+      { label: "Fordert heraus", players: [m.challenger] }, { versus: true }, { label: "Gegner", players: [m.opponent] }]);
+    case "oneVsAll": return lineup("Wer spielt mit?", [
+      { label: "Allein", players: [m.soloPlayer] }, { versus: true }, { label: "Gruppe", players: all.filter(i => i !== m.soloPlayer) }],
+      why(m.soloPlayer, "most"));
+    case "uneven": return lineup("Wer spielt mit?", [
+      { label: mg.singleName, players: [m.singlePlayer] }, { versus: true }, { label: mg.pairName, players: m.pairPlayers }],
+      m.byAbility ? "" : [coinReason(m.singlePlayer, all, "most"), pairReason(m.pairPlayers, all)].filter(Boolean).join(" "));
+    case "team": return lineup("Wer spielt mit?", [
+      { label: "Team 1", players: m.teams[0] }, { versus: true }, { label: "Team 2", players: m.teams[1] }], "Die App hat die Teams ausgelost.");
+    case "all": return lineup("Wer spielt mit?", mg.judge
+      ? [{ label: "Alle gegen alle", players: all.filter(i => i !== m.judge) }, { label: "Richter", players: [m.judge] }]
+      : [{ label: "Alle gegen alle", players: all }], mg.judge ? why(m.judge, "fewest") : "");
+  }
+  return "";
+}
+
+// Why the app picked player i: most or fewest coins in pool, or drawn by lot on a tie.
+function coinReason(i, pool, kind) {
+  const coins = (pool || state.players.map((_, k) => k)).map(k => state.players[k].coins);
+  const target = kind === "most" ? Math.max(...coins) : Math.min(...coins);
+  const tied = coins.filter(c => c === target).length;
+  const name = playerName(i);
+  if (tied === coins.length) return `Alle haben gleich viele Münzen, darum hat die App ${name} ausgelost.`;
+  if (tied > 1) return `Gleichstand bei den ${kind === "most" ? "meisten" : "wenigsten"} Münzen, die App hat ${name} ausgelost.`;
+  return `${name} hat die ${kind === "most" ? "meisten" : "wenigsten"} Münzen.`;
+}
+
+function pairReason(pair, pool) {
+  const coins = pool.map(k => state.players[k].coins).sort((a, b) => a - b);
+  const pairCoins = pair.map(k => state.players[k].coins);
+  const clear = coins.length < 3 || Math.max(...pairCoins) < coins[2];
+  return clear ? `${playerNames(pair)} haben die wenigsten Münzen.` : `${playerNames(pair)}: die wenigsten Münzen, bei Gleichstand ausgelost.`;
+}
+
+// Menu entry "Anderes Minispiel ziehen": discards the open minigame (after confirming in the menu).
+function openMinigame() {
+  const m = state.minigame;
+  return m && !m.done && MINIGAMES[m.index] ? m : null;
+}
+
+function redrawMinigame() {
+  const m = openMinigame();
+  if (!m) return;
+  const r = m.request || {};
+  drawMinigame(r.category || null, r.player === null || r.player === undefined ? undefined : r.player, true);
+  // abilities announced for the discarded minigame carry over to the new one
+  ["stakes", "tournament", "loadedDice"].forEach(key => { if (m[key] !== undefined && state.minigame) state.minigame[key] = m[key]; });
+  save();
+  render();
 }
 
 // Minigames count as played once their result is entered; only reshuffleMinigames() brings them back.
@@ -94,53 +113,48 @@ function reshuffleMinigames() {
 
 // player: set when an ability makes this player the challenger or solo player.
 // An open minigame is shown again instead of drawing a new one; again = true draws anew (confirmed redraw).
-function drawMinigame(category, fromEvent, player, again) {
+function drawMinigame(category, player, again) {
   const open = state.minigame;
-  const resume = !again && open && (fromEvent
-    ? open.fromEvent && state.event && state.event.minigameIndex === open.index
-    : !open.done && !open.fromEvent && !open.byAbility && !category && player === undefined);
+  const resume = !again && open && !open.done && !open.byAbility && !category && player === undefined;
   if (resume) { show("minigame"); return; }
-  if (!fromEvent && player === undefined && !again) cardDrawn("minigame");
+  if (player === undefined && !again) cardDrawn("minigame");
   state.tip = null; // Trinkgeld lasts until a minigame is drawn
   let options = remainingMinigames(category);
-  // an event card or ability still needs its minigame, even if all of that kind were played
-  if (!options.length && (fromEvent || category || player !== undefined)) {
+  // an ability still needs its minigame, even if all of that kind were played
+  if (!options.length && (category || player !== undefined)) {
     options = activeIndices(MINIGAMES).filter(i => !category || MINIGAMES[i].category === category);
   }
   if (!options.length) { show("overview"); return; }
   if (options.length > 1 && state.minigame) options = options.filter(i => i !== state.minigame.index);
   const index = options[Math.floor(Math.random() * options.length)];
-  startMinigame(index, fromEvent, player);
+  startMinigame(index, player);
   state.minigame.request = { category: category || null, player: player === undefined ? null : player };
   save();
 }
 
-function startMinigame(index, fromEvent, player) {
+function startMinigame(index, player) {
   const mg = MINIGAMES[index];
-  const m = { index: index, fromEvent: Boolean(fromEvent), card: state.cardCount || 0 };
+  const m = { index: index, card: state.cardCount || 0 };
 
-  // drawn freely: the app decides who plays, based on coins; a player on Pinkelpause sits out unless an ability calls him
-  if (!fromEvent) {
-    const byAbility = player !== undefined;
-    m.pool = byAbility ? state.players.map((_, i) => i) : inPlay();
-    const order = byCoins(m.pool);
-    if (mg.category === "duel") m.challenger = byAbility ? player : order[0];
-    if (mg.category === "oneVsAll") m.soloPlayer = byAbility ? player : order[order.length - 1];
-    if (mg.category === "uneven") {
-      m.singlePlayer = byAbility ? player : order[order.length - 1];
-      m.pairPlayers = order.filter(i => i !== m.singlePlayer).slice(0, 2);
-    }
-    if (mg.category === "all" && mg.judge) m.judge = order.find(i => i !== player);
-    m.byAbility = byAbility;
-    if (mg.category === "team") {
-      const shuffled = shuffle(m.pool);
-      const half = Math.ceil(shuffled.length / 2);
-      m.teams = [shuffled.slice(0, half), shuffled.slice(half)];
-    }
+  // the app decides who plays, based on coins; a player on Pinkelpause sits out unless an ability calls him
+  const byAbility = player !== undefined;
+  m.pool = byAbility ? state.players.map((_, i) => i) : inPlay();
+  const order = byCoins(m.pool);
+  if (mg.category === "duel") m.challenger = byAbility ? player : order[0];
+  if (mg.category === "oneVsAll") m.soloPlayer = byAbility ? player : order[order.length - 1];
+  if (mg.category === "uneven") {
+    m.singlePlayer = byAbility ? player : order[order.length - 1];
+    m.pairPlayers = order.filter(i => i !== m.singlePlayer).slice(0, 2);
+  }
+  if (mg.category === "all" && mg.judge) m.judge = order.find(i => i !== player);
+  m.byAbility = byAbility;
+  if (mg.category === "team") {
+    const shuffled = shuffle(m.pool);
+    const half = Math.ceil(shuffled.length / 2);
+    m.teams = [shuffled.slice(0, half), shuffled.slice(half)];
   }
 
   state.minigame = m;
-  if (fromEvent) state.event.minigameIndex = index;
   show("minigame");
 }
 

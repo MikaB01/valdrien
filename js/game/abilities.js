@@ -339,7 +339,7 @@ function encore(index) {
   const i = state.ability.player;
   state.winBonus = { player: i, amount: 2 };
   state.players[i].abilityUsed = true;
-  startMinigame(index, false, i);
+  startMinigame(index, i);
 }
 
 // The button for this ability appears on the minigame screen (minigameAbilities).
@@ -379,7 +379,7 @@ ABILITIES.challenge = {
 function challenge() {
   const i = state.ability.player;
   state.players[i].abilityUsed = true;
-  drawMinigame("duel", false, i);
+  drawMinigame("duel", i);
   state.minigame.stakes = "half";
   save();
   render();
@@ -416,7 +416,6 @@ function minigameAbilities() {
 // Rules and opponents must be fixed and the player must take part.
 function tournamentReady(i) {
   const m = state.minigame;
-  if (m.fromEvent) return Boolean(state.event) && eventParticipants().includes(i);
   if (MINIGAMES[m.index].category === "duel" && m.opponent === undefined) return false;
   return minigameParticipants().includes(i);
 }
@@ -459,10 +458,10 @@ function currentCard() {
   const e = state.event;
   if (state.screen === "event" && e) {
     if (e.isPrivate) return { kind: "private", fresh: true };
-    return { kind: "event", fresh: !Object.keys(e.done || {}).length && e.minigameIndex === null };
+    return { kind: "event", fresh: !Object.keys(e.done || {}).length };
   }
   const m = state.minigame;
-  if (state.screen === "minigame" && m && !m.fromEvent) return { kind: "minigame", fresh: !m.done && !m.byAbility };
+  if (state.screen === "minigame" && m) return { kind: "minigame", fresh: !m.done && !m.byAbility };
   return null;
 }
 
@@ -516,7 +515,7 @@ function refreshCard(card) {
     const m = state.minigame;
     const keep = {};
     ["request", "card", "automatic", "stakes", "tournament", "loadedDice"].forEach(k => { if (m[k] !== undefined) keep[k] = m[k]; });
-    startMinigame(m.index, false);
+    startMinigame(m.index);
     Object.assign(state.minigame, keep);
   }
 }

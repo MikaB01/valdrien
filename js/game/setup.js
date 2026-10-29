@@ -1,7 +1,7 @@
 function screenNames() {
   const rows = state.names.map((name, i) => `
     <div class="name-row">
-      <input id="name-${i}" value="${escapeName(name)}" placeholder="Name von ${currentAdventure().player} ${i + 1}"
+      <input id="name-${i}" value="${escapeName(name)}" placeholder="Name von ${setupAdventure().player} ${i + 1}"
              autocomplete="off" autocapitalize="words" enterkeyhint="next"
              oninput="state.names[${i}] = this.value; validateNames()" onkeydown="nameKey(event, ${i})">
       <button class="remove" aria-label="Spieler entfernen" onclick="removeName(${i})"
@@ -9,19 +9,35 @@ function screenNames() {
     </div>`).join("");
 
   return `
-    <h2>${currentAdventure().question}</h2>
-    <p class="muted">${RULES.minPlayers} bis ${maxPlayers()} ${currentAdventure().plural}. Die Namen sind Beispiele, überschreibe sie einfach.</p>
+    <h2>${setupAdventure().question}</h2>
+    <p class="muted">${RULES.minPlayers} bis ${maxPlayers()} ${setupAdventure().plural}. Die Namen sind Beispiele, überschreibe sie einfach.</p>
     <div class="names">${rows}</div>
     ${state.names.length < maxPlayers()
-      ? `<button class="btn-quiet" onclick="addName()">+ ${currentAdventure().player} hinzufügen</button>` : ""}
+      ? `<button class="btn-quiet" onclick="addName()">+ ${setupAdventure().player} hinzufügen</button>` : ""}
     <p class="muted" id="names-error"></p>
-    <p class="muted mode-line">${settings.roles !== false
-      ? `Mit geheimen Rollen${rerollSetting() ? `, bis zu ${rerollSetting()}× neu ziehen` : ""}.`
-      : "Ohne Rollen: kein Raten, keine Fähigkeiten, keine geheimen Aufgaben."}
-      <button class="link-button" onclick="openReference('settings')">Ändern</button></p>
-    <p class="note" id="reroll-note" hidden></p>
+    ${modeCard()}
     <button class="btn" id="deal-btn" onclick="dealRoles()">${settings.roles !== false ? "Rollen geheim verteilen" : "Abenteuer beginnen"}</button>
   `;
+}
+
+// Roles on or off for the next game, with what that means; "Ändern" opens the settings at this section.
+function modeCard() {
+  const on = settings.roles !== false;
+  const rerolls = rerollSetting();
+  const facts = on
+    ? ["Jeder bekommt heimlich eine Rolle mit Fähigkeit und geheimer Aufgabe.",
+       rerolls ? `Gefällt die Rolle nicht, darf jeder sie ${rerolls === 1 ? "einmal" : `bis zu ${rerolls}-mal`} weglegen und neu ziehen.` : "Neu ziehen ist ausgeschaltet: Jeder behält seine erste Rolle."]
+    : ["Kein Raten, keine Fähigkeiten, keine geheimen Aufgaben.", `Jeder startet mit ${coinsText(RULES.startingCoinsFallback)}, am Ende zählen nur die Münzen.`];
+  return `
+    <section class="mode-card" aria-label="Geheime Rollen">
+      <div class="mode-head">
+        <span class="mode-icon">${icon(on ? "roles" : "coin")}</span>
+        <span class="mode-title"><span class="label">Spielart</span><strong>${on ? "Mit geheimen Rollen" : "Ohne Rollen"}</strong></span>
+        <button class="mode-change" onclick="openSettingsAt('roles')">Ändern</button>
+      </div>
+      <ul class="mode-facts">${facts.map(f => `<li>${f}</li>`).join("")}</ul>
+      <p class="mode-warning" id="reroll-note" hidden></p>
+    </section>`;
 }
 
 // How often each player may draw a new role. A role that was put back is never shown to anyone
@@ -38,9 +54,9 @@ function rerollPlan(players, roles, wanted) {
 function rerollNote(players) {
   const wanted = rerollSetting();
   if (settings.roles === false || !wanted || players < RULES.minPlayers) return "";
-  const roles = roleCount();
+  const a = setupAdventure();
+  const roles = roleCount(a);
   const plan = rerollPlan(players, roles, wanted);
-  const a = currentAdventure();
   if (!plan.spare) return `Neue Rollen ziehen geht diesmal nicht: Es gibt ${roles} Rollen, und ihr seid ${players} ${a.plural}.`;
   if (plan.short) return `Neu ziehen geht, aber nicht für alle: Bei ${roles} Rollen und ${players} ${a.dative} ${plan.spare === 1 ? "bleibt nur 1 Rolle" : `bleiben nur ${plan.spare} Rollen`} übrig. Klärt vorher untereinander, wer neu ziehen darf.`;
   if (plan.limit < wanted) return `Bei ${roles} Rollen und ${players} ${a.dative} darf jeder höchstens ${plan.limit}× neu ziehen, damit es für alle gleich bleibt.`;
@@ -56,7 +72,6 @@ function screenHandover() {
         <div class="dots" role="img" aria-label="Rolle ${state.current + 1} von ${state.players.length}">
           ${state.players.map((_, i) => `<span class="${i <= state.current ? "filled" : ""}"></span>`).join("")}
         </div>
-        <div class="emblem">${icon("role")}</div>
         <p class="muted">Gib das Handy an</p>
         <p class="name-large">${escapeName(s.name)}</p>
         <p class="muted">Nur ${escapeName(s.name)} darf jetzt hinsehen. Halte das Handy so, dass niemand mitliest.</p>
@@ -94,14 +109,17 @@ function roleCard(r) {
         <span class="label">Erkennungsmerkmale</span>
         <ul>${r.traits.map(m => `<li>${m}</li>`).join("")}</ul>
       </div>
-      <div class="section">
-        <span class="label">Fähigkeit · ${r.ability.name}</span>
+      <div class="section section-box">
+        <span class="label">Fähigkeit</span>
+        <strong class="section-name">${r.ability.name}</strong>
         <p>${r.ability.text}</p>
         <p class="muted">Wird freigeschaltet, sobald jemand deine Rolle errät.</p>
       </div>
-      <div class="section">
-        <span class="label">Geheime Aufgabe · ${r.task.name} · +${r.task.bonus} Münzen</span>
+      <div class="section section-box">
+        <span class="label">Geheime Aufgabe</span>
+        <strong class="section-name">${r.task.name}</strong>
         <p>${r.task.text}</p>
+        <span class="chip chip-gold section-bonus">Bonus: +${r.task.bonus} Münzen</span>
       </div>
       <p class="coin-line">Startkapital: ${r.startingCoins} Münzen</p>
     </article>`;
@@ -136,11 +154,11 @@ function removeName(i) {
 function validateNames() {
   const names = state.names.map(n => n.trim());
   let error = "";
-  if (names.some(n => n === "")) error = `Bitte gib allen ${currentAdventure().dative} einen Namen.`;
-  else if (new Set(names.map(n => n.toLowerCase())).size !== names.length) error = `Zwei ${currentAdventure().plural} haben denselben Namen.`;
+  if (names.some(n => n === "")) error = `Bitte gib allen ${setupAdventure().dative} einen Namen.`;
+  else if (new Set(names.map(n => n.toLowerCase())).size !== names.length) error = `Zwei ${setupAdventure().plural} haben denselben Namen.`;
   else if (names.length > maxPlayers()) error = settings.roles !== false
     ? `Es gibt nur ${maxPlayers()} Rollen. Entfernt ${names.length - maxPlayers() === 1 ? "einen Namen" : (names.length - maxPlayers()) + " Namen"} oder spielt ohne Rollen.`
-    : `Höchstens ${maxPlayers()} ${currentAdventure().plural}.`;
+    : `Höchstens ${maxPlayers()} ${setupAdventure().plural}.`;
   const note = document.getElementById("reroll-note");
   if (note) { note.textContent = error ? "" : rerollNote(names.length); note.hidden = !note.textContent; }
   document.getElementById("names-error").textContent = error;
@@ -150,6 +168,7 @@ function validateNames() {
 
 function dealRoles() {
   if (!validateNames()) return;
+  if (ADVENTURES[state.setupAdventure]) state.adventure = state.setupAdventure;
   resetSeats();
   // new game: forget deleted entries and assign fresh slots
   state.players = [];

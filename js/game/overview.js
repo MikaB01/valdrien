@@ -1,12 +1,10 @@
+// Most coins first.
 function scoreBoard() {
   const values = state.players.map(s => s.coins);
-  const max = Math.max(...values), min = Math.min(...values);
   const order = state.players.map((_, i) => i).sort((a, b) => values[b] - values[a]);
   const rows = order.map(i => {
     const s = state.players[i];
     const chips = [];
-    if (max !== min && s.coins === max) chips.push(`<span class="chip chip-gold">meiste</span>`);
-    if (max !== min && s.coins === min) chips.push(`<span class="chip">wenigste</span>`);
     if (s.revealed && !s.abilityUsed) chips.push(`<span class="chip chip-forest">Fähigkeit bereit</span>`);
     else if (s.revealed) chips.push(`<span class="chip">enttarnt</span>`);
     return `
@@ -21,8 +19,11 @@ function scoreBoard() {
 function screenOverview() {
   const ready = state.players.filter(s => s.revealed && !s.abilityUsed).length;
   return `
-    <div class="heading"><span class="eyebrow">${currentAdventure().title}</span><h2>Das Abenteuer</h2></div>
-    ${timerBar()}
+    <div class="overview-head">
+      <span class="eyebrow">${currentAdventure().title}</span>
+      <h2>Das Abenteuer</h2>
+      ${timerButton()}
+    </div>
     ${reshuffleBox() || `<div class="scene-banner">${adventureArt(currentAdventure().id, true)}</div>`}
     ${state.seersNight ? `<p class="note">Die Nacht der Seher: Bis zum nächsten Ereignis bringt ein Treffer beim Raten ${RULES.hitRewardSeers} Münzen.</p>` : ""}
     ${state.winBonus ? `<p class="note">Gewinnt ${playerName(state.winBonus.player)} das nächste Minispiel, gibt es ${state.winBonus.amount} Münzen extra.</p>` : ""}
@@ -121,16 +122,12 @@ function secretEntries(i, fresh) {
     <section class="secret-list" aria-label="Geheime Ereignisse">
       ${list.map(p => {
         const isNew = fresh.includes(p.id);
-        const consequence = p.kind === "task"
-          ? (p.status === "open" ? `Geheime Aufgabe: Schaffst du es, gibt es ${signed(p.coins)} Münzen. Sag dem Spielleiter Bescheid, sobald du es geschafft hast.`
-            : p.status === "done" ? `Geschafft: ${signed(p.coins)} Münzen gebucht.` : "Nicht geschafft.")
-          : (p.coins ? `${signed(p.coins)} Münzen, schon gebucht.` : "");
         return `
           <article class="secret-card ${isNew ? "new" : ""}">
             ${isNew ? `<span class="chip chip-gold">Neu</span>` : ""}
             <strong class="secret-title">${escapeName(p.title || "")}</strong>
             <p>${escapeName(p.text || "")}</p>
-            ${consequence ? `<p class="muted">${consequence}</p>` : ""}
+            ${secretOutcome(p)}
           </article>`;
       }).join("")}
     </section>`;
@@ -158,7 +155,6 @@ function screenMyRole() {
   if (!m.open) {
     return `
       <div class="handover">
-        <div class="emblem">${icon("role")}</div>
         <p class="muted">Gib das Handy an</p>
         <p class="name-large">${escapeName(s.name)}</p>
         <p class="muted">Nur ${escapeName(s.name)} darf jetzt hinsehen.</p>

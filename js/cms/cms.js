@@ -347,7 +347,7 @@ function subtitle(e) {
   if (cms.section === "minigames") return (CATEGORIES[e.category]?.name || "Ohne Kategorie") + rewardShort(e);
   if (cms.section === "events") return e.visibility === "private"
     ? [e.category, e.privateType === "task" ? "Aufgabe" : "", e.privateCoins ? (e.privateCoins > 0 ? "+" : "") + e.privateCoins : ""].filter(Boolean).join(" · ")
-    : [e.category, EFFECT_MECHANICS[e.effect] ? "" : "ohne Wirkung"].filter(Boolean).join(" · ");
+    : [e.category, eventRetired(e) ? "kommt nicht ins Spiel" : ""].filter(Boolean).join(" · ");
   return "";
 }
 function rewardShort(e) {
@@ -510,14 +510,18 @@ function checkHtml() {
     if (withoutRoles) notes.push(`Es gibt ${roles.length} Rollen. Mit Rollen braucht eine Partie mindestens 3, ohne Rollen ist das Abenteuer schon spielbar.`);
     else problems.push(`Es gibt ${roles.length} Rollen. Für eine Partie mit Rollen braucht es mindestens 3.`);
   }
+  const retired = eventList.filter(eventRetired);
   if (!eventList.length) problems.push("Es gibt noch keine Ereignisse.");
-  Object.entries(CATEGORIES).forEach(([k, d]) => { if (!minigameList.some(m => m.category === k)) notes.push(`Kein Minispiel in der Kategorie „${d.name}“. Ereignisse oder Fähigkeiten, die so ein Minispiel brauchen, finden dann keins.`); });
+  else if (retired.length === eventList.length) problems.push("Kein Ereignis hat eine Wirkung, die es im Spiel noch gibt.");
+  if (retired.length) notes.push(`Kommen nicht ins Spiel, weil ihre Wirkung ein Minispiel auslöste (das gibt es nicht mehr): ${retired.map(e => e.name || "Ohne Namen").join(", ")}. Wähle dort eine andere Wirkung oder lösche sie.`);
+  Object.entries(CATEGORIES).forEach(([k, d]) => { if (!minigameList.some(m => m.category === k)) notes.push(`Kein Minispiel in der Kategorie „${d.name}“. Fähigkeiten, die so ein Minispiel brauchen, finden dann keins.`); });
   const withoutMechanic = roles.filter(r => !r.ability?.mechanic).map(r => r.name || "Ohne Namen");
   if (withoutMechanic.length) notes.push(`Ohne Spielmechanik (Münzen von Hand): ${withoutMechanic.join(", ")}.`);
   const privateCount = eventList.filter(e => e.visibility === "private").length;
-  const roleEvents = eventList.filter(eventRequiresRoles).length;
-  if (roleEvents && roleEvents === eventList.length) notes.push(`Alle Ereignisse brauchen Rollen. Ohne Rollen ist das Abenteuer nicht spielbar.`);
-  else if (roleEvents) notes.push(`${roleEvents} ${roleEvents === 1 ? "Ereignis kommt" : "Ereignisse kommen"} nur in Partien mit Rollen vor. Ohne Rollen bleiben ${eventList.length - roleEvents}.`);
+  const inGame = eventList.filter(e => !eventRetired(e));
+  const roleEvents = inGame.filter(eventRequiresRoles).length;
+  if (roleEvents && roleEvents === inGame.length) notes.push(`Alle Ereignisse brauchen Rollen. Ohne Rollen ist das Abenteuer nicht spielbar.`);
+  else if (roleEvents) notes.push(`${roleEvents} ${roleEvents === 1 ? "Ereignis kommt" : "Ereignisse kommen"} nur in Partien mit Rollen vor. Ohne Rollen bleiben ${inGame.length - roleEvents}.`);
   if (privateCount) notes.push(`${privateCount} private ${privateCount === 1 ? "Ereignis geht" : "Ereignisse gehen"} jeweils an einen einzelnen Spieler auf seine QR-Seite.`);
   if (!problems.length && !notes.length) return `<div class="message">Spielbereit: ${roles.length} Rollen, ${minigameList.length} Minispiele, ${eventList.length} Ereignisse.</div>`;
   return `
@@ -607,7 +611,12 @@ function entryEditor() {
             ? "Aufgabe: Der Spieler sagt dem Spielleiter, wenn er es geschafft hat. Der Spielleiter bestätigt das im Geldbeutel, dann bucht die App die Münzen."
             : "Sofort: Die App bucht die Münzen, sobald das Ereignis eintritt. Bei 0 ist es nur eine geheime Information."}</p>
           ${field([...p, "privateCoins"], "Münzen für den Spieler", "number", { help: "Minus heißt Verlust, z. B. −2" })}`
-        : field([...p, "effect"], "Was die App dabei tut", "select", { values: EFFECT_MECHANICS, help: "Die App kann nur diese Wirkungen. Neue müssen programmiert werden." })}
+        : `${eventRetired(e) ? `<p class="explain warning">${CATALOG.retiredEffects[e.effect]
+            ? `Diese Wirkung löste ein Minispiel aus. Das gibt es nicht mehr: Die App zieht entweder eine Ereigniskarte oder ein Minispiel.`
+            : `Diese Wirkung kennt die App nicht.`} Solange keine andere gewählt ist, kommt das Ereignis nicht ins Spiel.</p>` : ""}
+          ${field([...p, "effect"], "Was die App dabei tut", "select", { values: eventRetired(e) && CATALOG.retiredEffects[e.effect]
+            ? Object.assign({}, EFFECT_MECHANICS, { [e.effect]: `Nicht mehr möglich: ${CATALOG.retiredEffects[e.effect]}` }) : EFFECT_MECHANICS,
+            help: "Die App kann nur diese Wirkungen. Neue müssen programmiert werden." })}`}
       </div>
       <div class="group">
         <h3>Partien ohne Rollen</h3>

@@ -5,19 +5,10 @@ function screenEvent() {
   if (e.isPrivate) return screenPrivateEvent();
 
   const effect = eventEffect();
-  // "Wer hat gewonnen?" only makes sense once the minigame has been drawn
-  const waiting = e.minigameIndex === null && (effect.groups || []).some(g => g.buttons.some(k => k.minigame));
   const groups = (effect.groups || []).map((group, gi) => {
-    if (waiting && !group.buttons.some(k => k.minigame)) return "";
     const chosen = e.done[gi];
     const buttons = group.buttons.map((k, bi) => {
-      if (k.minigame) {
-        const drawn = MINIGAMES[e.minigameIndex];
-        return `<button class="action action-minigame" onclick="eventAction(${gi}, ${bi})">${drawn ? `Minispiel ansehen: ${drawn.title}` : `Minispiel ziehen: ${CATEGORY_NAMES[k.minigame]}`}</button>`;
-      }
-      if (chosen === bi) {
-        return `<button class="action chosen" disabled>✓ ${k.text}</button>`;
-      }
+      if (chosen === bi) return `<button class="action chosen" disabled>✓ ${k.text}</button>`;
       return `<button class="action" onclick="eventAction(${gi}, ${bi})" ${chosen !== undefined ? "disabled" : ""}>${k.text}</button>`;
     }).join("");
     return `<div class="action-group">${group.title ? `<span class="label">${group.title}</span>` : ""}${buttons}</div>`;
@@ -27,6 +18,7 @@ function screenEvent() {
     ${e.automatic
       ? `<p class="kicker">Die Zeit ist um! Ein Ereignis tritt ein …</p>`
       : `<p class="muted" style="text-align:center">Ereigniskarte · noch ${state.eventDeck.length} im Stapel</p>`}
+    ${effect.who ? lineup("Wen trifft es?", effect.who) : ""}
     <article class="card drawn-card speakable">
       ${speakButton()}
       <div class="title">
@@ -37,8 +29,6 @@ function screenEvent() {
     </article>
     ${cardNotes(e.card)}
     ${pauseControls()}
-    ${state.minigame && state.minigame.fromEvent && state.minigame.loadedDice !== undefined && e.minigameIndex !== null
-      ? `<p class="note">»Gezinkt«: Tragt erst das Ergebnis des zweiten Versuchs ein.</p>` : ""}
     ${effect.note ? `<p class="note">${effect.note}</p>` : ""}
     ${groups ? `<div class="actions">${groups}</div>` : ""}
     ${eventPending() ? "" : `<button class="btn" onclick="show('overview')">Weiter</button>`}
@@ -80,7 +70,6 @@ function drawEvent(automatic, fixedIndex) {
   state.playedEvents.push(index);
 
   resetTimer();
-  if (state.minigame && state.minigame.fromEvent) state.minigame = null;
   cardDrawn("event");
   if (EVENTS[index].isPrivate) { privateEvent(index, automatic); return; }
   // a new card ends everything that lasted "until the next event"
@@ -95,7 +84,6 @@ function drawEvent(automatic, fixedIndex) {
     index: index,
     automatic: Boolean(automatic),
     done: {},
-    minigameIndex: null,
     card: state.cardCount,
     random: Math.random(),
     snapshot: takeSnapshot()
@@ -148,6 +136,19 @@ function givePrivateCard(index, player) {
   return entry;
 }
 
+// What a secret card means for the player's coins, stated so nobody books them a second time.
+function secretOutcome(p) {
+  const n = Math.abs(p.coins || 0);
+  const coins = `${n} ${n === 1 ? "Münze" : "Münzen"}`;
+  if (p.kind === "task") {
+    if (p.status === "open") return `<p class="outcome outcome-open"><strong>Noch offen</strong>Schaffst du es, ${p.coins < 0 ? "verlierst du" : "bekommst du"} ${coins}. Sag dem Spielleiter Bescheid, sobald du es geschafft hast. Erst dann bucht die App die Münzen.</p>`;
+    if (p.status === "done") return `<p class="outcome outcome-done"><strong>✓ Geschafft und verbucht</strong>Die App hat dir ${coins} ${p.coins < 0 ? "abgezogen" : "gutgeschrieben"}.</p>`;
+    return `<p class="outcome"><strong>Nicht geschafft</strong>Es gibt keine Münzen.</p>`;
+  }
+  if (!p.coins) return "";
+  return `<p class="outcome outcome-done"><strong>✓ Schon verbucht</strong>Die App hat dir ${coins} ${p.coins < 0 ? "abgezogen" : "gutgeschrieben"}. Du musst nichts weiter tun.</p>`;
+}
+
 // When the time is up: an event card or, by the share set in the settings, a minigame; only what is left can come.
 function canDrawTimed() { return remainingEvents().length > 0 || remainingMinigames().length > 0; }
 
@@ -156,7 +157,7 @@ function drawTimedCard() {
   const minigames = remainingMinigames().length > 0;
   if (minigames && (!remainingEvents().length || Math.random() < share)) {
     resetTimer();
-    drawMinigame(null, false);
+    drawMinigame();
     state.minigame.automatic = true;
     save();
     render();
@@ -274,7 +275,6 @@ async function showConnection() {
 function eventAction(gi, bi) {
   const e = state.event;
   const button = eventEffect().groups[gi].buttons[bi];
-  if (button.minigame) { drawMinigame(button.minigame, true); return; }
   if (e.done[gi] !== undefined) return;
   const before = state.players.map(s => s.coins);
   if (button.apply) button.apply();
@@ -283,10 +283,6 @@ function eventAction(gi, bi) {
     const diff = s.coins - before[i];
     if (diff < 0) e.losses[i] = (e.losses[i] || 0) - diff;
   });
-  if (button.winners) {
-    minigameFinished(button.winners, before, button.participants || eventParticipants());
-    if (state.minigame && state.minigame.fromEvent) markMinigamePlayed();
-  }
   e.done[gi] = bi;
 
   if (button.stay) { save(); render(); return; }
@@ -299,19 +295,10 @@ function eventAction(gi, bi) {
   }
 }
 
-// Who plays the minigame of the current event card: an explicit list, otherwise everyone who could win.
-function eventParticipants() {
-  const groups = (eventEffect().groups || []).filter(g => g.buttons.some(k => k.winners));
-  const explicit = groups.flatMap(g => g.buttons).find(k => k.participants);
-  if (explicit) return explicit.participants;
-  return [...new Set(groups.flatMap(g => g.buttons.flatMap(k => k.winners || [])))];
-}
-
 function eventPending() {
   const e = state.event;
   if (!e || e.isPrivate) return false;
-  return (eventEffect().groups || []).some((a, i) =>
-    a.buttons.some(k => !k.minigame) && e.done[i] === undefined);
+  return (eventEffect().groups || []).some((a, i) => e.done[i] === undefined);
 }
 
 // Top n cards of the deck (top first) without drawing them; fewer if fewer are left.

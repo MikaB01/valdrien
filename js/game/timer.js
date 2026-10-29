@@ -57,40 +57,38 @@ function intervalText() {
   return lo === hi ? `Alle ${lo} Minuten` : `Alle ${lo} bis ${hi} Minuten`;
 }
 
-// With a hidden random timer only the remaining window is shown, e.g. "in 3 bis 13 Minuten".
+// With a hidden timer only a rough window is shown ("3–13 Min."), or nothing but that the clock runs.
 function windowText() {
   const w = state.timerWindow;
-  if (!w) return "Nächstes Ereignis kommt bald";
+  if (!w) return "läuft";
   const elapsed = roundMs() - remainingMs();
   const lo = Math.max(0, Math.ceil((w[0] * 60000 - elapsed) / 60000));
   const hi = Math.max(0, Math.ceil((w[1] * 60000 - elapsed) / 60000));
-  if (hi <= 1) return "Nächstes Ereignis kommt gleich";
-  if (lo <= 0) return `Nächstes Ereignis kommt in höchstens ${hi} Minuten`;
-  if (lo === hi) return `Nächstes Ereignis kommt in ${hi} Minuten`;
-  return `Nächstes Ereignis kommt in ${lo} bis ${hi} Minuten`;
+  if (hi <= 1) return "gleich";
+  if (lo <= 0) return `≤ ${hi} Min.`;
+  if (lo === hi) return `${hi} Min.`;
+  return `${lo}–${hi} Min.`;
 }
 
 const PAUSE_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12M15 6v12"/></svg>`;
 const PLAY_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>`;
 
-function timerBar() {
+// Compact clock in the corner of the main screen; the whole thing is the pause/play button.
+function timerButton() {
   if (!state.running || !state.timerEnd) return "";
   const paused = timerPaused();
   const visible = settings.showTimer !== false;
-  const percent = Math.min(100, 100 * remainingMs() / roundMs());
+  const left = Math.min(1, remainingMs() / roundMs());
   return `
-    <div class="timer-bar ${paused ? "paused" : ""}" role="timer">
-      <button class="timer-toggle" onclick="toggleTimer()" aria-label="${paused ? "Uhr weiterlaufen lassen" : "Uhr anhalten"}">${paused ? PLAY_ICON : PAUSE_ICON}</button>
-      <div class="timer-body">
-        <div class="timer-line">
-          ${paused ? `<span class="timer-label">Uhr angehalten</span>` : visible
-            ? `<span class="timer-label">Nächstes Ereignis</span>`
-            : `<span class="timer-label timer-window" id="timer-window">${windowText()}</span>`}
-          ${visible ? `<span class="timer-time" id="remaining">${timeText(remainingMs())}</span>` : ""}
-        </div>
-        ${visible ? `<div class="progress"><div id="progress-fill" style="width:${percent}%"></div></div>` : ""}
-      </div>
-    </div>`;
+    <button class="timer-button ${paused ? "paused" : ""}" onclick="toggleTimer()"
+            aria-label="${paused ? "Uhr ist angehalten. Weiterlaufen lassen" : "Zeit bis zum nächsten Ereignis. Uhr anhalten"}">
+      <span class="timer-ring" id="timer-ring" style="--left:${visible ? left : 1}">${paused ? PLAY_ICON : PAUSE_ICON}</span>
+      <span class="timer-text">
+        ${visible ? `<span class="timer-time" id="remaining">${timeText(remainingMs())}</span>`
+          : `<span class="timer-time timer-window" id="timer-window">${windowText()}</span>`}
+        <span class="timer-caption">${paused ? "fortsetzen" : "anhalten"}</span>
+      </span>
+    </button>`;
 }
 
 function tick() {
@@ -102,7 +100,7 @@ function tick() {
   const display = document.getElementById("remaining");
   if (display) {
     display.textContent = timeText(remaining);
-    document.getElementById("progress-fill").style.width = Math.min(100, 100 * remaining / roundMs()) + "%";
+    document.getElementById("timer-ring").style.setProperty("--left", Math.min(1, remaining / roundMs()));
   }
 
   if (remaining === 0) {

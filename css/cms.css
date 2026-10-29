@@ -141,6 +141,7 @@ details.group[open] > summary { margin-bottom: 4px; }
 .segment label:has(input:checked) { background: var(--forest); color: var(--on-forest); font-weight: 700; }
 .segment label:has(input:focus-visible) { outline: 3px solid var(--gold); outline-offset: -3px; }
 .explain { font-size: 0.85rem; color: var(--text-muted); }
+.explain.warning { color: var(--text); padding: 8px 10px; border-left: 3px solid var(--gold); background: color-mix(in srgb, var(--gold) 12%, transparent); border-radius: 0 6px 6px 0; }
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;

@@ -23,13 +23,22 @@ function audioGraph() {
   music.duck = ctx.createGain();
   const comp = ctx.createDynamicsCompressor();
   const reverb = ctx.createConvolver();
-  reverb.buffer = impulse(ctx, 2.6);
+  reverb.buffer = impulse(ctx, 3.6);
   const wet = ctx.createGain();
-  wet.gain.value = 0.35;
+  wet.gain.value = 0.45;
+  // a dark room: the highs are taken off everything, the reverb tail even more
+  const dark = ctx.createBiquadFilter();
+  dark.type = "lowpass";
+  dark.frequency.value = 3200;
+  const darkTail = ctx.createBiquadFilter();
+  darkTail.type = "lowpass";
+  darkTail.frequency.value = 1800;
   music.bus = ctx.createGain();
-  music.bus.connect(comp);
-  music.bus.connect(reverb);
-  reverb.connect(wet);
+  music.bus.connect(dark);
+  dark.connect(comp);
+  dark.connect(reverb);
+  reverb.connect(darkTail);
+  darkTail.connect(wet);
   wet.connect(comp);
   comp.connect(music.duck);
   music.duck.connect(music.out);
@@ -120,16 +129,17 @@ function playChime() {
   if (ctx.state === "suspended") ctx.resume().catch(() => {});
   const t = ctx.currentTime + 0.05, out = music.sfx;
   if (state.adventure === "dungeon") {
-    bell(t, 38, { gain: 0.16, length: 3.2, out });
-    [62, 65, 69, 73, 74].forEach((m, k) => bone(t + 0.35 + k * 0.075, m + 12, { gain: 0.11, out }));
-    keyJingle(t + 0.8, { gain: 0.07, out });
+    bell(t, 38, { gain: 0.18, length: 4, out });
+    tone(t, 26, 2.5, { type: "sawtooth", gain: 0.05, attack: 0.05, filter: 300, out });
+    [74, 73, 70, 69, 62].forEach((m, k) => bone(t + 0.5 + k * 0.11, m, { gain: 0.1, out }));
+    keyJingle(t + 1.2, { gain: 0.05, out });
   } else if (state.adventure === "tavern") {
-    [62, 66, 69, 74].forEach((m, k) => tone(t + k * 0.035, m, 0.9, { type: "sawtooth", gain: 0.05, attack: 0.004, filter: 3200, out }));
-    [86, 93].forEach((m, k) => tone(t + 0.3 + k * 0.14, m, 1.1, { gain: 0.09, attack: 0.004, out }));
-    noiseHit(t + 0.3, { gain: 0.05, length: 0.06, filter: 5000, out });
+    [50, 53, 57, 62].forEach((m, k) => tone(t + k * 0.05, m, 1.3, { type: "sawtooth", gain: 0.05, attack: 0.004, filter: 1600, out }));
+    bell(t + 0.35, 50, { gain: 0.08, length: 2.4, out });
+    noiseHit(t, { gain: 0.06, length: 0.9, filter: 180, type: "lowpass", out });
   } else {
-    [74, 78, 81, 86, 90].forEach((m, k) => tone(t + k * 0.07, m, 1.2, { type: "triangle", gain: 0.08, attack: 0.004, out }));
-    [93, 98].forEach((m, k) => tone(t + 0.42 + k * 0.1, m, 1.0, { gain: 0.05, attack: 0.01, out }));
+    [62, 65, 69, 74, 77].forEach((m, k) => tone(t + k * 0.09, m, 1.6, { type: "triangle", gain: 0.08, attack: 0.004, filter: 2400, out }));
+    tone(t + 0.5, 38, 2.2, { type: "sine", gain: 0.1, attack: 0.3, out });
   }
 }
 
@@ -143,10 +153,10 @@ function playKeySound(complete) {
   keyJingle(t, { gain: 0.08, out });
   noiseHit(t + 0.55, { gain: 0.16, length: 0.03, filter: 1800, type: "bandpass", out });
   tone(t + 0.55, 45, 0.12, { type: "triangle", gain: 0.12, attack: 0.002, out });
-  if (complete) [74, 78, 81, 86].forEach((m, k) => bone(t + 0.8 + k * 0.09, m, { gain: 0.1, out }));
+  if (complete) [62, 65, 69, 74].forEach((m, k) => bone(t + 0.8 + k * 0.11, m, { gain: 0.1, out }));
 }
 
-// Breaking out: a creaking gate, a bell and a bright run into the morning.
+// Breaking out: a creaking gate, a bell and a run up into the grey morning.
 function playEscapeSound() {
   if (!soundOn()) return;
   const ctx = audioGraph();
@@ -155,7 +165,7 @@ function playEscapeSound() {
   const t = ctx.currentTime + 0.05, out = music.sfx;
   creak(t, { out });
   bell(t + 1.1, 50, { gain: 0.12, length: 3, out });
-  [62, 66, 69, 74, 78, 81, 86].forEach((m, k) => tone(t + 1.3 + k * 0.08, m, 1.4, { type: "triangle", gain: 0.06, attack: 0.004, out }));
+  [50, 53, 57, 62, 65, 69, 74].forEach((m, k) => tone(t + 1.3 + k * 0.1, m, 1.6, { type: "triangle", gain: 0.06, attack: 0.004, filter: 2400, out }));
 }
 
 function scheduleMusic() {
@@ -261,59 +271,85 @@ function newPiece(kind, start) {
   return kind === "tavern" ? tavernPiece(start) : forestPiece(start);
 }
 
-// Forest: slow, airy D major pentatonic with pad, harp arpeggios, a flute line and the odd bird.
+// Low wind through the trees or the cracks in the wall: filtered noise that swells and fades.
+function wind(t, length, { gain = 0.03, from = 300, to = 700 } = {}) {
+  const ctx = music.ctx;
+  const src = ctx.createBufferSource();
+  src.buffer = music.noise;
+  src.loop = true;
+  const f = ctx.createBiquadFilter();
+  f.type = "bandpass";
+  f.Q.value = 1.2;
+  f.frequency.setValueAtTime(from, t);
+  f.frequency.linearRampToValueAtTime(to, t + length / 2);
+  f.frequency.linearRampToValueAtTime(from, t + length);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(gain, t + length / 2);
+  g.gain.linearRampToValueAtTime(0.0001, t + length);
+  src.connect(f);
+  f.connect(g);
+  g.connect(music.bus);
+  src.start(t);
+  src.stop(t + length + 0.1);
+}
+
+// Forest at dusk: slow D minor with a low drone, dark pad, sparse harp, a lonely flute, wind and the odd owl.
 function forestPiece(start) {
-  const beat = 60 / pick([60, 66, 72]);
-  const chords = pick([[[50, 54, 57], [47, 50, 54], [43, 47, 50], [45, 49, 52]], [[50, 54, 57], [43, 47, 50], [47, 50, 54], [45, 49, 52]]]);
-  const melody = walker([62, 64, 66, 69, 71, 74, 76, 78, 81], 3);
+  const beat = 60 / pick([50, 54, 58]);
+  const chords = pick([[[50, 53, 57], [46, 50, 53], [43, 46, 50], [45, 49, 52]], [[50, 53, 57], [48, 52, 55], [46, 50, 53], [45, 49, 52]]]);
+  const melody = walker([57, 60, 62, 64, 65, 67, 69, 72, 74], 3);
   return {
-    bars: pick([16, 20, 24]), bar: 0, nextBar: start, barLength: 4 * beat,
+    bars: pick([14, 18, 22]), bar: 0, nextBar: start, barLength: 4 * beat,
     play(bar, t) {
       const chord = chords[bar % chords.length];
-      chord.forEach((m, k) => tone(t, m, 4 * beat, { type: k ? "sine" : "triangle", gain: 0.035, attack: 1.2, filter: 1400, detune: k * 4 }));
-      tone(t, chord[0] - 12, 4 * beat, { type: "sine", gain: 0.05, attack: 0.8 });
+      chord.forEach((m, k) => tone(t, m - 12 * (k === 0), 4 * beat, { type: k ? "sine" : "triangle", gain: 0.035, attack: 1.6, filter: 900, detune: k * 5 }));
+      tone(t, 38, 4 * beat, { type: "sine", gain: 0.06, attack: 1.2 });
       for (let e = 0; e < 8; e++) {
-        if (Math.random() < 0.55) tone(t + e * beat / 2, chord[e % 3] + 12 * (e > 3 ? 2 : 1), 1.6, { type: "triangle", gain: 0.05, attack: 0.005 });
+        if (Math.random() < 0.38) tone(t + e * beat / 2, chord[e % 3] + 12, 2.2, { type: "triangle", gain: 0.045, attack: 0.005, filter: 1800 });
       }
-      if (bar % 4 >= 2 || bar > 8) {
+      if (bar >= 4 && bar % 4 !== 3) {
         let at = 0;
         while (at < 4) {
-          const length = pick([1, 1, 2, 0.5]);
-          if (Math.random() < 0.8) tone(t + at * beat, melody(), length * beat * 0.9, { type: "sine", gain: 0.045, attack: 0.08, vibrato: 3 });
+          const length = pick([1, 2, 2, 1.5]);
+          if (Math.random() < 0.65) tone(t + at * beat, melody(), length * beat * 0.95, { type: "sine", gain: 0.04, attack: 0.15, vibrato: 4 });
           at += length;
         }
       }
-      if (Math.random() < 0.3) {
-        const bird = t + Math.random() * 3 * beat;
-        for (let k = 0; k < 3; k++) tone(bird + k * 0.12, 98 + Math.floor(Math.random() * 5), 0.08, { gain: 0.012, attack: 0.01 });
+      if (Math.random() < 0.3) wind(t + Math.random() * beat, 3 * beat, { gain: 0.025 });
+      if (Math.random() < 0.12) {
+        const owl = t + Math.random() * 2 * beat;
+        tone(owl, 67, 0.35, { gain: 0.03, attack: 0.08 });
+        tone(owl + 0.55, 63, 0.6, { gain: 0.025, attack: 0.1 });
       }
     }
   };
 }
 
-// Tavern: lively D dorian tune in 3/4 with plucked lute, bass, frame drum and a crackling fire.
+// Tavern in the storm: a heavy D minor tune in 3/4 with low lute, bass, muffled drum, fire crackle and distant thunder.
 function tavernPiece(start) {
-  const beat = 60 / pick([108, 116, 124]);
-  const chords = pick([[[50, 53, 57], [48, 52, 55], [50, 53, 57], [45, 48, 52]], [[50, 53, 57], [48, 52, 55], [53, 57, 60], [48, 52, 55]]]);
-  const melody = walker([62, 64, 65, 67, 69, 71, 72, 74, 76, 77], 4);
+  const beat = 60 / pick([84, 90, 96]);
+  const chords = pick([[[50, 53, 57], [48, 52, 55], [46, 50, 53], [45, 49, 52]], [[50, 53, 57], [46, 50, 53], [48, 52, 55], [45, 49, 52]]]);
+  const melody = walker([57, 60, 62, 64, 65, 67, 69, 70, 73, 74], 4);
   return {
     bars: pick([24, 32, 40]), bar: 0, nextBar: start, barLength: 3 * beat,
     play(bar, t) {
       const chord = chords[Math.floor(bar / 2) % chords.length];
-      tone(t, chord[0] - 12, 2.5 * beat, { type: "triangle", gain: 0.11, attack: 0.01 });
-      tone(t + 2 * beat, chord[2] - 12, beat, { type: "triangle", gain: 0.06, attack: 0.01 });
-      drum(t, 0.22);
-      if (Math.random() < 0.6) drum(t + 2 * beat, 0.09);
-      chord.forEach(m => tone(t + beat, m, beat * 0.8, { type: "sawtooth", gain: 0.018, attack: 0.005, filter: 1800 }));
-      chord.forEach(m => tone(t + 2 * beat, m, beat * 0.8, { type: "sawtooth", gain: 0.014, attack: 0.005, filter: 1800 }));
+      tone(t, chord[0] - 12, 2.5 * beat, { type: "triangle", gain: 0.12, attack: 0.01 });
+      tone(t + 2 * beat, chord[2] - 24, beat, { type: "triangle", gain: 0.06, attack: 0.01 });
+      drum(t, 0.18);
+      if (Math.random() < 0.4) drum(t + 2 * beat, 0.07);
+      chord.forEach(m => tone(t + beat, m - 12, beat * 0.9, { type: "sawtooth", gain: 0.02, attack: 0.005, filter: 1100 }));
+      chord.forEach(m => tone(t + 2 * beat, m - 12, beat * 0.9, { type: "sawtooth", gain: 0.016, attack: 0.005, filter: 1100 }));
       if (bar >= 2) {
         for (let e = 0; e < 6; e++) {
-          if (Math.random() < 0.8) tone(t + e * beat / 2, melody(), beat * 0.7, { type: "sawtooth", gain: 0.03, attack: 0.004, filter: 2600 });
+          if (Math.random() < 0.6) tone(t + e * beat / 2, melody(), beat * 0.8, { type: "sawtooth", gain: 0.026, attack: 0.004, filter: 1600 });
         }
       }
       for (let k = 0; k < 4; k++) {
-        if (Math.random() < 0.5) noiseHit(t + Math.random() * 3 * beat, { gain: 0.012 + Math.random() * 0.02, length: 0.02, filter: 2500 });
+        if (Math.random() < 0.5) noiseHit(t + Math.random() * 3 * beat, { gain: 0.01 + Math.random() * 0.015, length: 0.02, filter: 2500 });
       }
+      if (Math.random() < 0.06) noiseHit(t, { gain: 0.09, length: 2.8, filter: 120, type: "lowpass" });
     }
   };
 }
@@ -376,45 +412,47 @@ function creak(t, { out = null } = {}) {
   osc.stop(t + 1.3);
 }
 
-// Dungeon: a tipsy dance of death in D harmonic minor, 3/4. Oom-pah bass, plucked chords, a skeleton xylophone tune,
-// a tolling bell at the start of each phrase, now and then a rattling chain and a hiccup from the drunk jailer.
+// Dungeon: a slow dance of death in D phrygian, 3/4. An organ drone, a grave bell, a heartbeat drum,
+// a skeleton xylophone in the low register, rattling chains and now and then a moan in the dark.
 function dungeonPiece(start) {
-  const beat = 60 / pick([104, 112, 120]);
+  const beat = 60 / pick([62, 68, 74]);
   const chords = pick([
-    [[50, 53, 57], [45, 49, 52], [50, 53, 57], [43, 46, 50], [46, 50, 53], [45, 49, 52], [50, 53, 57], [45, 49, 55]],
-    [[50, 53, 57], [43, 46, 50], [45, 49, 52], [50, 53, 57], [46, 50, 53], [43, 46, 50], [45, 49, 52], [45, 49, 55]]
+    [[50, 53, 57], [51, 55, 58], [50, 53, 57], [45, 49, 52], [46, 50, 53], [51, 55, 58], [50, 53, 57], [45, 49, 55]],
+    [[50, 53, 57], [46, 50, 53], [51, 55, 58], [50, 53, 57], [43, 46, 50], [51, 55, 58], [45, 49, 52], [45, 49, 55]]
   ]);
-  const melody = walker([62, 64, 65, 67, 69, 70, 73, 74, 76, 77, 81], 4);
-  const wobble = () => (Math.random() - 0.5) * 0.03; // the band has had a few
+  const melody = walker([57, 58, 61, 62, 64, 65, 67, 69, 70, 73, 74], 3);
   return {
-    bars: pick([32, 40, 48]), bar: 0, nextBar: start, barLength: 3 * beat,
+    bars: pick([24, 32, 40]), bar: 0, nextBar: start, barLength: 3 * beat,
     play(bar, t) {
       const chord = chords[Math.floor(bar / 2) % chords.length];
-      if (bar % 8 === 0) bell(t, 38, { gain: 0.07, length: 4 });
-      tone(t, chord[0] - 12, beat * 0.9, { type: "sawtooth", gain: 0.08, attack: 0.01, filter: 520 });
-      tone(t, chord[0] - 24, beat * 0.9, { type: "sine", gain: 0.09, attack: 0.01 });
-      [1, 2].forEach(b => chord.forEach(m => tone(t + b * beat + wobble(), m, beat * 0.35, { type: "triangle", gain: 0.03, attack: 0.003, filter: 2200 })));
-      if (bar >= 8 && bar % 16 < 8) chord.forEach(m => tone(t, m - 12, 3 * beat, { type: "square", gain: 0.008, attack: 0.6, filter: 900 }));
+      if (bar % 4 === 0) bell(t, 38, { gain: 0.09, length: 5 });
+      if (bar % 2 === 0) {
+        tone(t, chord[0] - 12, 6 * beat, { type: "sawtooth", gain: 0.05, attack: 0.8, filter: 420 });
+        tone(t, chord[0] - 24, 6 * beat, { type: "sine", gain: 0.09, attack: 0.6 });
+        chord.forEach((m, k) => tone(t, m - 12, 6 * beat, { type: "square", gain: 0.007, attack: 1.2, filter: 700, detune: k * 6 }));
+      }
+      drum(t, 0.16);
+      drum(t + 0.28, 0.08);
       if (bar >= 2) {
-        const rhythm = pick([[0, 1, 2], [0, 1.5, 2], [0, 0.5, 1, 2], [0, 2], [0, 1, 1.5, 2, 2.5]]);
-        rhythm.forEach(at => { if (Math.random() < 0.85) bone(t + at * beat + wobble(), melody(), { gain: 0.085 }); });
+        const rhythm = pick([[0, 2], [0, 1, 2], [0, 1.5], [1, 2], [0]]);
+        rhythm.forEach(at => { if (Math.random() < 0.8) bone(t + at * beat, melody(), { gain: 0.08 }); });
       }
-      if (Math.random() < 0.12) {
+      if (Math.random() < 0.15) {
         const at = t + Math.random() * 2 * beat;
-        for (let k = 0; k < 5; k++) noiseHit(at + k * 0.05 + Math.random() * 0.02, { gain: 0.02, length: 0.03, filter: 3500, type: "bandpass" });
+        for (let k = 0; k < 6; k++) noiseHit(at + k * 0.06 + Math.random() * 0.02, { gain: 0.022, length: 0.035, filter: 3000, type: "bandpass" });
       }
-      if (bar > 8 && Math.random() < 0.06) {
-        const ctx = music.ctx, at = t + 2.5 * beat;
+      if (bar > 6 && Math.random() < 0.08) {
+        const ctx = music.ctx, at = t + beat;
         const osc = ctx.createOscillator(), g = ctx.createGain();
-        osc.frequency.setValueAtTime(380, at);
-        osc.frequency.exponentialRampToValueAtTime(820, at + 0.09);
+        osc.frequency.setValueAtTime(midiHz(57), at);
+        osc.frequency.linearRampToValueAtTime(midiHz(52), at + 2.2);
         g.gain.setValueAtTime(0.0001, at);
-        g.gain.exponentialRampToValueAtTime(0.05, at + 0.02);
-        g.gain.exponentialRampToValueAtTime(0.0001, at + 0.12);
+        g.gain.linearRampToValueAtTime(0.025, at + 0.8);
+        g.gain.linearRampToValueAtTime(0.0001, at + 2.4);
         osc.connect(g); g.connect(music.bus);
-        osc.start(at); osc.stop(at + 0.15);
+        osc.start(at); osc.stop(at + 2.5);
       }
-      if (bar % 4 === 0 && Math.random() < 0.5) noiseHit(t, { gain: 0.012, length: 3 * beat, filter: 500, type: "bandpass" });
+      if (bar % 4 === 2 && Math.random() < 0.5) wind(t, 3 * beat, { gain: 0.02, from: 200, to: 450 });
     }
   };
 }

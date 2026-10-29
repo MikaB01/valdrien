@@ -37,6 +37,7 @@ function convertEvent(id, e) {
     text: escapeHtml(e.description || ""),
     isPrivate: e.visibility === "private",
     requiresRoles: eventRequiresRoles(e),
+    retired: eventRetired(e),
     privateType: e.privateType === "task" ? "task" : "instant",
     privateCoins: num(e.privateCoins, 0)
   };
@@ -115,8 +116,8 @@ function convertAdventure(id, a, before, slots) {
     }
   };
   const activeRoles = adventure.roles.filter(r => !r.deleted).length;
-  const activeEvents = adventure.events.filter(e => !e.deleted).length;
-  const eventsWithoutRoles = adventure.events.filter(e => !e.deleted && !e.requiresRoles).length;
+  const activeEvents = adventure.events.filter(e => !e.deleted && !e.retired).length;
+  const eventsWithoutRoles = adventure.events.filter(e => !e.deleted && !e.retired && !e.requiresRoles).length;
   adventure.playableWithRoles = activeRoles >= RULES.adventureMinRoles && activeEvents >= RULES.adventureMinEvents;
   adventure.playableWithoutRoles = eventsWithoutRoles >= RULES.adventureMinEvents;
   return adventure;
@@ -156,8 +157,8 @@ function rememberSlots() {
 }
 
 function activeIndices(list) { return list.map((_, i) => i).filter(i => !list[i].deleted); }
-// Event cards that may be drawn in this game: without roles, role events stay out.
-function playableEvents() { return activeIndices(EVENTS).filter(i => rolesOn() || !EVENTS[i].requiresRoles); }
+// Event cards that may be drawn in this game: without roles, role events stay out; so do events with a retired effect.
+function playableEvents() { return activeIndices(EVENTS).filter(i => !EVENTS[i].retired && (rolesOn() || !EVENTS[i].requiresRoles)); }
 
 let ROLES = [];
 let EVENTS = [];
@@ -174,10 +175,13 @@ function selectAdventureData(id) {
 }
 
 function currentAdventure() { return ADVENTURES[state.adventure] || firstAdventure(); }
+// The adventure picked for the next game (adventure choice, names screen). state.adventure and ROLES/EVENTS/MINIGAMES
+// stay with the dealt game until the new one is dealt, so browsing the choice never touches a game in progress.
+function setupAdventure() { return ADVENTURES[state.setupAdventure] || currentAdventure(); }
 
-function roleCount() { return activeIndices(ROLES).length; }
+function roleCount(a = currentAdventure()) { return a ? a.roles.filter(r => !r.deleted).length : 0; }
 // Before dealing, the settings decide whether roles are dealt.
-function maxPlayers() { return settings.roles !== false ? roleCount() : RULES.maxPlayersWithoutRoles; }
+function maxPlayers() { return settings.roles !== false ? roleCount(setupAdventure()) : RULES.maxPlayersWithoutRoles; }
 function playable(a) { return settings.roles !== false ? a.playableWithRoles : a.playableWithoutRoles; }
 
 function afterContentUpdate() {

@@ -69,6 +69,8 @@ function load() {
     const saved = localStorage.getItem("valdrien-game");
     if (saved) state = JSON.parse(saved);
   } catch (e) {}
+  // games saved while event cards still started minigames
+  if (state.minigame && state.minigame.fromEvent) state.minigame = null;
   selectAdventureData(state.adventure);
 }
 
@@ -107,15 +109,6 @@ function verb(list, singular, plural) { return list.length === 1 ? singular : pl
 
 function addCoins(list, amount) {
   list.forEach(i => { state.players[i].coins = Math.max(0, state.players[i].coins + amount); });
-}
-
-function duelWin(winner, participants) {
-  participants.forEach(i => {
-    if (i === winner) return;
-    const payment = Math.min(2, state.players[i].coins);
-    state.players[i].coins -= payment;
-    state.players[winner].coins += payment;
-  });
 }
 
 function transfer(from, to, n) {

@@ -43,7 +43,7 @@ function backAction() {
       return state.players[f.player] && state.players[f.player].abilityUsed ? go("overview") : startAbility;
     }
     case "event": return eventPending() ? null : go("overview");
-    case "minigame": return state.minigame && state.minigame.fromEvent ? go("event") : go("overview");
+    case "minigame": return go("overview");
     case "buyCard": return state.buyCard && state.buyCard.player !== null
       ? () => { state.buyCard.player = null; render(); } : go("overview");
     case "tasks": return resumeAdventure;
@@ -78,8 +78,8 @@ function renderFrame() {
   layer.innerHTML = sheet === "menu" ? menuSheet() : sheet === "purse" ? purseSheet() : "";
 }
 
-function openSheet(which) { sheet = sheet === which ? null : which; confirmFinish = false; renderFrame(); }
-function closeSheet() { sheet = null; confirmFinish = false; renderFrame(); }
+function openSheet(which) { sheet = sheet === which ? null : which; confirmFinish = false; confirmRedraw = false; renderFrame(); }
+function closeSheet() { sheet = null; confirmFinish = false; confirmRedraw = false; renderFrame(); }
 document.addEventListener("keydown", e => { if (e.key === "Escape" && sheet) closeSheet(); });
 
 function menuSheet() {
@@ -91,15 +91,25 @@ function menuSheet() {
       <div class="menu-list">
         ${entry(icon("rules"), "Regelwerk", "openReference('rules')")}
         ${entry(icon("lightning"), "In einer Minute erklärt", "openReference('quickGuide')")}
-        ${entry(icon("gear"), "Einstellungen", "openReference('settings')")}
+        ${entry(icon("settings"), "Einstellungen", "openReference('settings')")}
       </div>
       ${inGame ? `
         <span class="menu-divider">Dieses Abenteuer</span>
         <div class="menu-list">
           ${entry(icon("secret"), "Geheim nachsehen", "startMyRole()")}
-          ${minigamesUsedUp()
+          ${minigamesUsedUp() && !openMinigame()
             ? entry(icon("minigame"), "Minispiele neu einmischen", "sheet = null; reshuffleMinigames()")
-            : entry(icon("minigame"), "Minispiel ziehen", "sheet = null; drawMinigame(null, false)")}
+            : (openMinigame()
+              ? entry(icon("minigame"), "Offenes Minispiel ansehen", "show('minigame')")
+              : entry(icon("minigame"), "Minispiel ziehen", "sheet = null; drawMinigame()"))}
+          ${openMinigame() && !confirmRedraw ? entry(icon("redraw"), "Anderes Minispiel ziehen", "confirmRedraw = true; renderFrame()") : ""}
+          ${openMinigame() && confirmRedraw ? `
+            <div class="confirm" role="alertdialog" aria-labelledby="redraw-title">
+              <strong id="redraw-title">Wirklich ein anderes Minispiel ziehen?</strong>
+              <p class="muted">»${MINIGAMES[openMinigame().index].title}« wird verworfen.</p>
+              <button class="btn" onclick="sheet = null; confirmRedraw = false; redrawMinigame()">Ja, neu ziehen</button>
+              <button class="link-button" onclick="confirmRedraw = false; renderFrame()">Abbrechen</button>
+            </div>` : ""}
           ${rolesOn() ? entry(icon("roles"), "Alle Rollen ansehen", "show('roles')") : ""}
           ${eventsUsedUp()
             ? entry(icon("event"), "Ereignisse neu einmischen", "sheet = null; reshuffleEvents()")
@@ -133,8 +143,23 @@ function purseSheet() {
     </div>`;
 }
 
+// Who a card or minigame is about: rows of { label, players } or { versus: true }, plus an optional reason line.
+function lineup(title, rows, reason) {
+  return `
+    <section class="lineup" aria-label="${title}">
+      <span class="label">${title}</span>
+      ${rows.map(r => r.versus ? `<span class="versus">gegen</span>` : `
+        <div class="lineup-row">
+          ${r.label ? `<span class="lineup-label">${r.label}</span>` : ""}
+          <div class="lineup-names">${r.players.map(i => `<span class="name-chip">${playerName(i)}</span>`).join("")}</div>
+        </div>`).join("")}
+      ${reason ? `<p class="lineup-reason">${reason}</p>` : ""}
+    </section>`;
+}
+
 function show(screen) {
   state.screen = screen;
+  settingsFocus = null;
   confirmFinish = false;
   confirmRedraw = false;
   sheet = null;
@@ -159,7 +184,7 @@ function render() {
   document.getElementById("app").innerHTML = fn();
   document.body.dataset.screen = state.screen;
   const inAdventure = !["start", "adventures"].includes(state.screen);
-  const id = inAdventure ? currentAdventure().id : null;
+  const id = inAdventure ? (state.screen === "names" ? setupAdventure() : currentAdventure()).id : null;
   const look = backdropClass(id);
   document.getElementById("backdrop").className = look === "tavern" ? look : [look, state.screen === "intro" ? "intro" : ""].join(" ").trim();
   setAdventureLook(id);
