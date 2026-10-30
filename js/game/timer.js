@@ -64,7 +64,7 @@ function windowText() {
   const elapsed = roundMs() - remainingMs();
   const lo = Math.max(0, Math.ceil((w[0] * 60000 - elapsed) / 60000));
   const hi = Math.max(0, Math.ceil((w[1] * 60000 - elapsed) / 60000));
-  if (hi <= 1) return "gleich";
+  if (hi <= 1) return "bald …";
   if (lo <= 0) return `≤ ${hi} Min.`;
   if (lo === hi) return `${hi} Min.`;
   return `${lo}–${hi} Min.`;

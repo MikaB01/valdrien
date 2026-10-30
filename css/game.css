@@ -400,35 +400,34 @@ body[data-screen="overview"] .tile-keys .key-icons img { width: 34px; height: 34
 }
 
 /* Clock in the corner of the main screen: the whole pill pauses and resumes; the ring shows the time left */
+/* Deliberately quiet: the clock matters little for play, so no brass, no shadow, muted colors */
 .timer-button {
-  flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 4px 12px 4px 4px;
-  background: linear-gradient(var(--paper), color-mix(in srgb, var(--paper) 70%, var(--sunken)));
-  border: 1.5px solid var(--brass); border-radius: 999px; box-shadow: 0 2px 0 var(--shade); color: var(--text);
+  flex-shrink: 0; display: flex; align-items: center; gap: 6px; padding: 3px 10px 3px 3px;
+  background: color-mix(in srgb, var(--paper) 60%, transparent);
+  border: 1px solid var(--line); border-radius: 999px; color: var(--text-muted);
   touch-action: manipulation; -webkit-tap-highlight-color: transparent;
 }
 .timer-ring {
-  width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0;
-  background: radial-gradient(closest-side, var(--accent-bottom) 76%, transparent 78%),
-              conic-gradient(var(--gold) calc(var(--left, 1) * 1turn), var(--line) 0);
-  color: var(--on-accent);
+  width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0;
+  background: radial-gradient(closest-side, var(--paper) 78%, transparent 80%),
+              conic-gradient(color-mix(in srgb, var(--gold) 70%, var(--line)) calc(var(--left, 1) * 1turn), var(--line) 0);
+  color: var(--text-muted);
 }
-.timer-ring svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
+.timer-ring svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
 .timer-ring svg path[d^="M8"] { fill: currentColor; stroke-width: 1.5; }
 .timer-text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1; }
 /* Fixed widths: neither the ticking time nor anhalten/fortsetzen may change the size of the pill */
-.timer-time { font-weight: 700; font-size: 1.2rem; color: var(--title); font-variant-numeric: tabular-nums; white-space: nowrap; min-width: 5ch; }
-.timer-window { font-size: 1.02rem; min-width: 8.5ch; }
-.timer-caption { display: grid; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gold); }
+.timer-time { font-weight: 600; font-size: 0.98rem; color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; min-width: 5ch; }
+.timer-window { font-size: 0.9rem; min-width: 8.5ch; }
+.timer-caption { display: grid; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); opacity: 0.8; }
 .timer-caption > span { grid-area: 1 / 1; }
 .timer-caption > .off { visibility: hidden; }
-.timer-button.paused { border-style: dashed; background: color-mix(in srgb, var(--gold) 18%, var(--paper)); }
-.timer-button.paused .timer-ring { background: radial-gradient(circle at 35% 30%, #f3d283, #c4922f 65%, #8d6420); color: #3a2611; }
+.timer-button.paused { border-style: dashed; }
+.timer-button.paused .timer-ring { background: var(--sunken); color: var(--gold); }
 @media (prefers-reduced-motion: no-preference) {
-  .timer-button { transition: background-color .1s ease, box-shadow .1s ease; }
-  .timer-button.paused .timer-time { animation: blink 1.4s steps(2, jump-none) infinite; }
-  @keyframes blink { 50% { opacity: 0.35; } }
+  .timer-button { transition: background-color .1s ease; }
 }
-.timer-button:active { box-shadow: inset 0 2px 4px var(--shade); }
+.timer-button:active { background: var(--sunken); }
 .timer-button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 .progress { width: 100%; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
 .progress div { height: 100%; background: var(--gold); transition: width 1s linear; }
