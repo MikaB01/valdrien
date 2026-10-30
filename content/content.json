@@ -1028,9 +1028,9 @@
           "Einmal im Jahr, in der Nacht der Toten, dürfen die Gefangenen ihre Zellen verlassen und gemeinsam essen: das Henkersmahl. Ihr sitzt im Gemeinschaftsraum des Verlieses an einem langen, wackeligen Tisch. Der Eintopf ist grau, das Bier ist warm, und was da im Brot knirscht, will niemand so genau wissen. Die Wachen sind oben beim Fest, nur der alte Kerkermeister ist geblieben. Er sitzt mit am Tisch, und er trinkt mit. Krug um Krug.",
           "Nach oben führt kein Weg hinaus. Dort feiern die Wachen in der großen Halle, und an ihnen kommt niemand vorbei. Der einzige Ausweg führt nach unten. Unter dem Verlies liegen die alten Katakomben, ein Labyrinth aus Gängen und Grabkammern, in das seit Jahrhunderten niemand mehr freiwillig hinabsteigt. Ganz am Ende der Katakomben, so erzählt man sich, mündet ein uralter Abflusstunnel in den Burggraben.",
           "Der Weg dorthin führt durch drei Türen. Zuerst die rostige Eisentür, die vom Gemeinschaftsraum hinaus in den finsteren Wachgang führt. Am Ende des Gangs das Silbergitter, hinter dem eine schmale Wendeltreppe tief hinab in die Katakomben führt. Es ist aus Silber geschmiedet, damit nichts heraufkommt, was dort unten haust. Und am Ende der Katakomben, wo die Luft nach Moder und Grabwasser riecht, das Knochentor. Es ist gebaut aus den Gebeinen all jener, die es nicht hinausgeschafft haben. Dahinter liegt der Tunnel, und dahinter die Freiheit.",
-          "Die Schlüssel hängen alle am Gürtel des Kerkermeisters, ein riesiger, klirrender Bund. Eisenschlüssel hat er viele, Silberschlüssel schon weniger, und Knochenschlüssel nur eine Handvoll. Wer einen davon erwischt, hat Glück. Und der Kerkermeister ist bestechlich. Leider ist er inzwischen auch sternhagelvoll. Welcher Schlüssel welcher ist, weiß er längst nicht mehr. Wer ihm Münzen zuschiebt, bekommt einen Schlüssel, irgendeinen. „Der hier passt bestimmt“, lallt er und kichert.",
-          "Ein Schlüssel kostet 3 Münzen, und bei jedem Kauf bekommt ihr zufällig einen: Eisen oft, Silber seltener, Knochen selten. Welche Schlüssel ihr habt, weiß nur jeder selbst. Wer drei verschiedene Schlüssel besitzt, öffnet Eisentür, Silbergitter und Knochentor, flieht durch die Katakomben und bricht aus.",
-          "Wer hinauswill, muss also kaufen, bis er alle drei beisammen hat."
+          "Die Schlüssel hängen alle am Gürtel des Kerkermeisters, ein riesiger, klirrender Bund. Eisenschlüssel hat er viele, Silberschlüssel schon weniger, und Knochenschlüssel nur eine Handvoll. Wer einen davon erwischt, hat Glück. Und der Kerkermeister ist bestechlich. Noch ist er fast nüchtern, beißt auf jede Münze und lässt sich seine Schlüssel teuer bezahlen. Aber die Nacht ist lang, das Fass unter dem Tisch ist voll, und mit jedem Krug wird er großzügiger. Welcher Schlüssel welcher ist, weiß er allerdings schon jetzt nicht mehr. Wer ihm Münzen zuschiebt, bekommt einen Schlüssel, irgendeinen.",
+          "Zu Beginn kostet ein Schlüssel 7 Münzen. Jedes Mal, wenn der Kerkermeister ein Stück betrunkener wird, sinkt der Preis um 1 Münze, bis er am Ende für 2 Münzen alles hergibt, was an seinem Gürtel klimpert. Bei jedem Kauf bekommt ihr zufällig einen Schlüssel: Eisen oft, Silber seltener, Knochen selten. Welche Schlüssel ihr habt, weiß nur jeder selbst. Wer drei verschiedene Schlüssel besitzt, öffnet Eisentür, Silbergitter und Knochentor, flieht durch die Katakomben und bricht aus.",
+          "Wer hinauswill, muss also kaufen, bis er alle drei beisammen hat. Früh kaufen ist teuer, warten ist gefährlich."
         ],
         "closing": "Und das schnell, denn im Morgengrauen kommt der Henker, und er hat heute eine lange Liste."
       },
@@ -1067,11 +1067,6 @@
             "name": "Goldfinger",
             "text": "Direkt nachdem du ein Minispiel gewonnen hast, verdoppelst du deinen Gewinn.",
             "mechanic": "goldFinger"
-          },
-          "task": {
-            "name": "Das Rudel",
-            "text": "Bring zwei Mitspieler dazu, gemeinsam mit dir den Mond anzuheulen. Ein kurzes „Auuuu!“ reicht, aber beide müssen mitheulen.",
-            "bonus": 3
           }
         },
         "roderick-der-ritter": {
@@ -1090,11 +1085,6 @@
             "name": "Das Turnier",
             "text": "Sobald ein Minispiel gezogen wurde, bei dem du mitspielst, und Regeln und Gegner feststehen, kündigst du deinen Sieg an. Gewinnst du, erhältst du zusätzlich zu deinem Gewinn 1 Münze von jedem Mitspieler des Minispiels. (Info: Bei jedem Minispiel, bei dem du mitspielst, erscheint vor dem Start ein Knopf, mit dem du die Fähigkeit aktivierst.)",
             "mechanic": "marksman"
-          },
-          "task": {
-            "name": "Der Ritterschlag",
-            "text": "Schlag zwei Mitspieler zum Ritter: Sie neigen den Kopf, du tippst ihnen mit einem Löffel auf beide Schultern und gibst ihnen einen erfundenen Ritternamen.",
-            "bonus": 2
           }
         },
         "zacharias-der-zocker": {
@@ -1113,11 +1103,6 @@
             "name": "Glücksfee",
             "text": "Du wählst Kopf oder Zahl, und die App wirft eine Münze. Liegst du richtig, nimmst du dem reichsten Mitspieler die Hälfte seiner Münzen weg (aufgerundet). Bist du selbst der Reichste, trifft es den Zweitreichsten. Bei Gleichstand wählst du einen davon aus. Liegst du falsch, verlierst du alle deine Münzen an die Bank.",
             "mechanic": "luckyFairy"
-          },
-          "task": {
-            "name": "Die Glückssträhne",
-            "text": "Schließ mit zwei verschiedenen Mitspielern je eine Wette ab (Einsatz: ein Bierdeckel, ein Korken oder Ähnliches) und gewinne mindestens eine davon.",
-            "bonus": 2
           }
         },
         "magnus-der-mundschenk": {
@@ -1136,11 +1121,6 @@
             "name": "Trinkgeld",
             "text": "Ab jetzt erhältst du für jede Ereigniskarte, die kein Minispiel ist, 1 Münze von der Bank. Kauft in dieser Zeit jemand eine geheime Ereigniskarte, erhältst du auch dafür 1 Münze. Das gilt, bis ein Minispiel gezogen wird.",
             "mechanic": "tip"
-          },
-          "task": {
-            "name": "Der Trinkspruch",
-            "text": "Bring zwei Trinksprüche aus, bei denen jeweils mindestens drei Mitspieler mit dir anstoßen. Wasser zählt genauso.",
-            "bonus": 3
           }
         },
         "hilda-die-hexe": {
@@ -1159,11 +1139,6 @@
             "name": "Gezinkt",
             "text": "Du lässt ein Minispiel wiederholen, egal ob du mitgespielt hast. Minispiel und Teilnehmer bleiben gleich. Der erste Versuch zählt nicht, Münzen werden erst nach dem zweiten Versuch verteilt. Der Knopf erscheint beim Minispiel, sobald deine Rolle erraten ist.",
             "mechanic": "loadedDice"
-          },
-          "task": {
-            "name": "Der Zaubertrank",
-            "text": "Rühr murmelnd in einem Becher Wasser und bring zwei Mitspieler dazu, von deinem „Zaubertrank“ zu kosten.",
-            "bonus": 3
           }
         },
         "vlad-der-vampir": {
@@ -1182,11 +1157,6 @@
             "name": "Herausforderung",
             "text": "Du forderst einen Mitspieler deiner Wahl zum Duell. Gewinnst du, erhältst du die Hälfte seiner Münzen (aufgerundet). Verlierst du, erhält er die Hälfte deiner Münzen (aufgerundet).",
             "mechanic": "challenge"
-          },
-          "task": {
-            "name": "Die Blutspende",
-            "text": "Bring zwei Mitspieler dazu, dir etwas Rotes zu geben: Rotwein, Saft, eine Tomate, Ketchup oder eine rote Serviette.",
-            "bonus": 2
           }
         },
         "dietrich-der-dieb": {
@@ -1205,11 +1175,6 @@
             "name": "Langfinger",
             "text": "Du wählst bis zu drei verschiedene Mitspieler und drehst für jeden einmal am Glücksrad. Das Rad hat vier gleich große Felder: −1, +1, +2 und +3. Bei einem Plus nimmst du diesem Mitspieler so viele Münzen weg. Bei −1 hat er dich beim Klauen erwischt, und du gibst ihm 1 Münze.",
             "mechanic": "longFingers"
-          },
-          "task": {
-            "name": "Die Beute",
-            "text": "Sammle unbemerkt drei harmlose Kleinigkeiten von drei verschiedenen Mitspielern (Korken, Bierdeckel, Serviette). Nach dem Spiel gibst du alles zurück.",
-            "bonus": 3
           }
         },
         "heinrich-der-harnharte": {
@@ -1228,11 +1193,6 @@
             "name": "Pinkelpause",
             "text": "Direkt nachdem eine Ereigniskarte gezogen wurde, kannst du aussetzen. Diese und alle weiteren Ereigniskarten gelten dann nicht für dich, bis du wieder einsteigst. Für jede am Stück ausgesetzte Ereigniskarte erhältst du 1 Münze von der Bank (höchstens 10). Sobald deine Rolle erraten ist, erscheint bei jeder Ereigniskarte ein Knopf zum Aussetzen und Wiedereinsteigen.",
             "mechanic": "bathroomBreak"
-          },
-          "task": {
-            "name": "Die Pinkelgesellschaft",
-            "text": "Kündige mindestens dreimal an, dass du mal musst, und bring einen Mitspieler dazu, mit dir aufzustehen und bis zur Tür mitzugehen. Weiter muss niemand mit.",
-            "bonus": 2
           }
         },
         "gregor-der-gelehrte": {
@@ -1251,11 +1211,6 @@
             "name": "Neugiernase",
             "text": "Du stellst einem Mitspieler heimlich eine Ja-Nein-Frage zu seiner Rolle, und er muss ehrlich antworten. Nach dem Rollennamen selbst darfst du nicht fragen. Errätst du seine Rolle später, erhältst du für den Treffer 6 statt 3 Münzen.",
             "mechanic": "curiosity"
-          },
-          "task": {
-            "name": "Das Studienobjekt",
-            "text": "Bring zwei Mitspieler dazu, von sich aus „Faszinierend!“ zu sagen.",
-            "bonus": 2
           }
         },
         "gunther-der-gaukler": {
@@ -1274,11 +1229,6 @@
             "name": "Narrenrätsel",
             "text": "Du wählst heimlich eine Zahl: 2, 4 oder 6. Ein Mitspieler deiner Wahl rät sie. Liegt er falsch, erhältst du so viele Münzen von der Bank. Liegt er richtig, erhält er die Hälfte der Zahl von der Bank.",
             "mechanic": "foolsRiddle"
-          },
-          "task": {
-            "name": "Der Lacher",
-            "text": "Bring mit einem Witz oder Kunststück mindestens drei Mitspieler gleichzeitig zum Lachen.",
-            "bonus": 2
           }
         }
       },
@@ -1699,6 +1649,51 @@
           "description": "Erzähl einem Mitspieler, warum du völlig zu Unrecht hier unten sitzt, bis er laut sagt, dass er dir glaubt. Schaffst du es, erhältst du 2 Münzen.",
           "privateType": "task",
           "privateCoins": 2
+        },
+        "der-erste-krug": {
+          "pos": 201,
+          "name": "Der erste Krug",
+          "category": "Rausch",
+          "visibility": "public",
+          "description": "Der Kerkermeister zapft sich am Fass unter dem Tisch den ersten Krug des Abends, bläst den Schaum über eure Köpfe und leert ihn in einem Zug. Dann zählt er seinen Schlüsselbund nach, zweimal, mit gerunzelter Stirn. Beim dritten Mal verzählt er sich und lacht zum ersten Mal an diesem Abend. „Ist ja Feiertag“, brummt er. Ein Schlüssel kostet ab sofort 1 Münze weniger.",
+          "effect": "jailerDrinks",
+          "requiresRoles": false
+        },
+        "das-lied-vom-henkersknoten": {
+          "pos": 202,
+          "name": "Das Lied vom Henkersknoten",
+          "category": "Rausch",
+          "visibility": "public",
+          "description": "Der zweite Krug macht den Kerkermeister musikalisch. Er stimmt das Lied vom Henkersknoten an, alle elf Strophen, und schlägt mit dem Schlüsselbund den Takt auf die Tischplatte. Wer nicht mitsingt, bekommt einen bösen Blick. Wer mitsingt, bekommt einen Freundschaftspreis. Bei der siebten Strophe weiß er nicht mehr weiter und singt einfach noch einmal die erste. Ein Schlüssel kostet ab sofort 1 Münze weniger.",
+          "effect": "jailerDrinks",
+          "requiresRoles": false
+        },
+        "traenen-im-bier": {
+          "pos": 203,
+          "name": "Tränen im Bier",
+          "category": "Rausch",
+          "visibility": "public",
+          "description": "Beim dritten Krug wird der Kerkermeister rührselig. Mit zitternder Stimme erzählt er von seiner Mutter, die immer sagte, aus ihm werde einmal etwas Großes, und von dem Tag, an dem er stattdessen hier unten landete. Dicke Tränen tropfen in sein Bier. Er schnäuzt sich in den Ärmel, tätschelt dem nächstbesten Gefangenen die Wange und schluchzt: „Ihr seid die Einzigen, die mir je zugehört haben.“ Ein Schlüssel kostet ab sofort 1 Münze weniger.",
+          "effect": "jailerDrinks",
+          "requiresRoles": false
+        },
+        "der-tanz-mit-dem-gerippe": {
+          "pos": 204,
+          "name": "Der Tanz mit dem Gerippe",
+          "category": "Rausch",
+          "visibility": "public",
+          "description": "Nach dem vierten Krug hält es den Kerkermeister nicht mehr auf der Bank. Er holt das alte Gerippe aus Zelle sieben, legt ihm den Arm um die Hüfte und tanzt mit ihm eine Polka über den Tisch, mitten durch den Eintopf. Das Gerippe verliert dabei einen Arm, der Kerkermeister beinahe seine Hose. Als er keuchend wieder sitzt, hängt der Schlüsselbund nur noch lose an seinem Gürtel. Ein Schlüssel kostet ab sofort 1 Münze weniger.",
+          "effect": "jailerDrinks",
+          "requiresRoles": false
+        },
+        "der-letzte-tropfen": {
+          "pos": 205,
+          "name": "Der letzte Tropfen",
+          "category": "Rausch",
+          "visibility": "public",
+          "description": "Das Fass ist leer. Der Kerkermeister kippt es über seinem Krug aus, schüttelt es, horcht hinein und leckt zuletzt den Zapfhahn ab. Dann hält er Gustav, die Ratte, für den Burgherrn, sinkt vor ihr auf die Knie und schwört ihr ewige Treue. Als er sich am Tisch wieder hochgezogen hat, blinzelt er in die Runde: „Zwei Münzen, und der Schlüssel gehört euch. Wer seid ihr eigentlich?“ Billiger wird es nicht mehr, weiter als bis zwei zählt er heute nicht. Ein Schlüssel kostet ab sofort 1 Münze weniger.",
+          "effect": "jailerDrinks",
+          "requiresRoles": false
         }
       }
     }

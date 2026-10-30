@@ -20,17 +20,19 @@ function convertRole(id, r) {
       name: escapeHtml(r.ability?.name || "Fähigkeit"),
       text: escapeHtml(r.ability?.text || "")
     },
-    task: {
-      name: escapeHtml(r.task?.name || "Geheime Aufgabe"),
-      text: escapeHtml(r.task?.text || ""),
-      bonus: num(r.task?.bonus, 0)
-    }
+    // a role without task text and bonus has no secret task (Henkersmahl)
+    task: r.task && (r.task.text || r.task.name || num(r.task.bonus, 0)) ? {
+      name: escapeHtml(r.task.name || "Geheime Aufgabe"),
+      text: escapeHtml(r.task.text || ""),
+      bonus: num(r.task.bonus, 0)
+    } : null
   };
 }
 
 function convertEvent(id, e) {
   return {
     id,
+    pos: num(e.pos, 0),
     title: escapeHtml(e.name || "Ohne Namen"),
     category: escapeHtml(e.category || ""),
     effect: e.effect || "calm",
@@ -179,6 +181,7 @@ function currentAdventure() { return ADVENTURES[state.adventure] || firstAdventu
 // stay with the dealt game until the new one is dealt, so browsing the choice never touches a game in progress.
 function setupAdventure() { return ADVENTURES[state.setupAdventure] || currentAdventure(); }
 
+function hasTasks(a = currentAdventure()) { return Boolean(a) && a.roles.some(r => !r.deleted && r.task); }
 function roleCount(a = currentAdventure()) { return a ? a.roles.filter(r => !r.deleted).length : 0; }
 // Before dealing, the settings decide whether roles are dealt.
 function maxPlayers() { return settings.roles !== false ? roleCount(setupAdventure()) : RULES.maxPlayersWithoutRoles; }

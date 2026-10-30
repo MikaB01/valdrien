@@ -44,6 +44,7 @@ function rerollSetting() {
 
 let confirmFinish = false;
 let confirmRedraw = false;
+let confirmReroll = false;
 let sheet = null;
 
 // The whole game state; saved to localStorage after every change.

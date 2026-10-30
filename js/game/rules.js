@@ -23,7 +23,8 @@ const RULES = {
   minigameShareDefault: 0.3, // when the time is up: share of minigames, the rest are event cards
 
   // Adventures with goal "keys": buy random keys, three different ones break out and win at once.
-  keyCost: 3,
+  // The price falls by 1 with every "jailerDrinks" event card, from start down to min.
+  keyPrice: { start: 7, min: 2 },
   keys: [
     { id: "iron", name: "Eisenschlüssel", door: "Eisentür", chance: 0.5, image: "images/key-iron.webp" },
     { id: "silver", name: "Silberschlüssel", door: "Silbergitter", chance: 0.35, image: "images/key-silver.webp" },

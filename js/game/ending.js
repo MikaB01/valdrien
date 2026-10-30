@@ -1,6 +1,7 @@
 function screenTasks() {
   const list = state.players.map((s, i) => {
     const r = ROLES[s.role];
+    if (!r || !r.task) return "";
     return `
       <label class="task-check">
         <input type="checkbox" id="task-${i}" ${s.taskDone ? "checked" : ""}
@@ -22,7 +23,7 @@ function screenEnd() {
   if (keysGoal()) return screenKeysEnd();
   const result = state.players.map((s, i) => ({
     name: s.name,
-    total: s.coins + (s.taskDone && roleOf(i) ? roleOf(i).task.bonus : 0)
+    total: s.coins + (s.taskDone && roleOf(i) && roleOf(i).task ? roleOf(i).task.bonus : 0)
   })).sort((a, b) => b.total - a.total);
 
   const best = result[0].total;
@@ -43,7 +44,7 @@ function screenEnd() {
 function finishAdventure() {
   state.running = false;
   resetTimer();
-  show(rolesOn() && !keysGoal() ? "tasks" : "end");
+  show(rolesOn() && !keysGoal() && state.players.some((_, i) => roleOf(i) && roleOf(i).task) ? "tasks" : "end");
 }
 
 function resumeAdventure() {

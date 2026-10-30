@@ -563,6 +563,7 @@ function entryEditor() {
       </div>
       <div class="group">
         <h3>Geheime Aufgabe</h3>
+        <p class="explain">Name, Beschreibung und Bonus leer lassen, wenn die Rolle keine geheime Aufgabe hat (wie im Henkersmahl). Dann zeigt die App auf der Rollenkarte keine Aufgabe.</p>
         <div class="field-row">
           ${field([...p, "task", "name"], "Name der Aufgabe", "text")}
           ${field([...p, "task", "bonus"], "Bonus am Ende", "number", { help: "Münzen, wenn erfüllt" })}

@@ -4,11 +4,34 @@
 // who: [{ label, players }] names the players the card is about (shown prominently). Exactly one button per group is pressed.
 const EFFECTS = {};
 
-// Effects that last until the next event card.
+// Run when the card is drawn (effects that last until the next event card, or change the game at once).
+// May return fields to remember on state.event.
 const EFFECTS_ON_DRAW = {
   seers: () => { state.seersNight = true; },
-  looseTongues: () => { state.freeGuesses = true; }
+  looseTongues: () => { state.freeGuesses = true; },
+  jailerDrinks: () => {
+    const before = keyPrice();
+    state.jailerDrinks = (state.jailerDrinks || 0) + 1;
+    return { keyPrice: [before, keyPrice()] };
+  }
 };
+
+// A card whose effect needs a state the game has not reached yet (no role guessed, all coins equal, the jailer's
+// earlier rounds) stays in the deck but is skipped until this returns true, so it never comes as a dud.
+// New effects bound to a game state belong here too.
+const EFFECTS_READY = {
+  exposed: () => inPlay().some(i => state.players[i].revealed),
+  disguise: () => inPlay().some(i => !state.players[i].revealed),
+  envy: () => new Set(inPlay().map(i => state.players[i].coins)).size > 1,
+  jailerDrinks: index => keysGoal() && keyPrice() > RULES.keyPrice.min && jailerStage(index) === (state.jailerDrinks || 0)
+};
+
+function eventReady(index) {
+  const card = EVENTS[index];
+  if (!card || card.isPrivate) return Boolean(card);
+  const ready = EFFECTS_READY[card.effect];
+  return !ready || ready(index);
+}
 
 function eventEffect() {
   const e = state.event;
@@ -112,6 +135,11 @@ EFFECTS.generosity = ({ b, all }) => ({ who: [{ label: `Entscheidet: ${coinGroup
 
 EFFECTS.looseTongues = ({ all }) =>
   ({ who: everyone(all), note: "Die App hat es sich gemerkt: Bis zum nächsten Ereignis kostet Raten keine Münze." });
+
+EFFECTS.jailerDrinks = ({ e }) => {
+  const [before, after] = e.keyPrice || [keyPrice() + 1, keyPrice()];
+  return { note: `Der Kerkermeister ist jetzt ${jailerMood(after)}. Neuer Schlüsselpreis: ${coinsText(after)} statt ${before}.` };
+};
 
 EFFECTS.seers = ({ all }) =>
   ({ who: everyone(all), note: `Die App hat es sich gemerkt: Bis zum nächsten Ereignis bringt ein Treffer beim Raten ${RULES.hitRewardSeers} Münzen.` });

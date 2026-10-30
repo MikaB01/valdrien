@@ -40,7 +40,7 @@ No build step: plain `<script>` files loaded in order, all top-level declaration
 | `events.js` | Drawing and resolving event cards, private events. |
 | `effects.js` | `EFFECTS`: one handler per event effect. |
 | `minigames.js` | Drawing minigames, line-ups, scoring. |
-| `keys.js` | Adventures with goal `keys` (Henkersmahl): buying random keys, the secret key display, breakout and its end screen. |
+| `keys.js` | Adventures with goal `keys` (Henkersmahl): key price and the jailer's mood, buying random keys, the secret key display, breakout and its end screen. |
 | `ending.js` | Secret tasks, final count, play again. |
 | `player-page.js` | QR links, syncing seats to Supabase, the player's own page. |
 | `speech.js` | Read-aloud buttons via the browser's Web Speech API (on-device voices, no service). |
@@ -55,6 +55,7 @@ No build step: plain `<script>` files loaded in order, all top-level declaration
   1. Add the key and a German CMS label to `js/shared/catalog.js` (it becomes selectable in the CMS).
   2. Implement it in `ABILITIES` (`js/game/abilities.js`) or `EFFECTS` (`js/game/effects.js`); the expected shape is documented at the top of each file.
   `main.js` logs a console warning for catalog entries without an implementation.
+- **Event effect that needs a game state** (a guessed role, unequal coins, an earlier card): add a check to `EFFECTS_READY` in `js/game/effects.js`. Until it returns true the card stays in the deck and is skipped, so it never comes without effect.
 
 ## Content JSON (format 2)
 
@@ -72,9 +73,11 @@ No build step: plain `<script>` files loaded in order, all top-level declaration
                       privateType (instant|task), privateCoins, requiresRoles } } } } }
 ```
 
-`goal: "keys"` (Das Henkersmahl im Verlies): instead of counting coins at the end, players buy random keys for `RULES.keyCost`; the chances and key pictures are in `RULES.keys`. Whoever first holds all three kinds breaks out and wins at once; each player sees only their own keys. Role tasks are cashed in during the game under "Nachsehen", because the end comes without warning.
+`goal: "keys"` (Das Henkersmahl im Verlies): instead of counting coins at the end, players buy random keys for `keyPrice()`: `RULES.keyPrice.start` (7), 1 coin less with every event card with effect `jailerDrinks` (they come in list order), down to `RULES.keyPrice.min` (2); the chances and key pictures are in `RULES.keys`. Whoever first holds all three kinds breaks out and wins at once; each player sees only their own keys. Role tasks are cashed in during the game under "Nachsehen", because the end comes without warning.
 
 Event cards never start a minigame: when the time is up the app draws either an event card or a minigame. Events still set to one of the former minigame effects (`CATALOG.retiredEffects`) or to any unknown effect stay out of the deck (`retired`); the CMS marks them so another effect can be chosen.
+
+A role's `task` is optional: without name, text and bonus the role has no secret task (the Henkersmahl roles have none).
 
 `requiresRoles: true` keeps an event out of games played without roles (settings → "Geheime Rollen"). Events with an effect from `CATALOG.roleEffects` count as role events even without the field; the CMS sets it for them, and `database/setup.sql` adds it to existing content.
 

@@ -162,6 +162,7 @@ function show(screen) {
   settingsFocus = null;
   confirmFinish = false;
   confirmRedraw = false;
+  confirmReroll = false;
   sheet = null;
   if (screen === "overview" && state.running && !state.timerEnd) startRound();
   save();

@@ -106,7 +106,7 @@ function rolesSection(segment) {
       <section id="settings-roles" class="${settingsFocus === "roles" ? "focus" : ""}">
         ${sectionHead("roles", "Geheime Rollen")}
         ${hint("roles", on
-          ? `Jeder bekommt heimlich eine Rolle mit Fähigkeit und geheimer Aufgabe. Gefällt sie nicht, darf man beim Verteilen eine neue ziehen, so oft wie hier eingestellt. Eine weggelegte Rolle bekommt niemand sonst zu sehen. Gibt es zu wenige Rollen, damit jeder gleich oft neu ziehen kann, senkt die App die Zahl für alle gleich.`
+          ? `Jeder bekommt heimlich eine Rolle mit Fähigkeit und, je nach Abenteuer, geheimer Aufgabe. Gefällt sie nicht, darf man beim Verteilen eine neue ziehen, so oft wie hier eingestellt. Eine weggelegte Rolle bekommt niemand sonst zu sehen. Gibt es zu wenige Rollen, damit jeder gleich oft neu ziehen kann, senkt die App die Zahl für alle gleich.`
           : `Ohne Rollen gibt es kein Raten, keine Fähigkeiten und keine geheimen Aufgaben. Ereigniskarten, die Rollen brauchen, bleiben aus dem Stapel. Jeder startet mit ${coinsText(RULES.startingCoinsFallback)}, am Ende zählen nur die Münzen.`)}
         <div class="segmented" role="group" aria-label="Geheime Rollen verteilen">
           ${segment(on, "setSetting('roles', true)", "Mit Rollen")}

@@ -48,7 +48,7 @@ function screenOverview() {
         <span class="key-icons" aria-hidden="true">${RULES.keys.map(k => `<img src="${k.image}" alt="">`).join("")}</span>
         <span class="tile-body">
           <span class="tile-title">Schlüssel kaufen</span>
-          <span class="tile-text">${coinsText(RULES.keyCost)} · Eisen, Silber oder Knochen</span>
+          <span class="tile-text">${coinsText(keyPrice())} · Eisen, Silber oder Knochen</span>
         </span>
       </button>` : ""}
       <button class="tile ${rolesOn() || keysGoal() ? "tile-compact" : ""}" onclick="startBuyCard()">
@@ -66,7 +66,7 @@ function screenOverview() {
 }
 
 // Shown instead of the picture once all event cards or all minigames are played; each button mixes only its own kind back in.
-function eventsUsedUp() { return playableEvents().length > 0 && !remainingEvents().length; }
+function eventsUsedUp() { return playableEvents().some(eventReady) && !drawableEvents().length; }
 function minigamesUsedUp() { return activeIndices(MINIGAMES).length > 0 && !remainingMinigames().length; }
 
 function reshuffleBox() {
@@ -188,7 +188,7 @@ function screenRoles() {
     <button class="btn" onclick="startMyRole()">Geheim nachsehen</button>
     <p class="muted">Diese ${roleCount()} Rollen gibt es in diesem Abenteuer. ${playerCount < roleCount()
       ? `Ihr seid ${playerCount}, also sind nicht alle im Spiel.`
-      : "Jede Rolle ist vergeben."} Fähigkeiten und Aufgaben bleiben geheim.</p>
+      : "Jede Rolle ist vergeben."} ${hasTasks() ? "Fähigkeiten und Aufgaben bleiben" : "Die Fähigkeiten bleiben"} geheim.</p>
     <div class="role-list">
       ${ROLES.map((r, k) => r.deleted ? "" : `
         <article class="role-entry">

@@ -86,7 +86,7 @@ function timerButton() {
       <span class="timer-text">
         ${visible ? `<span class="timer-time" id="remaining">${timeText(remainingMs())}</span>`
           : `<span class="timer-time timer-window" id="timer-window">${windowText()}</span>`}
-        <span class="timer-caption">${paused ? "fortsetzen" : "anhalten"}</span>
+        <span class="timer-caption" aria-hidden="true"><span class="${paused ? "off" : ""}">anhalten</span><span class="${paused ? "" : "off"}">fortsetzen</span></span>
       </span>
     </button>`;
 }

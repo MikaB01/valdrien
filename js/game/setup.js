@@ -25,7 +25,7 @@ function modeCard() {
   const on = settings.roles !== false;
   const rerolls = rerollSetting();
   const facts = on
-    ? ["Jeder bekommt heimlich eine Rolle mit Fähigkeit und geheimer Aufgabe.",
+    ? [`Jeder bekommt heimlich eine Rolle mit Fähigkeit${hasTasks(setupAdventure()) ? " und geheimer Aufgabe" : ""}.`,
        rerolls ? `Gefällt die Rolle nicht, darf jeder sie ${rerolls === 1 ? "einmal" : `bis zu ${rerolls}-mal`} weglegen und neu ziehen.` : "Neu ziehen ist ausgeschaltet: Jeder behält seine erste Rolle."]
     : ["Kein Raten, keine Fähigkeiten, keine geheimen Aufgaben.", `Jeder startet mit ${coinsText(RULES.startingCoinsFallback)}, am Ende zählen nur die Münzen.`];
   return `
@@ -115,12 +115,13 @@ function roleCard(r) {
         <p>${r.ability.text}</p>
         <p class="muted">Wird freigeschaltet, sobald jemand deine Rolle errät.</p>
       </div>
+      ${r.task ? `
       <div class="section section-box">
         <span class="label">Geheime Aufgabe</span>
         <strong class="section-name">${r.task.name}</strong>
         <p>${r.task.text}</p>
-        <span class="chip chip-gold section-bonus">Bonus: +${r.task.bonus} Münzen</span>
-      </div>
+        ${r.task.bonus ? `<span class="chip chip-gold section-bonus">Bonus: +${r.task.bonus} Münzen</span>` : ""}
+      </div>` : ""}
       <p class="coin-line">Startkapital: ${r.startingCoins} Münzen</p>
     </article>`;
 }
@@ -211,6 +212,7 @@ function dealRoles() {
   state.tip = null;
   state.pause = null;
   state.curiosity = null;
+  state.jailerDrinks = 0;
   state.cardCount = 0;
   show(state.roles ? "handover" : "intro");
 }
@@ -229,18 +231,29 @@ function rerollBox(i) {
   const pool = rerollPool().length;
   if (used >= limit) return `<p class="muted reroll-line">Du hast schon ${used === 1 ? "einmal" : used + "-mal"} neu gezogen. Diese Rolle bleibt.</p>`;
   if (!pool) return `<p class="muted reroll-line">Es ist keine Rolle mehr übrig, die du neu ziehen könntest.</p>`;
+  const left = limit - used === 1 ? "Noch einmal möglich" : `Noch ${limit - used}-mal möglich`;
+  const short = state.rerollShort ? ` Achtung: Es gibt nicht für alle eine zweite Rolle, übrig ${pool === 1 ? "ist nur noch eine" : `sind noch ${pool}`}.` : "";
+  if (confirmReroll) {
+    return `
+    <div class="confirm reroll-confirm" role="alertdialog" aria-labelledby="reroll-title">
+      <strong id="reroll-title">Wirklich eine neue Rolle ziehen?</strong>
+      <p class="muted">${ROLES[s.role].name} legst du dann endgültig weg, zurück geht es nicht. Die neue Rolle ist Zufall.${short}</p>
+      <button class="btn" onclick="rerollRole()">Ja, neue Rolle ziehen</button>
+      <button class="link-button" onclick="confirmReroll = false; render()">Nein, ${ROLES[s.role].name} behalten</button>
+    </div>`;
+  }
   return `
     <div class="reroll">
-      <button class="btn-quiet" onclick="rerollRole()">Rolle weglegen und neu ziehen</button>
-      <p class="muted">${limit - used === 1 ? "Noch einmal möglich" : `Noch ${limit - used}-mal möglich`}. Die weggelegte Rolle bekommt niemand mehr zu sehen.${state.rerollShort
-        ? ` Achtung: Es gibt nicht für alle eine zweite Rolle, übrig ${pool === 1 ? "ist nur noch eine" : `sind noch ${pool}`}.` : ""}</p>
+      <button class="btn-quiet" onclick="confirmReroll = true; render()">Rolle weglegen und neu ziehen</button>
+      <p class="muted">${left}. Die weggelegte Rolle bekommt niemand mehr zu sehen.${short}</p>
     </div>`;
 }
 
 function rerollRole() {
   const s = state.players[state.current];
   const pool = rerollPool();
-  if (!s || !state.cardVisible || !pool.length || (s.rerolls || 0) >= (state.rerollLimit || 0)) return;
+  if (!confirmReroll || !s || !state.cardVisible || !pool.length || (s.rerolls || 0) >= (state.rerollLimit || 0)) return;
+  confirmReroll = false;
   state.discardedRoles = (state.discardedRoles || []).concat(s.role);
   s.role = pool[Math.floor(Math.random() * pool.length)];
   s.coins = ROLES[s.role].startingCoins;
@@ -255,6 +268,7 @@ function rerollRole() {
 
 function nextPlayer() {
   state.cardVisible = false;
+  confirmReroll = false;
   if (state.current < state.players.length - 1) {
     state.current++;
     show("handover");

@@ -1,4 +1,5 @@
-// Adventures with goal "keys" (Das Henkersmahl im Verlies): players buy random keys from the drunk jailer.
+// Adventures with goal "keys" (Das Henkersmahl im Verlies): players buy random keys from the jailer, who gets drunker
+// (and cheaper) with every "jailerDrinks" event card: state.jailerDrinks counts the rounds played.
 // Only the buyer sees which key came out; three different keys break out and end the game at once.
 // players[i].keys = { iron: n, silver: n, bone: n }
 
@@ -8,6 +9,19 @@ function distinctKeys(i) { return RULES.keys.filter(k => keysOf(i)[k.id] > 0).le
 function totalKeys(i) { return RULES.keys.reduce((n, k) => n + (keysOf(i)[k.id] || 0), 0); }
 function hasAllKeys(i) { return distinctKeys(i) === RULES.keys.length; }
 function keyKind(id) { return RULES.keys.find(k => k.id === id); }
+
+function keyPrice() { return Math.max(RULES.keyPrice.min, RULES.keyPrice.start - (state.jailerDrinks || 0)); }
+
+// Position of a jailer card among the adventure's jailer cards (list order); it is played when the jailer reaches that round.
+function jailerStage(index) {
+  return playableEvents().filter(i => EVENTS[i].effect === "jailerDrinks")
+    .sort((a, b) => EVENTS[a].pos - EVENTS[b].pos || a - b).indexOf(index);
+}
+
+const JAILER_MOODS = ["sternhagelvoll", "sturzbetrunken", "betrunken", "beschwipst", "angeheitert", "noch fast nüchtern"];
+function jailerMood(price = keyPrice()) {
+  return JAILER_MOODS[Math.max(0, Math.min(JAILER_MOODS.length - 1, price - RULES.keyPrice.min))];
+}
 
 function randomKey() {
   let r = Math.random() * RULES.keys.reduce((n, k) => n + k.chance, 0);
@@ -33,14 +47,31 @@ function keyStrip(counts, small) {
     </div>`;
 }
 
+// What the jailer says when handing over a key: sober, tipsy, drunk.
 const JAILER_LINES = [
-  "„Der hier passt bestimmt“, lallt der Kerkermeister und kichert.",
-  "„Hicks. Nimm den. Oder den. Ach, nimm den.“",
-  "„Den hab ich noch nie gesehen. Muss wichtig sein.“",
-  "Der Kerkermeister rülpst und drückt dir einen Schlüssel in die Hand.",
-  "„Für dich nur das Beste“, nuschelt er und greift blind in den Bund.",
-  "„Psst. Nicht weitersagen“, flüstert er so laut, dass es alle hören."
+  [
+    "„Zähl nach. Ich zähl auch nach.“ Der Kerkermeister beißt auf jede Münze, bevor er in den Bund greift.",
+    "Der Kerkermeister mustert dich lange. Dann löst er, ohne hinzusehen, einen Schlüssel vom Bund.",
+    "„Ich hab dich im Auge“, knurrt er und schiebt dir einen Schlüssel über den Tisch.",
+    "„Kein Wort zu den Wachen“, brummt der Kerkermeister und lässt die Münzen in seiner Schürze verschwinden."
+  ],
+  [
+    "„Nimm den hier. Oder den. Ach, die sehen eh alle gleich aus.“",
+    "Der Kerkermeister summt ein Trinklied und drückt dir einen Schlüssel in die Hand.",
+    "„Psst. Nicht weitersagen“, flüstert er so laut, dass es alle hören.",
+    "„Für dich nur das Beste“, sagt er feierlich und greift blind in den Bund."
+  ],
+  [
+    "„Der hier passt bestimmt“, lallt der Kerkermeister und kichert.",
+    "„Hicks. Nimm den. Oder den. Ach, nimm den.“",
+    "„Den hab ich noch nie gesehen. Muss wichtig sein.“",
+    "Der Kerkermeister rülpst und drückt dir einen Schlüssel in die Hand."
+  ]
 ];
+function jailerLine() {
+  const price = keyPrice();
+  return pick(JAILER_LINES[price >= RULES.keyPrice.start - 1 ? 0 : price >= RULES.keyPrice.min + 2 ? 1 : 2]);
+}
 
 function startBuyKey() {
   state.buyKey = { step: "who", player: null };
@@ -49,12 +80,13 @@ function startBuyKey() {
 
 function screenBuyKey() {
   const b = state.buyKey || { step: "who", player: null };
-  const cost = RULES.keyCost;
+  const cost = keyPrice();
   if (b.step === "who" || !state.players[b.player]) {
     return `
       <div class="heading"><span class="eyebrow">Beim Kerkermeister</span><h2>Wer kauft einen Schlüssel?</h2></div>
       <figure class="key-banner"><img src="images/dungeon-keys.jpg" alt="Ein Eisen-, ein Silber- und ein Knochenschlüssel auf rotem Tuch"></figure>
-      <p class="muted">Ein Schlüssel kostet ${coinsText(cost)}. Welcher es wird, weiß nicht einmal der Kerkermeister: meist Eisen, seltener Silber, ganz selten Knochen.</p>
+      <p class="key-price"><span>Der Kerkermeister ist ${jailerMood(cost)}.</span><strong>${coinsText(cost)}</strong></p>
+      <p class="muted">So viel kostet ein Schlüssel gerade${cost > RULES.keyPrice.min ? ". Je mehr der Kerkermeister trinkt, desto billiger wird es" : ", billiger wird es nicht mehr"}. Welcher es wird, weiß nicht einmal er: meist Eisen, seltener Silber, ganz selten Knochen.</p>
       <div class="choices">
         ${state.players.map((s, i) => `
           <button class="choice" onclick="chooseKeyBuyer(${i})" ${s.coins < cost ? "disabled" : ""}>
@@ -81,7 +113,7 @@ function screenBuyKey() {
   const before = (b.before || 0);
   return `
     <div class="key-result">
-      <p class="kicker">${b.line || JAILER_LINES[0]}</p>
+      <p class="kicker">${b.line || JAILER_LINES[2][0]}</p>
       <figure class="key-drawn"><img src="${kind.image}" alt=""><figcaption>${kind.name}</figcaption></figure>
       ${complete ? `
         <h2 class="escape-title">Alle drei Schlüssel!</h2>
@@ -100,7 +132,7 @@ function screenBuyKey() {
 }
 
 function chooseKeyBuyer(i) {
-  if (!state.players[i] || state.players[i].coins < RULES.keyCost) return;
+  if (!state.players[i] || state.players[i].coins < keyPrice()) return;
   state.buyKey = { step: "handover", player: i };
   show("buyKey");
 }
@@ -108,15 +140,15 @@ function chooseKeyBuyer(i) {
 function buyKey() {
   const b = state.buyKey;
   const s = b && state.players[b.player];
-  if (!s || s.coins < RULES.keyCost || hasAllKeys(b.player)) return;
-  addCoins([b.player], -RULES.keyCost);
+  if (!s || s.coins < keyPrice() || hasAllKeys(b.player)) return;
+  addCoins([b.player], -keyPrice());
   const id = randomKey();
   s.keys = s.keys || {};
   b.before = s.keys[id] || 0;
   s.keys[id] = b.before + 1;
   b.result = id;
   b.step = "result";
-  b.line = pick(JAILER_LINES);
+  b.line = jailerLine();
   playKeySound(hasAllKeys(b.player));
   show("buyKey");
 }
@@ -179,7 +211,7 @@ function screenKeysEnd() {
 function taskCashIn(i) {
   const s = state.players[i];
   const role = roleOf(i);
-  if (!keysGoal() || !role || !role.task.bonus) return "";
+  if (!keysGoal() || !role || !role.task || !role.task.bonus) return "";
   if (s.taskDone) return `<p class="note">Deine geheime Aufgabe ist erledigt, ${coinsText(role.task.bonus)} sind gebucht.</p>`;
   const m = state.peekRole || {};
   return m.confirmTask ? `
@@ -194,7 +226,7 @@ function taskCashIn(i) {
 function cashInTask(i) {
   const s = state.players[i];
   const role = roleOf(i);
-  if (!role || s.taskDone) return;
+  if (!role || !role.task || s.taskDone) return;
   s.taskDone = true;
   addCoins([i], role.task.bonus);
   state.peekRole.confirmTask = false;

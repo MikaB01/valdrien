@@ -41,6 +41,9 @@ function remainingEvents() {
   return playableEvents().filter(i => !played.has(i));
 }
 
+// Remaining cards that would change something right now (see EFFECTS_READY); the others wait in the deck.
+function drawableEvents() { return remainingEvents().filter(eventReady); }
+
 // Keeps the deck (top = last) equal to the remaining cards; cards added in the CMS go in at random positions.
 function syncEventDeck() {
   const deck = Array.isArray(state.eventDeck) ? state.eventDeck : [];
@@ -49,10 +52,26 @@ function syncEventDeck() {
   }
   const remaining = remainingEvents();
   const kept = deck.filter(i => remaining.includes(i));
-  shuffle(remaining.filter(i => !kept.includes(i)))
-    .forEach(i => kept.splice(Math.floor(Math.random() * (kept.length + 1)), 0, i));
+  const added = shuffle(remaining.filter(i => !kept.includes(i)));
+  added.forEach(i => kept.splice(Math.floor(Math.random() * (kept.length + 1)), 0, i));
+  if (added.some(i => EVENTS[i].effect === "jailerDrinks")) orderJailerCards(kept);
   state.eventDeck = kept;
   return kept;
+}
+
+// The jailer's rounds come in list order: they keep the random deck positions they were shuffled into,
+// but the first round takes the position nearest the top.
+function orderJailerCards(deck) {
+  const slots = deck.map((index, k) => [index, k]).filter(([index]) => EVENTS[index].effect === "jailerDrinks").map(([, k]) => k);
+  const cards = slots.map(k => deck[k]).sort((a, b) => jailerStage(b) - jailerStage(a));
+  slots.forEach((k, n) => { deck[k] = cards[n]; });
+}
+
+// Top of the deck = end of the array; cards that are not ready yet are skipped and keep their place.
+function topEvents(deck, n) {
+  const ready = [];
+  for (let k = deck.length - 1; k >= 0 && ready.length < n; k--) if (eventReady(deck[k])) ready.push(deck[k]);
+  return ready;
 }
 
 function reshuffleEvents() {
@@ -64,7 +83,7 @@ function reshuffleEvents() {
 
 function drawEvent(automatic, fixedIndex) {
   const deck = syncEventDeck();
-  const index = fixedIndex !== undefined ? fixedIndex : deck[deck.length - 1];
+  const index = fixedIndex !== undefined ? fixedIndex : topEvents(deck, 1)[0];
   if (index === undefined || !EVENTS[index]) { show("overview"); return; }
   state.eventDeck = deck.filter(i => i !== index);
   state.playedEvents.push(index);
@@ -76,18 +95,18 @@ function drawEvent(automatic, fixedIndex) {
   state.seersNight = false;
   state.freeGuesses = false;
   const onDraw = EFFECTS_ON_DRAW[EVENTS[index].effect];
-  if (onDraw) onDraw();
+  const remembered = onDraw ? onDraw(index) : null;
   state.lastWinnings = {};
   state.lastParticipants = [];
 
-  state.event = {
+  state.event = Object.assign({
     index: index,
     automatic: Boolean(automatic),
     done: {},
     card: state.cardCount,
     random: Math.random(),
     snapshot: takeSnapshot()
-  };
+  }, remembered || {});
   show("event");
 }
 
@@ -150,12 +169,12 @@ function secretOutcome(p) {
 }
 
 // When the time is up: an event card or, by the share set in the settings, a minigame; only what is left can come.
-function canDrawTimed() { return remainingEvents().length > 0 || remainingMinigames().length > 0; }
+function canDrawTimed() { return drawableEvents().length > 0 || remainingMinigames().length > 0; }
 
 function drawTimedCard() {
   const share = settings.minigameShare ?? RULES.minigameShareDefault;
   const minigames = remainingMinigames().length > 0;
-  if (minigames && (!remainingEvents().length || Math.random() < share)) {
+  if (minigames && (!drawableEvents().length || Math.random() < share)) {
     resetTimer();
     drawMinigame();
     state.minigame.automatic = true;
@@ -301,14 +320,15 @@ function eventPending() {
   return (eventEffect().groups || []).some((a, i) => e.done[i] === undefined);
 }
 
-// Top n cards of the deck (top first) without drawing them; fewer if fewer are left.
+// Next n cards that would be drawn (top first) without drawing them; fewer if fewer are left.
 function upcomingEvents(n) {
-  return syncEventDeck().slice(-n).reverse();
+  return topEvents(syncEventDeck(), n);
 }
 
 function moveTopCardToBottom() {
-  const index = state.eventDeck.pop();
-  state.eventDeck.unshift(index);
+  const index = topEvents(syncEventDeck(), 1)[0];
+  if (index === undefined) return;
+  state.eventDeck = [index].concat(state.eventDeck.filter(i => i !== index));
 }
 
 Object.assign(SCREENS, {

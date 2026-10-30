@@ -49,7 +49,8 @@ const CATALOG = {
     seers:        "Hält an: Treffer beim Raten bringt 5 statt 3",
     looseTongues: "Hält an: Raten kostet nichts",
     lottery:      "Die App lost einen Spieler aus, er erhält 4",
-    misfortune:   "Die App lost einen Spieler aus, er verliert 2"
+    misfortune:   "Die App lost einen Spieler aus, er verliert 2",
+    jailerDrinks: "Kerkermeister trinkt: Schlüssel 1 Münze billiger (nur Schlüssel-Abenteuer, kommt in Listenreihenfolge)"
   },
 
   // Effects that started a minigame. Event cards no longer do that: the app draws either an event card or a minigame.
@@ -65,7 +66,7 @@ const CATALOG = {
   // adventure goals (CMS: "Spielziel")
   goals: {
     coins: "Die meisten Münzen am Ende",
-    keys: "Schlüssel kaufen: drei verschiedene brechen aus (3 Münzen je Schlüssel)"
+    keys: "Schlüssel kaufen: drei verschiedene brechen aus (Preis fällt mit dem Rausch des Kerkermeisters)"
   },
 
   // Effects that only make sense with roles (guessing, revealed/hidden, traits).

@@ -415,17 +415,20 @@ body[data-screen="overview"] .tile-keys .key-icons img { width: 34px; height: 34
 .timer-ring svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
 .timer-ring svg path[d^="M8"] { fill: currentColor; stroke-width: 1.5; }
 .timer-text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1; }
-.timer-time { font-weight: 700; font-size: 1.2rem; color: var(--title); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.timer-window { font-size: 1.02rem; }
-.timer-caption { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gold); }
+/* Fixed widths: neither the ticking time nor anhalten/fortsetzen may change the size of the pill */
+.timer-time { font-weight: 700; font-size: 1.2rem; color: var(--title); font-variant-numeric: tabular-nums; white-space: nowrap; min-width: 5ch; }
+.timer-window { font-size: 1.02rem; min-width: 8.5ch; }
+.timer-caption { display: grid; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gold); }
+.timer-caption > span { grid-area: 1 / 1; }
+.timer-caption > .off { visibility: hidden; }
 .timer-button.paused { border-style: dashed; background: color-mix(in srgb, var(--gold) 18%, var(--paper)); }
 .timer-button.paused .timer-ring { background: radial-gradient(circle at 35% 30%, #f3d283, #c4922f 65%, #8d6420); color: #3a2611; }
 @media (prefers-reduced-motion: no-preference) {
-  .timer-button { transition: transform .1s ease; }
-  .timer-button:active { transform: scale(0.96); }
+  .timer-button { transition: background-color .1s ease, box-shadow .1s ease; }
   .timer-button.paused .timer-time { animation: blink 1.4s steps(2, jump-none) infinite; }
   @keyframes blink { 50% { opacity: 0.35; } }
 }
+.timer-button:active { box-shadow: inset 0 2px 4px var(--shade); }
 .timer-button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 .progress { width: 100%; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
 .progress div { height: 100%; background: var(--gold); transition: width 1s linear; }
@@ -835,6 +838,9 @@ body[data-screen="overview"] .tile-keys .key-icons img { width: 34px; height: 34
 
 .key-banner { margin: 0 6px; border-radius: 10px; overflow: hidden; border: 1.5px solid var(--brass); box-shadow: 0 6px 14px var(--shade); aspect-ratio: 16 / 7; }
 .key-banner img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.key-price { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 0; padding: 10px 14px; border: 1.5px solid var(--brass); border-radius: 10px; background: var(--sunken); }
+.key-price span { font-family: var(--font-title); font-size: 1.15rem; color: var(--title); line-height: 1.2; }
+.key-price strong { white-space: nowrap; font-size: 1.25rem; color: var(--gold); font-variant-numeric: tabular-nums; }
 .emblem-keys { background: url("../images/key-iron.webp") center / 84% no-repeat, radial-gradient(circle at 50% 35%, var(--paper), var(--sunken)); }
 .key-result { display: flex; flex-direction: column; gap: 14px; }
 .key-drawn { margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 8px; }
