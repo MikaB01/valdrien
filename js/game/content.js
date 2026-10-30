@@ -39,6 +39,7 @@ function convertEvent(id, e) {
     text: escapeHtml(e.description || ""),
     isPrivate: e.visibility === "private",
     requiresRoles: eventRequiresRoles(e),
+    drinking: e.drinking === true,
     retired: eventRetired(e),
     privateType: e.privateType === "task" ? "task" : "instant",
     privateCoins: num(e.privateCoins, 0)
@@ -159,8 +160,12 @@ function rememberSlots() {
 }
 
 function activeIndices(list) { return list.map((_, i) => i).filter(i => !list[i].deleted); }
-// Event cards that may be drawn in this game: without roles, role events stay out; so do events with a retired effect.
-function playableEvents() { return activeIndices(EVENTS).filter(i => !EVENTS[i].retired && (rolesOn() || !EVENTS[i].requiresRoles)); }
+// Event cards that may be drawn in this game: without roles, role events stay out; without the drinking game, drinking cards;
+// so do events with a retired effect.
+function playableEvents() {
+  return activeIndices(EVENTS).filter(i => !EVENTS[i].retired && (rolesOn() || !EVENTS[i].requiresRoles) && (drinkingOn() || !EVENTS[i].drinking));
+}
+function hasDrinkingCards(a) { return Boolean(a) && a.events.some(e => !e.deleted && !e.retired && e.drinking); }
 
 let ROLES = [];
 let EVENTS = [];

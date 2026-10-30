@@ -10,7 +10,9 @@ function totalKeys(i) { return RULES.keys.reduce((n, k) => n + (keysOf(i)[k.id] 
 function hasAllKeys(i) { return distinctKeys(i) === RULES.keys.length; }
 function keyKind(id) { return RULES.keys.find(k => k.id === id); }
 
-function keyPrice() { return Math.max(RULES.keyPrice.min, RULES.keyPrice.start - (state.jailerDrinks || 0)); }
+// What the jailer asks for as drunk as he is; "Der Kerkermeister verrechnet sich" (keyPriceSet) overrides it for a while.
+function jailerPrice() { return Math.max(RULES.keyPrice.min, RULES.keyPrice.start - (state.jailerDrinks || 0)); }
+function keyPrice() { return lasting("keyPriceSet") ? RULES.keyPrice.muddled : jailerPrice(); }
 
 // Position of a jailer card among the adventure's jailer cards (list order); it is played when the jailer reaches that round.
 function jailerStage(index) {
@@ -19,7 +21,7 @@ function jailerStage(index) {
 }
 
 const JAILER_MOODS = ["sternhagelvoll", "sturzbetrunken", "betrunken", "beschwipst", "angeheitert", "noch fast nüchtern"];
-function jailerMood(price = keyPrice()) {
+function jailerMood(price = jailerPrice()) {
   return JAILER_MOODS[Math.max(0, Math.min(JAILER_MOODS.length - 1, price - RULES.keyPrice.min))];
 }
 
@@ -69,7 +71,7 @@ const JAILER_LINES = [
   ]
 ];
 function jailerLine() {
-  const price = keyPrice();
+  const price = jailerPrice();
   return pick(JAILER_LINES[price >= RULES.keyPrice.start - 1 ? 0 : price >= RULES.keyPrice.min + 2 ? 1 : 2]);
 }
 
@@ -85,8 +87,10 @@ function screenBuyKey() {
     return `
       <div class="heading"><span class="eyebrow">Beim Kerkermeister</span><h2>Wer kauft einen Schlüssel?</h2></div>
       <figure class="key-banner"><img src="images/dungeon-keys.jpg" alt="Ein Eisen-, ein Silber- und ein Knochenschlüssel auf rotem Tuch"></figure>
-      <p class="key-price"><span>Der Kerkermeister ist ${jailerMood(cost)}.</span><strong>${coinsText(cost)}</strong></p>
-      <p class="muted">So viel kostet ein Schlüssel gerade${cost > RULES.keyPrice.min ? ". Je mehr der Kerkermeister trinkt, desto billiger wird es" : ", billiger wird es nicht mehr"}. Welcher es wird, weiß nicht einmal er: meist Eisen, seltener Silber, ganz selten Knochen.</p>
+      <p class="key-price"><span>Der Kerkermeister ist ${jailerMood()}.</span><strong>${coinsText(cost)}</strong></p>
+      <p class="muted">${lasting("keyPriceSet")
+        ? `${state.lasting.title}: Bis zum nächsten Ereignis kostet ein Schlüssel ${coinsText(cost)}, ganz gleich, wie betrunken er ist`
+        : `So viel kostet ein Schlüssel gerade${cost > RULES.keyPrice.min ? ". Je mehr der Kerkermeister trinkt, desto billiger wird es" : ", billiger wird es nicht mehr"}`}. Welcher es wird, weiß nicht einmal er: meist Eisen, seltener Silber, ganz selten Knochen.</p>
       <div class="choices">
         ${state.players.map((s, i) => `
           <button class="choice" onclick="chooseKeyBuyer(${i})" ${s.coins < cost ? "disabled" : ""}>

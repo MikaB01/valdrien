@@ -25,9 +25,9 @@ function screenOverview() {
       ${timerButton()}
     </div>
     ${reshuffleBox() || `<div class="scene-banner">${adventureArt(currentAdventure().id, true)}</div>`}
-    ${state.seersNight ? `<p class="note">Die Nacht der Seher: Bis zum nächsten Ereignis bringt ein Treffer beim Raten ${RULES.hitRewardSeers} Münzen.</p>` : ""}
+    ${lastingNote() ? `<p class="note">${lastingNote()}</p>` : ""}
+    ${state.tableRule ? `<p class="note">${tableRuleNote()}</p>` : ""}
     ${state.winBonus ? `<p class="note">Gewinnt ${playerName(state.winBonus.player)} das nächste Minispiel, gibt es ${state.winBonus.amount} Münzen extra.</p>` : ""}
-    ${state.freeGuesses ? `<p class="note">Lose Zungen: Bis zum nächsten Ereignis kostet Raten keine Münze.</p>` : ""}
     ${tipNote()}
     ${pauseNote()}
     ${openTasks().length ? `<p class="note">Offene geheime ${openTasks().length === 1 ? "Aufgabe" : "Aufgaben"}: ${playerNames([...new Set(openTasks().map(x => x.i))])}. Bestätigen über den Geldbeutel unten in der Mitte.</p>` : ""}
@@ -36,7 +36,7 @@ function screenOverview() {
       <button class="tile ${keysGoal() ? "tile-compact" : ""}" onclick="startGuess()">
         ${icon("guess")}
         <span class="tile-title">Raten</span>
-        <span class="tile-text">${state.freeGuesses ? "Gerade kostenlos" : `Kostet ${coinsText(RULES.guessCost)}`}, Treffer bringt ${hitReward()}</span>
+        <span class="tile-text">${guessCost() ? `Kostet ${coinsText(guessCost())}` : "Gerade kostenlos"}, Treffer bringt ${hitReward()}</span>
       </button>
       <button class="tile ${ready ? "tile-ready" : ""} ${keysGoal() ? "tile-compact" : ""}" onclick="startAbility()">
         ${icon("ability")}
@@ -54,7 +54,7 @@ function screenOverview() {
       <button class="tile ${rolesOn() || keysGoal() ? "tile-compact" : ""}" onclick="startBuyCard()">
         ${icon("event")}
         <span class="tile-title">Geheimkarte</span>
-        <span class="tile-text">Für ${coinsText(RULES.privateCardCost)} kaufen</span>
+        <span class="tile-text">Für ${coinsText(privateCardCost())} kaufen</span>
       </button>
       <button class="tile ${rolesOn() || keysGoal() ? "tile-compact" : ""}" onclick="startMyRole()">
         ${icon("secret")}
@@ -64,6 +64,8 @@ function screenOverview() {
     </div>
   `;
 }
+
+function tableRuleNote() { return `${state.tableRule.title}: Gilt bis zum nächsten Minispiel.`; }
 
 // Shown instead of the picture once all event cards or all minigames are played; each button mixes only its own kind back in.
 function eventsUsedUp() { return playableEvents().some(eventReady) && !drawableEvents().length; }

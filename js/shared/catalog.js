@@ -46,11 +46,20 @@ const CATALOG = {
     crossroads:   "Wenigste wählt: alle +1 oder selbst +2",
     generosity:   "Meiste schenkt einem Mitspieler 2 oder zahlt 3",
     fate:         "Münzwurf für jeden: Kopf +1, Zahl −1",
+    fateManual:   "Echte Münze: für jeden „richtig“ (+1) oder „falsch“ (−1) eintragen",
     seers:        "Hält an: Treffer beim Raten bringt 5 statt 3",
+    bounty:       "Hält an: Treffer beim Raten bringt 4 statt 3",
     looseTongues: "Hält an: Raten kostet nichts",
-    lottery:      "Die App lost einen Spieler aus, er erhält 4",
-    misfortune:   "Die App lost einen Spieler aus, er verliert 2",
-    jailerDrinks: "Kerkermeister trinkt: Schlüssel 1 Münze billiger (nur Schlüssel-Abenteuer, kommt in Listenreihenfolge)"
+    costlyGuess:  "Hält an: Raten kostet 2 statt 1",
+    secretSale:   "Hält an: geheime Karte kostet 1 statt 2",
+    lottery:      "Die App lost einen Spieler aus, er erhält 3",
+    spotlightMost:   "Nichts zu buchen, die App zeigt, wer die meisten Münzen hat",
+    spotlightFewest: "Nichts zu buchen, die App zeigt, wer die wenigsten Münzen hat",
+    coinCount:    "Nichts zu buchen, die App zeigt die Münzen aller Spieler",
+    untilMinigame: "Nichts zu buchen, Erinnerung auf der Hauptseite bis zum nächsten Minispiel",
+    jailerDrinks: "Kerkermeister trinkt: Schlüssel 1 Münze billiger (nur Schlüssel-Abenteuer, kommt in Listenreihenfolge)",
+    keyPriceSet:  "Hält an: Schlüssel kostet 4, egal was vorher (nur Schlüssel-Abenteuer)",
+    searchPockets: "Verdächtigte wählen: 2 an die Bank zahlen oder Schlüssel zeigen (nur Schlüssel-Abenteuer)"
   },
 
   // Effects that started a minigame. Event cards no longer do that: the app draws either an event card or a minigame.
@@ -71,7 +80,7 @@ const CATALOG = {
 
   // Effects that only make sense with roles (guessing, revealed/hidden, traits).
   // Events with one of these, or with requiresRoles: true, are left out of games without roles.
-  roleEffects: ["exposed", "disguise", "oracle", "seers", "looseTongues"]
+  roleEffects: ["exposed", "disguise", "oracle", "seers", "looseTongues", "bounty", "costlyGuess"]
 };
 
 // e: an event as stored in the content JSON

@@ -7,7 +7,7 @@ function screenGuess() {
   if (r.step === "who") {
     return `
       <h2>Auf eine Rolle raten</h2>
-      <p class="muted">Wer möchte raten? ${state.freeGuesses ? "Lose Zungen: Raten kostet gerade nichts." : `Ein Tipp kostet ${coinsText(RULES.guessCost)}.`} Schon erratene Rollen können nicht noch einmal erraten werden.</p>
+      <p class="muted">Wer möchte raten? ${guessPriceText()} Schon erratene Rollen können nicht noch einmal erraten werden.</p>
       <div class="choices">
         ${state.players.map((s, i) => `
           <button class="choice" onclick="chooseGuesser(${i})" ${canGuess(i) ? "" : "disabled"}>
@@ -18,20 +18,21 @@ function screenGuess() {
   }
 
   if (r.step === "stake") {
+    const cost = guessCost();
     return `
-      ${state.freeGuesses ? `
+      ${cost ? `
+      <h2>${escapeName(guesser.name)}, ${stakeText("eine Münze", coinsText(cost), cost)} setzen, um auf eine Rolle zu raten?</h2>
+      <p class="muted">${guessPriceChanged() ? guessPriceText() + " " : ""}Du hast ${guesser.coins} Münzen. ${stakeText("Die gesetzte Münze geht", "Die gesetzten Münzen gehen", cost)} an die Spielbank.</p>
+      <button class="btn" onclick="placeStake()">Ja, ${coinsText(cost)} setzen</button>` : `
       <h2>${escapeName(guesser.name)}, möchtest du auf eine Rolle raten?</h2>
-      <p class="muted">Lose Zungen: Dein Tipp kostet gerade nichts.</p>
-      <button class="btn" onclick="placeStake()">Ja, Tipp abgeben</button>` : `
-      <h2>${escapeName(guesser.name)}, ${stakeText("eine Münze", coinsText(RULES.guessCost))} setzen, um auf eine Rolle zu raten?</h2>
-      <p class="muted">Du hast ${guesser.coins} Münzen. ${stakeText("Die gesetzte Münze geht", "Die gesetzten Münzen gehen")} an die Spielbank.</p>
-      <button class="btn" onclick="placeStake()">Ja, ${coinsText(RULES.guessCost)} setzen</button>`}
+      <p class="muted">${guessPriceText()}</p>
+      <button class="btn" onclick="placeStake()">Ja, Tipp abgeben</button>`}
 `;
   }
 
   if (r.step === "result") {
     return `
-      <h2>${r.free ? "Dein Tipp, bitte!" : stakeText("Die Münze ist gesetzt", "Die Münzen sind gesetzt")}</h2>
+      <h2>${r.free ? "Dein Tipp, bitte!" : stakeText("Die Münze ist gesetzt", "Die Münzen sind gesetzt", r.cost)}</h2>
       <p class="narrative">${escapeName(guesser.name)}, sprich deinen Tipp laut aus: Wer ist welche Rolle? Die Person, auf die getippt wurde, sagt ehrlich, ob es stimmt.</p>
       <button class="btn" onclick="guessResult(true)">Rolle richtig erraten</button>
       <button class="btn-quiet" onclick="guessResult(false)">Falsch geraten</button>`;
@@ -40,7 +41,7 @@ function screenGuess() {
   if (r.step === "wrong") {
     return `
       <h2>Daneben!</h2>
-      <p class="narrative">Die anderen haben ihr Geheimnis gewahrt. ${r.free ? "Zum Glück hat dich der Tipp nichts gekostet." : stakeText("Die gesetzte Münze ist verloren.", "Die gesetzten Münzen sind verloren.")}</p>
+      <p class="narrative">Die anderen haben ihr Geheimnis gewahrt. ${r.free ? "Zum Glück hat dich der Tipp nichts gekostet." : stakeText("Die gesetzte Münze ist verloren.", "Die gesetzten Münzen sind verloren.", r.cost)}</p>
       <p class="muted">${escapeName(guesser.name)} hat jetzt ${guesser.coins} Münzen.</p>
       ${back}`;
   }
@@ -90,6 +91,7 @@ function placeStake() {
   const cost = guessCost();
   if (guesser.coins < cost) return;
   guesser.coins -= cost;
+  state.guess.cost = cost;
   state.guess.free = cost === 0;
   state.guess.step = "result";
   show("guess");
@@ -112,11 +114,21 @@ function guessTarget(i) {
   show("guess");
 }
 
-function guessCost() { return state.freeGuesses ? 0 : RULES.guessCost; }
+function guessCost() {
+  return lasting("looseTongues") ? 0 : lasting("costlyGuess") ? RULES.guessCostCostly : RULES.guessCost;
+}
+function guessPriceChanged() { return guessCost() !== RULES.guessCost; }
+function guessPriceText() {
+  const cost = guessCost();
+  const text = cost ? `Ein Tipp kostet ${guessPriceChanged() ? "gerade " : ""}${coinsText(cost)}.` : "Raten kostet gerade nichts.";
+  return guessPriceChanged() ? `${state.lasting.title}: ${text}` : text;
+}
 
-function hitReward() { return state.seersNight ? RULES.hitRewardSeers : RULES.hitReward; }
+function hitReward() {
+  return lasting("seers") ? RULES.hitRewardSeers : lasting("bounty") ? RULES.hitRewardBounty : RULES.hitReward;
+}
 
-function stakeText(oneCoin, severalCoins) { return RULES.guessCost === 1 ? oneCoin : severalCoins; }
+function stakeText(oneCoin, severalCoins, cost = RULES.guessCost) { return cost === 1 ? oneCoin : severalCoins; }
 
 Object.assign(SCREENS, {
   guess: screenGuess

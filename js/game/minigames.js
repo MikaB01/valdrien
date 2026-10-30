@@ -119,6 +119,7 @@ function drawMinigame(category, player, again) {
   if (resume) { show("minigame"); return; }
   if (player === undefined && !again) cardDrawn("minigame");
   state.tip = null; // Trinkgeld lasts until a minigame is drawn
+  state.tableRule = null;
   let options = remainingMinigames(category);
   // an ability still needs its minigame, even if all of that kind were played
   if (!options.length && (category || player !== undefined)) {

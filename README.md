@@ -70,10 +70,14 @@ No build step: plain `<script>` files loaded in order, all top-level declaration
     minigames: { <id>: { pos, name, category (duel|all|oneVsAll|team|uneven), description,
                          reward: { winner, loser, judge, solo, group, fail, team, single, pair, singleName, pairName } } },
     events: { <id>: { pos, name, category, visibility (public|private), description, effect,
-                      privateType (instant|task), privateCoins, requiresRoles } } } } }
+                      privateType (instant|task), privateCoins, requiresRoles, drinking } } } } }
 ```
 
 `goal: "keys"` (Das Henkersmahl im Verlies): instead of counting coins at the end, players buy random keys for `keyPrice()`: `RULES.keyPrice.start` (7), 1 coin less with every event card with effect `jailerDrinks` (they come in list order), down to `RULES.keyPrice.min` (2); the chances and key pictures are in `RULES.keys`. Whoever first holds all three kinds breaks out and wins at once; each player sees only their own keys. Role tasks are cashed in during the game under "Nachsehen", because the end comes without warning.
+
+`drinking: true` marks a drinking card (Trinkrunde, Trinkregel): it only comes into the deck while the drinking game is switched on in the settings (`settings.drinking`, per device, applies at once, also in a running game).
+
+Effects that last "until the next event card" (`seers`, `bounty`, `looseTongues`, `costlyGuess`, `secretSale`, `keyPriceSet`) are listed in `LASTING` in `js/game/effects.js` and stored as `state.lasting = { effect, title }`; bought secret cards do not end them. `untilMinigame` keeps a reminder (`state.tableRule`) on the main screen until the next minigame.
 
 Event cards never start a minigame: when the time is up the app draws either an event card or a minigame. Events still set to one of the former minigame effects (`CATALOG.retiredEffects`) or to any unknown effect stay out of the deck (`retired`); the CMS marks them so another effect can be chosen.
 

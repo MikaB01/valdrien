@@ -1380,15 +1380,6 @@
         }
       },
       "events": {
-        "der-kerkermeister-wird-spendabel": {
-          "pos": 10,
-          "name": "Der Kerkermeister wird spendabel",
-          "category": "Segen",
-          "visibility": "public",
-          "description": "Der Kerkermeister hat einen Krug zu viel und wirft lallend eine Handvoll Münzen über den Tisch: „Für euch, meine Kinderchen!“ Alle erhalten 1 Münze.",
-          "effect": "goldRain",
-          "requiresRoles": false
-        },
         "das-seilgeld": {
           "pos": 20,
           "name": "Das Seilgeld",
@@ -1396,16 +1387,8 @@
           "visibility": "public",
           "description": "Ein Bote des Henkers poltert herein: Jeder Gefangene zahlt seinen Anteil am Seil, gutes Hanfseil ist teuer. Alle zahlen 1 Münze an die Spielbank.",
           "effect": "tax",
-          "requiresRoles": false
-        },
-        "die-kerkerkoechin-hat-ein-herz": {
-          "pos": 30,
-          "name": "Die Kerkerköchin hat ein Herz",
-          "category": "Segen",
-          "visibility": "public",
-          "description": "Die alte Kerkerköchin schöpft dem Ärmsten eine Extrakelle Eintopf, und am Boden der Kelle klimpert es. Wer die wenigsten Münzen hat, erhält 3 Münzen. Bei Gleichstand erhalten alle Gleichplatzierten je 3.",
-          "effect": "favor",
-          "requiresRoles": false
+          "requiresRoles": false,
+          "drinking": false
         },
         "gustav-hat-hunger": {
           "pos": 40,
@@ -1414,88 +1397,28 @@
           "visibility": "public",
           "description": "Gustav, die fetteste Ratte des Verlieses, nagt sich durch den dicksten Geldbeutel am Tisch. Wer die meisten Münzen hat, verliert 2 Münzen. Bei Gleichstand trifft es alle Gleichplatzierten.",
           "effect": "pickpocket",
-          "requiresRoles": false
-        },
-        "gerechtigkeit-unter-gefangenen": {
-          "pos": 50,
-          "name": "Gerechtigkeit unter Gefangenen",
-          "category": "Fluch",
-          "visibility": "public",
-          "description": "Im Verlies gilt nur ein Gesetz: Wer zu viel hat, teilt, oder wacht ohne Zähne auf. Wer die meisten Münzen hat, gibt 2 Münzen ab, und wer die wenigsten hat, erhält 2 Münzen. Bei Gleichstand sind alle Gleichplatzierten betroffen.",
-          "effect": "envy",
-          "requiresRoles": false
+          "requiresRoles": false,
+          "drinking": false
         },
         "peinliche-befragung": {
           "pos": 60,
-          "name": "Peinliche Befragung",
+          "name": "Der Henker merkt sich Gesichter",
           "category": "Enthüllung",
           "visibility": "public",
-          "description": "Der Kerkermeister befragt alle, die man schon durchschaut hat. Viel Geschrei, wenig Ergebnis, aber teuer. Alle, deren Rolle erraten wurde, verlieren 1 Münze.",
+          "description": "Der Henker steigt die Wendeltreppe herab und mustert jeden Gefangenen ganz genau. Wessen wahre Identität schon erraten wurde, der landet nach einem Ausbruch für immer auf den Fahndungsplakaten des ganzen Landes, außer er zahlt dem Henker etwas für sein schlechtes Gedächtnis. Alle, deren Rolle erraten wurde, zahlen 1 Münze an den Henker.",
           "effect": "exposed",
-          "requiresRoles": true
+          "requiresRoles": true,
+          "drinking": false
         },
         "im-dunkeln-sind-alle-ratten-grau": {
           "pos": 70,
           "name": "Im Dunkeln sind alle Ratten grau",
           "category": "Segen",
           "visibility": "public",
-          "description": "Eine Fackel verlöscht. Wer sich noch nicht verraten hat, nutzt die Dunkelheit und tastet unter dem Tisch nach verlorenen Münzen. Alle, deren Rolle noch nicht erraten wurde, erhalten 1 Münze.",
+          "description": "Eine Fackel erlischt, und im Dunkeln klimpert es unter dem Tisch: Der Kerkermeister hat beim Zählen seinen Beutel fallen lassen und sucht ihn jetzt an der falschen Stelle. Wer sich noch nicht verraten hat, kann in Ruhe danach tasten, denn auf ihn achtet keiner. Alle, deren Rolle noch nicht erraten wurde, erhalten 1 Münze.",
           "effect": "disguise",
-          "requiresRoles": true
-        },
-        "streit-um-die-letzte-wurst": {
-          "pos": 80,
-          "name": "Streit um die letzte Wurst",
-          "category": "Duell",
-          "visibility": "public",
-          "description": "Es gibt nur noch eine Wurst, und zwei wollen sie: der Reichste und der Ärmste am Tisch. Wer die meisten und wer die wenigsten Münzen hat, treten im Duell gegeneinander an. Der Sieger erhält von jedem Verlierer 2 Münzen. Bei Gleichstand treten alle Gleichplatzierten gegeneinander an.",
-          "effect": "duel",
-          "requiresRoles": false
-        },
-        "das-kerkerturnier": {
-          "pos": 90,
-          "name": "Das Kerkerturnier",
-          "category": "Alle gegen alle",
-          "visibility": "public",
-          "description": "Der Kerkermeister will Unterhaltung und lallt: „Wer gewinnt, kriegt doppelt!“ Alle spielen ein Minispiel gegeneinander. Der Sieger erhält die doppelte Belohnung.",
-          "effect": "contest",
-          "requiresRoles": false
-        },
-        "zellenblock-gegen-zellenblock": {
-          "pos": 100,
-          "name": "Zellenblock gegen Zellenblock",
-          "category": "Team gegen Team",
-          "visibility": "public",
-          "description": "Ein alter Streit flammt auf: die Durchschauten gegen die Unerkannten. Alle, deren Rolle erraten wurde, spielen als Team gegen alle anderen. Jeder im Siegerteam erhält 1 Münze. Gibt es nur ein Lager, spielen alle gegeneinander, und der Sieger erhält 2 Münzen.",
-          "effect": "camps",
-          "requiresRoles": true
-        },
-        "der-kerkermeister-will-seinen-anteil": {
-          "pos": 110,
-          "name": "Der Kerkermeister will seinen Anteil",
-          "category": "Fluch mit Ausweg",
-          "visibility": "public",
-          "description": "Der Kerkermeister wankt zum reichsten Gefangenen und hält die Hand auf. Wer die meisten Münzen hat, verliert 2 Münzen, außer er gewinnt ein Duell gegen einen Herausforderer seiner Wahl.",
-          "effect": "purse",
-          "requiresRoles": false
-        },
-        "frischfleisch": {
-          "pos": 120,
-          "name": "Frischfleisch",
-          "category": "Einer gegen alle",
-          "visibility": "public",
-          "description": "Die Tür kracht auf, ein neuer Gefangener wird hereingeworfen und wettet sofort: der Reichste gegen den ganzen Rest. Wer die meisten Münzen hat, spielt allein gegen alle anderen. Gewinnt er, erhält er 3 Münzen. Gewinnt die Gruppe, erhält jeder in der Gruppe 1 Münze.",
-          "effect": "stranger",
-          "requiresRoles": false
-        },
-        "die-wahrsagerin-aus-zelle-dreizehn": {
-          "pos": 130,
-          "name": "Die Wahrsagerin aus Zelle dreizehn",
-          "category": "Enthüllung",
-          "visibility": "public",
-          "description": "Durch die Gitter krächzt eine alte Stimme: „Der Reiche soll sein Geheimnis lüften!“ Wer die meisten Münzen hat, verrät ein Erkennungsmerkmal seiner Rolle oder zahlt 2 Münzen an die Spielbank.",
-          "effect": "oracle",
-          "requiresRoles": true
+          "requiresRoles": true,
+          "drinking": false
         },
         "das-gnadengesuch": {
           "pos": 140,
@@ -1504,7 +1427,8 @@
           "visibility": "public",
           "description": "Der Ärmste darf ein Gnadengesuch an den Kerkermeister richten, und der schnieft gerührt in seinen Bart. Wer die wenigsten Münzen hat, entscheidet: Alle erhalten 1 Münze, oder er selbst erhält 2 Münzen.",
           "effect": "crossroads",
-          "requiresRoles": false
+          "requiresRoles": false,
+          "drinking": false
         },
         "die-letzte-brotkruste": {
           "pos": 150,
@@ -1513,51 +1437,72 @@
           "visibility": "public",
           "description": "Im Verlies teilt man, oder man wird geteilt. Wer die meisten Münzen hat, schenkt einem Mitspieler seiner Wahl 2 Münzen oder zahlt 3 Münzen an die Spielbank.",
           "effect": "generosity",
-          "requiresRoles": false
+          "requiresRoles": false,
+          "drinking": false
         },
         "die-muenze-aus-dem-totenschaedel": {
           "pos": 160,
           "name": "Die Münze aus dem Totenschädel",
           "category": "Glück",
           "visibility": "public",
-          "description": "Der Kerkermeister fischt eine Münze aus einem Totenschädel und wirft sie für jeden Gefangenen einzeln. Für jeden wird eine Münze geworfen: Kopf bringt 1 Münze, Zahl kostet 1 Münze.",
-          "effect": "fate",
-          "requiresRoles": false
-        },
-        "der-kerkermeister-plaudert": {
-          "pos": 170,
-          "name": "Der Kerkermeister plaudert",
-          "category": "Segen, hält an",
-          "visibility": "public",
-          "description": "Der Kerkermeister ist so betrunken, dass er jedem alles erzählt, was er je gehört hat. Bis zum nächsten Ereignis kostet Raten keine Münze.",
-          "effect": "looseTongues",
-          "requiresRoles": true
-        },
-        "totenstille": {
-          "pos": 180,
-          "name": "Totenstille",
-          "category": "Ruhe",
-          "visibility": "public",
-          "description": "Der Kerkermeister schnarcht. Irgendwo tropft Wasser. Eine Ratte niest. Nichts geschieht.",
-          "effect": "calm",
-          "requiresRoles": false
+          "description": "Der Kerkermeister fischt eine alte Münze aus einem Totenschädel und möchte wissen, ob das Glück noch hier unten wohnt. Reihum sagt jeder „Kopf“ oder „Zahl“, dann wirft sein linker Nachbar eine echte Münze. Wer richtig angesagt hat, erhält 1 Münze, wer falsch lag, verliert 1 Münze. Tragt das Ergebnis für jeden in der App ein.",
+          "effect": "fateManual",
+          "requiresRoles": false,
+          "drinking": false
         },
         "gustav-bringt-ein-geschenk": {
           "pos": 190,
           "name": "Gustav bringt ein Geschenk",
           "category": "Glück",
           "visibility": "public",
-          "description": "Gustav, die Ratte, schleppt einen Beutel aus den Katakomben heran und legt ihn vor einen Gefangenen. Wem, entscheidet nur die Ratte. Die App lost einen Gefangenen aus, er erhält 4 Münzen.",
+          "description": "Gustav, die Ratte, schleppt einen Beutel aus den Katakomben heran und legt ihn vor einen Gefangenen. Wem, entscheidet nur die Ratte. Die App lost einen Gefangenen aus, er erhält 3 Münzen.",
           "effect": "lottery",
+          "requiresRoles": false,
+          "drinking": false
+        },
+        "der-erste-krug": {
+          "pos": 201,
+          "name": "Der erste Krug",
+          "category": "Rausch",
+          "visibility": "public",
+          "description": "Der Kerkermeister zapft sich am Fass unter dem Tisch den ersten Krug des Abends, bläst den Schaum über eure Köpfe und leert ihn in einem Zug. Dann zählt er seinen Schlüsselbund nach, zweimal, mit gerunzelter Stirn. Beim dritten Mal verzählt er sich und lacht zum ersten Mal an diesem Abend. „Ist ja Feiertag“, brummt er. Ein Schlüssel kostet ab sofort 1 Münze weniger.",
+          "effect": "jailerDrinks",
           "requiresRoles": false
         },
-        "die-liste-des-henkers": {
-          "pos": 200,
-          "name": "Die Liste des Henkers",
-          "category": "Fluch",
+        "das-lied-vom-henkersknoten": {
+          "pos": 202,
+          "name": "Das Lied vom Henkersknoten",
+          "category": "Rausch",
           "visibility": "public",
-          "description": "Von der Wendeltreppe weht ein Zettel herunter: die Liste des Henkers, ein Name dick unterstrichen. Die App lost einen Gefangenen aus, er verliert 2 Münzen. Die braucht er ohnehin nur noch für Kerzen bei der eigenen Beerdigung.",
-          "effect": "misfortune",
+          "description": "Der zweite Krug macht den Kerkermeister musikalisch. Er stimmt das Lied vom Henkersknoten an, alle elf Strophen, und schlägt mit dem Schlüsselbund den Takt auf die Tischplatte. Wer nicht mitsingt, bekommt einen bösen Blick. Wer mitsingt, bekommt einen Freundschaftspreis. Bei der siebten Strophe weiß er nicht mehr weiter und singt einfach noch einmal die erste. Ein Schlüssel kostet ab sofort 1 Münze weniger.",
+          "effect": "jailerDrinks",
+          "requiresRoles": false
+        },
+        "traenen-im-bier": {
+          "pos": 203,
+          "name": "Tränen im Bier",
+          "category": "Rausch",
+          "visibility": "public",
+          "description": "Beim dritten Krug wird der Kerkermeister rührselig. Mit zitternder Stimme erzählt er von seiner Mutter, die immer sagte, aus ihm werde einmal etwas Großes, und von dem Tag, an dem er stattdessen hier unten landete. Dicke Tränen tropfen in sein Bier. Er schnäuzt sich in den Ärmel, tätschelt dem nächstbesten Gefangenen die Wange und schluchzt: „Ihr seid die Einzigen, die mir je zugehört haben.“ Ein Schlüssel kostet ab sofort 1 Münze weniger.",
+          "effect": "jailerDrinks",
+          "requiresRoles": false
+        },
+        "der-tanz-mit-dem-gerippe": {
+          "pos": 204,
+          "name": "Der Tanz mit dem Gerippe",
+          "category": "Rausch",
+          "visibility": "public",
+          "description": "Nach dem vierten Krug hält es den Kerkermeister nicht mehr auf der Bank. Er holt das alte Gerippe aus Zelle sieben, legt ihm den Arm um die Hüfte und tanzt mit ihm eine Polka über den Tisch, mitten durch den Eintopf. Das Gerippe verliert dabei einen Arm, der Kerkermeister beinahe seine Hose. Als er keuchend wieder sitzt, hängt der Schlüsselbund nur noch lose an seinem Gürtel. Ein Schlüssel kostet ab sofort 1 Münze weniger.",
+          "effect": "jailerDrinks",
+          "requiresRoles": false
+        },
+        "der-letzte-tropfen": {
+          "pos": 205,
+          "name": "Der letzte Tropfen",
+          "category": "Rausch",
+          "visibility": "public",
+          "description": "Das Fass ist leer. Der Kerkermeister kippt es über seinem Krug aus, schüttelt es, horcht hinein und leckt zuletzt den Zapfhahn ab. Dann hält er Gustav, die Ratte, für den Burgherrn, sinkt vor ihr auf die Knie und schwört ihr ewige Treue. Als er sich am Tisch wieder hochgezogen hat, blinzelt er in die Runde: „Zwei Münzen, und der Schlüssel gehört euch. Wer seid ihr eigentlich?“ Billiger wird es nicht mehr, weiter als bis zwei zählt er heute nicht. Ein Schlüssel kostet ab sofort 1 Münze weniger.",
+          "effect": "jailerDrinks",
           "requiresRoles": false
         },
         "fund-im-eintopf": {
@@ -1650,50 +1595,115 @@
           "privateType": "task",
           "privateCoins": 2
         },
-        "der-erste-krug": {
-          "pos": 201,
-          "name": "Der erste Krug",
-          "category": "Rausch",
+        "kopfgeld": {
+          "pos": 310,
+          "name": "Kopfgeld",
+          "category": "Segen, hält an",
           "visibility": "public",
-          "description": "Der Kerkermeister zapft sich am Fass unter dem Tisch den ersten Krug des Abends, bläst den Schaum über eure Köpfe und leert ihn in einem Zug. Dann zählt er seinen Schlüsselbund nach, zweimal, mit gerunzelter Stirn. Beim dritten Mal verzählt er sich und lacht zum ersten Mal an diesem Abend. „Ist ja Feiertag“, brummt er. Ein Schlüssel kostet ab sofort 1 Münze weniger.",
-          "effect": "jailerDrinks",
-          "requiresRoles": false
+          "description": "Der Kerkermeister ist schrecklich neugierig und hört nichts lieber als eine gute Gefangenengeschichte. Doch hier unten will keiner reden. Wer ihm trotzdem etwas Wahres verrät, wird belohnt. Bis zur nächsten zufällig gezogenen Ereigniskarte bringt ein richtiger Tipp beim Raten 4 statt 3 Münzen. Gekaufte geheime Ereigniskarten beenden die Wirkung nicht.",
+          "effect": "bounty",
+          "requiresRoles": true,
+          "drinking": false
         },
-        "das-lied-vom-henkersknoten": {
-          "pos": 202,
-          "name": "Das Lied vom Henkersknoten",
-          "category": "Rausch",
+        "gefluester-zum-halben-preis": {
+          "pos": 320,
+          "name": "Geflüster zum halben Preis",
+          "category": "Segen, hält an",
           "visibility": "public",
-          "description": "Der zweite Krug macht den Kerkermeister musikalisch. Er stimmt das Lied vom Henkersknoten an, alle elf Strophen, und schlägt mit dem Schlüsselbund den Takt auf die Tischplatte. Wer nicht mitsingt, bekommt einen bösen Blick. Wer mitsingt, bekommt einen Freundschaftspreis. Bei der siebten Strophe weiß er nicht mehr weiter und singt einfach noch einmal die erste. Ein Schlüssel kostet ab sofort 1 Münze weniger.",
-          "effect": "jailerDrinks",
-          "requiresRoles": false
+          "description": "Durch die Gitter von Zelle dreizehn flüstert die Wahrsagerin: „Heute zum halben Preis, meine Täubchen.“ Bis zur nächsten zufällig gezogenen Ereigniskarte kostet eine geheime Ereigniskarte 1 statt 2 Münzen. Gekaufte geheime Ereigniskarten beenden die Wirkung nicht.",
+          "effect": "secretSale",
+          "requiresRoles": false,
+          "drinking": false
         },
-        "traenen-im-bier": {
-          "pos": 203,
-          "name": "Tränen im Bier",
-          "category": "Rausch",
+        "der-kerkermeister-verrechnet-sich": {
+          "pos": 330,
+          "name": "Der Kerkermeister verrechnet sich",
+          "category": "hält an",
           "visibility": "public",
-          "description": "Beim dritten Krug wird der Kerkermeister rührselig. Mit zitternder Stimme erzählt er von seiner Mutter, die immer sagte, aus ihm werde einmal etwas Großes, und von dem Tag, an dem er stattdessen hier unten landete. Dicke Tränen tropfen in sein Bier. Er schnäuzt sich in den Ärmel, tätschelt dem nächstbesten Gefangenen die Wange und schluchzt: „Ihr seid die Einzigen, die mir je zugehört haben.“ Ein Schlüssel kostet ab sofort 1 Münze weniger.",
-          "effect": "jailerDrinks",
-          "requiresRoles": false
+          "description": "Der Kerkermeister zählt an seinen Fingern nach und kommt jedes Mal auf etwas anderes. Am Ende ist er felsenfest überzeugt, ein Schlüssel habe schon immer 4 Münzen gekostet, und lässt sich davon nicht mehr abbringen. Bis zur nächsten zufällig gezogenen Ereigniskarte kostet ein Schlüssel 4 Münzen, ganz gleich, was er vorher gekostet hat. Gekaufte geheime Ereigniskarten beenden die Wirkung nicht.",
+          "effect": "keyPriceSet",
+          "requiresRoles": false,
+          "drinking": false
         },
-        "der-tanz-mit-dem-gerippe": {
-          "pos": 204,
-          "name": "Der Tanz mit dem Gerippe",
-          "category": "Rausch",
+        "teure-geruechte": {
+          "pos": 340,
+          "name": "Teure Gerüchte",
+          "category": "Fluch, hält an",
           "visibility": "public",
-          "description": "Nach dem vierten Krug hält es den Kerkermeister nicht mehr auf der Bank. Er holt das alte Gerippe aus Zelle sieben, legt ihm den Arm um die Hüfte und tanzt mit ihm eine Polka über den Tisch, mitten durch den Eintopf. Das Gerippe verliert dabei einen Arm, der Kerkermeister beinahe seine Hose. Als er keuchend wieder sitzt, hängt der Schlüsselbund nur noch lose an seinem Gürtel. Ein Schlüssel kostet ab sofort 1 Münze weniger.",
-          "effect": "jailerDrinks",
-          "requiresRoles": false
+          "description": "Der Schreiber des Henkers lauscht an der Tür und notiert jede Vermutung, die er hört. Wer laut rät, muss ihm sein Schweigen abkaufen. Bis zur nächsten zufällig gezogenen Ereigniskarte kostet Raten 2 statt 1 Münze. Gekaufte geheime Ereigniskarten beenden die Wirkung nicht.",
+          "effect": "costlyGuess",
+          "requiresRoles": true,
+          "drinking": false
         },
-        "der-letzte-tropfen": {
-          "pos": 205,
-          "name": "Der letzte Tropfen",
-          "category": "Rausch",
+        "taschen-leeren": {
+          "pos": 350,
+          "name": "Taschen leeren!",
+          "category": "Enthüllung",
           "visibility": "public",
-          "description": "Das Fass ist leer. Der Kerkermeister kippt es über seinem Krug aus, schüttelt es, horcht hinein und leckt zuletzt den Zapfhahn ab. Dann hält er Gustav, die Ratte, für den Burgherrn, sinkt vor ihr auf die Knie und schwört ihr ewige Treue. Als er sich am Tisch wieder hochgezogen hat, blinzelt er in die Runde: „Zwei Münzen, und der Schlüssel gehört euch. Wer seid ihr eigentlich?“ Billiger wird es nicht mehr, weiter als bis zwei zählt er heute nicht. Ein Schlüssel kostet ab sofort 1 Münze weniger.",
-          "effect": "jailerDrinks",
-          "requiresRoles": false
+          "description": "Ein Gerücht macht die Runde: Einer von euch hat dem Kerkermeister heimlich Schlüssel abgeluchst. Auf „Eins, zwei, drei, Taschen leeren!“ zeigen alle gleichzeitig auf den, den sie verdächtigen. Wer die meisten Finger auf sich hat, wählt: Er zahlt 2 Münzen an die Spielbank, oder er zeigt allen, welche Schlüssel er schon hat. Bei Gleichstand entscheidet jeder der Gleichplatzierten für sich.",
+          "effect": "searchPockets",
+          "requiresRoles": false,
+          "drinking": false
+        },
+        "weihwasser-gegen-gespenster": {
+          "pos": 360,
+          "name": "Weihwasser gegen Gespenster",
+          "category": "Trinkrunde",
+          "visibility": "public",
+          "description": "Der Kerkermeister kommt mit einer staubigen Flasche aus dem Keller. Er ist sich ganz sicher, dass darin Weihwasser gegen die Gespenster ist. Es ist Schnaps. Wer die wenigsten Münzen hat, ist jetzt Mundschenk und schenkt jedem einen Kurzen ein. Dann stoßen alle gemeinsam an: „Gegen die Gespenster!“",
+          "effect": "spotlightFewest",
+          "requiresRoles": false,
+          "drinking": true
+        },
+        "ueber-geld-spricht-man-nicht": {
+          "pos": 370,
+          "name": "Über Geld spricht man nicht",
+          "category": "Trinkregel",
+          "visibility": "public",
+          "description": "Die Kerkerköchin kann das ewige Gerede über Geld nicht mehr hören und droht mit der Kelle: „Wer jetzt noch vom Geld anfängt, der kriegt die Kelle zu spüren!“ Bis zum nächsten Minispiel spricht niemand mehr über Münzen, Taler oder Gold. Auch ähnliche Wörter und alles, was dasselbe meint, sind verboten. Erlaubt sind sie nur, wenn jemand sie aus der App vorliest. Wer es trotzdem tut und erwischt wird, trinkt einen Schluck.",
+          "effect": "untilMinigame",
+          "requiresRoles": false,
+          "drinking": true
+        },
+        "der-wasserfall-der-katakomben": {
+          "pos": 380,
+          "name": "Der Wasserfall der Katakomben",
+          "category": "Trinkrunde",
+          "visibility": "public",
+          "description": "Durch die Decke tropft es, erst langsam, dann immer mehr: Oben in der Halle ist ein Fass umgekippt. Legt eine Reihenfolge fest: Wer am wenigsten im Glas hat, kommt zuerst, wer am meisten hat, zuletzt. Auf „Prost!“ setzen alle gleichzeitig an. Der Erste darf aufhören, wann er will. Jeder andere darf erst aufhören, wenn der vor ihm aufgehört hat. Wer sein Glas leer hat, hört auf.",
+          "effect": "calm",
+          "requiresRoles": false,
+          "drinking": true
+        },
+        "auf-alles-und-jeden": {
+          "pos": 390,
+          "name": "Auf alles und jeden",
+          "category": "Trinkrunde",
+          "visibility": "public",
+          "description": "Der Kerkermeister will unbedingt anstoßen, weiß aber nicht mehr, worauf. Wem zuerst ein Trinkspruch einfällt, steht auf und beginnt. Danach darf jeder, der mag, einen weiteren Trinkspruch ausbringen, auch mehrmals. Nach jedem Trinkspruch trinken alle gemeinsam einen Schluck. Fällt niemandem mehr etwas ein, ist die Runde vorbei.",
+          "effect": "calm",
+          "requiresRoles": false,
+          "drinking": true
+        },
+        "zahltag-im-verlies": {
+          "pos": 400,
+          "name": "Zahltag im Verlies",
+          "category": "Trinkrunde",
+          "visibility": "public",
+          "description": "Heute wird nicht mit Münzen bezahlt, sondern mit Schlücken. Reihum bestimmt jeder eine Person und verteilt so viele Schlücke an sie, wie er gerade Münzen hat. Die Münzen selbst behält er.",
+          "effect": "coinCount",
+          "requiresRoles": false,
+          "drinking": true
+        },
+        "die-runde-des-reichen": {
+          "pos": 410,
+          "name": "Die Runde des Reichen",
+          "category": "Trinkrunde",
+          "visibility": "public",
+          "description": "Wer am meisten hat, gibt einen aus. Wer die meisten Münzen hat, bestimmt zwei Mitspieler, die mit ihm einen Schluck trinken. Bei Gleichstand bestimmt jeder der Reichsten einen.",
+          "effect": "spotlightMost",
+          "requiresRoles": false,
+          "drinking": true
         }
       }
     }

@@ -278,7 +278,7 @@ function refreshFields() {
 function editorSignature() {
   const e = currentEntry();
   return [cms.adventure, cms.section, cms.entry || "", e ? "present" : "gone", e?.category || "", e?.visibility || "",
-    e?.effect || "", String(e?.requiresRoles === true),
+    e?.effect || "", String(e?.requiresRoles === true), String(e?.drinking === true),
     cms.dialog ? JSON.stringify(cms.dialog) : ""].join("|");
 }
 
@@ -334,6 +334,7 @@ function renderList() {
           <span class="right">
             ${cms.section === "events" && e.visibility === "private" ? `<span class="chip private">privat</span>` : ""}
             ${cms.section === "events" && eventRequiresRoles(e) ? `<span class="chip" title="Nur in Partien mit Rollen">Rollen</span>` : ""}
+            ${cms.section === "events" && e.drinking === true ? `<span class="chip" title="Nur im Trinkspiel">Trinken</span>` : ""}
             ${here.map(p => `<span class="here-badge" title="${escapeHtml(p.email)} arbeitet hier">${escapeHtml(initials(p.email))}</span>`).join("")}
           </span>
         </button>`;
@@ -522,6 +523,8 @@ function checkHtml() {
   const roleEvents = inGame.filter(eventRequiresRoles).length;
   if (roleEvents && roleEvents === inGame.length) notes.push(`Alle Ereignisse brauchen Rollen. Ohne Rollen ist das Abenteuer nicht spielbar.`);
   else if (roleEvents) notes.push(`${roleEvents} ${roleEvents === 1 ? "Ereignis kommt" : "Ereignisse kommen"} nur in Partien mit Rollen vor. Ohne Rollen bleiben ${inGame.length - roleEvents}.`);
+  const drinkingCount = inGame.filter(e => e.drinking === true).length;
+  if (drinkingCount) notes.push(`${drinkingCount} ${drinkingCount === 1 ? "Ereignis kommt" : "Ereignisse kommen"} nur vor, wenn in den Einstellungen das Trinkspiel an ist.`);
   if (privateCount) notes.push(`${privateCount} private ${privateCount === 1 ? "Ereignis geht" : "Ereignisse gehen"} jeweils an einen einzelnen Spieler auf seine QR-Seite.`);
   if (!problems.length && !notes.length) return `<div class="message">Spielbereit: ${roles.length} Rollen, ${minigameList.length} Minispiele, ${eventList.length} Ereignisse.</div>`;
   return `
@@ -627,6 +630,13 @@ function entryEditor() {
             <p class="explain">${e.requiresRoles === true
               ? "Nur mit Rollen: In Partien, die ohne Rollen gespielt werden, bleibt die Karte aus dem Stapel."
               : "Immer: Die Karte kommt auch in Partien ohne Rollen vor. Bezieht sich der Text auf Rollen, stell hier „Nur mit Rollen“ ein."}</p>`}
+      </div>
+      <div class="group">
+        <h3>Trinkspiel</h3>
+        ${field([...p, "drinking"], "Ist das eine Trinkkarte?", "flag", { values: { false: "Nein", true: "Ja, nur im Trinkspiel" }, defaultValue: false })}
+        <p class="explain">${e.drinking === true
+          ? "Trinkkarte: Sie kommt nur in den Stapel, wenn in den Einstellungen der App das Trinkspiel eingeschaltet ist."
+          : "Keine Trinkkarte: Sie kommt immer vor. Geht es auf der Karte ums Trinken, stell hier „Ja“ ein, dann lässt sie sich mit dem Trinkspiel abschalten."}</p>
       </div>`;
   }
   return html;
@@ -700,7 +710,7 @@ function teamHtml() {
 const FIELD_LABELS = { privateType: "Wann Münzen", privateCoins: "Münzen", name: "Name", startingCoins: "Startkapital", background: "Hintergrundgeschichte", character: "Charakter",
   traits: "Erkennungsmerkmale", ability: "Fähigkeit", task: "Geheime Aufgabe", text: "Beschreibung", mechanic: "Mechanik", bonus: "Bonus",
   category: "Kategorie", description: "Beschreibung", reward: "Belohnung", visibility: "Sichtbarkeit", effect: "Wirkung", setting: "Setting",
-  requiresRoles: "Nur mit Rollen",
+  requiresRoles: "Nur mit Rollen", drinking: "Trinkkarte",
   story: "Geschichte", epilogue: "Schlusstext", terms: "Begriffe", title: "Überschrift", paragraphs: "Text", closing: "Letzter Satz",
   before: "Text vorher", after: "Text nachher", pos: "Reihenfolge" };
 function historyText(v) {
@@ -831,7 +841,7 @@ const TEMPLATES = {
   roles: () => ({ name: "Neue Rolle", title: "", startingCoins: 4, background: "", character: "", traits: [],
     ability: { name: "", text: "", mechanic: "" }, task: { name: "", text: "", bonus: 2 } }),
   minigames: () => ({ name: "Neues Minispiel", category: "all", description: "", reward: { winner: 2 } }),
-  events: () => ({ name: "Neues Ereignis", category: "", visibility: "public", description: "", effect: "calm", requiresRoles: false })
+  events: () => ({ name: "Neues Ereignis", category: "", visibility: "public", description: "", effect: "calm", requiresRoles: false, drinking: false })
 };
 
 function nextPos(collection) { return Math.max(0, ...Object.values(collection || {}).map(e => e.pos || 0)) + 10; }

@@ -16,6 +16,7 @@ function screenNames() {
       ? `<button class="btn-quiet" onclick="addName()">+ ${setupAdventure().player} hinzufügen</button>` : ""}
     <p class="muted" id="names-error"></p>
     ${modeCard()}
+    ${drinkingCard()}
     <button class="btn" id="deal-btn" onclick="dealRoles()">${settings.roles !== false ? "Rollen geheim verteilen" : "Abenteuer beginnen"}</button>
   `;
 }
@@ -37,6 +38,24 @@ function modeCard() {
       </div>
       <ul class="mode-facts">${facts.map(f => `<li>${f}</li>`).join("")}</ul>
       <p class="mode-warning" id="reroll-note" hidden></p>
+    </section>`;
+}
+
+// Drinking game on or off, only for adventures with drinking cards.
+function drinkingCard() {
+  const a = setupAdventure();
+  if (!hasDrinkingCards(a)) return "";
+  const on = drinkingOn();
+  const count = a.events.filter(e => !e.deleted && !e.retired && e.drinking).length;
+  const cards = `${count} ${count === 1 ? "Ereigniskarte" : "Ereigniskarten"} mit Trinkrunden und Trinkregeln`;
+  return `
+    <section class="mode-card" aria-label="Trinkspiel">
+      <div class="mode-head">
+        <span class="mode-icon">${icon("mug")}</span>
+        <span class="mode-title"><span class="label">Trinkspiel</span><strong>${on ? "Mit Trinkkarten" : "Ohne Trinkkarten"}</strong></span>
+        <button class="mode-change" onclick="openSettingsAt('drinking')">Ändern</button>
+      </div>
+      <ul class="mode-facts"><li>${on ? `${cards} sind im Stapel. Wasser oder Saft zählen genauso.` : `${cards} bleiben aus dem Stapel.`}</li></ul>
     </section>`;
 }
 
@@ -202,9 +221,9 @@ function dealRoles() {
   state.guess = null;
   state.ability = null;
   state.buyCard = null;
-  state.seersNight = false;
+  state.lasting = null;
+  state.tableRule = null;
   state.winBonus = null;
-  state.freeGuesses = false;
   state.lastWinnings = {};
   state.lastParticipants = [];
   state.escaped = null;

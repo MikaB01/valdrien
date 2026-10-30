@@ -9,10 +9,12 @@ function screenEvent() {
     const chosen = e.done[gi];
     const buttons = group.buttons.map((k, bi) => {
       if (chosen === bi) return `<button class="action chosen" disabled>✓ ${k.text}</button>`;
-      return `<button class="action" onclick="eventAction(${gi}, ${bi})" ${chosen !== undefined ? "disabled" : ""}>${k.text}</button>`;
+      return `<button class="action" onclick="eventAction(${gi}, ${bi})" ${chosen !== undefined || k.disabled ? "disabled" : ""}>${k.text}</button>`;
     }).join("");
-    return `<div class="action-group">${group.title ? `<span class="label">${group.title}</span>` : ""}${buttons}</div>`;
+    const title = group.title ? `<span class="label">${group.title}</span>` : "";
+    return `<div class="action-group">${title}${group.row ? `<div class="action-row">${buttons}</div>` : buttons}</div>`;
   }).join("");
+  const pick = effect.pick && pickHtml(effect.pick, e.picked || []);
 
   return `
     ${e.automatic
@@ -30,9 +32,39 @@ function screenEvent() {
     ${cardNotes(e.card)}
     ${pauseControls()}
     ${effect.note ? `<p class="note">${effect.note}</p>` : ""}
+    ${effect.html || ""}
+    ${pick || ""}
     ${groups ? `<div class="actions">${groups}</div>` : ""}
     ${eventPending() ? "" : `<button class="btn" onclick="show('overview')">Weiter</button>`}
   `;
+}
+
+// Players the table taps before the card's buttons appear (e.g. who is suspected).
+function pickHtml(pick, picked) {
+  return `
+    <div class="action-group">
+      <span class="label">${pick.title}</span>
+      ${pick.players.map(i => `
+        <button class="action toggle ${picked.includes(i) ? "chosen" : ""}" aria-pressed="${picked.includes(i)}" onclick="eventPick(${i})">${picked.includes(i) ? "✓ " : ""}${playerName(i)}</button>`).join("")}
+    </div>
+    <button class="btn" onclick="eventPickDone()" ${picked.length ? "" : "disabled"}>${pick.confirm}</button>`;
+}
+
+function eventPick(i) {
+  const e = state.event;
+  if (!e || e.pickDone) return;
+  const picked = e.picked || [];
+  e.picked = picked.includes(i) ? picked.filter(j => j !== i) : picked.concat(i);
+  save();
+  render();
+}
+
+function eventPickDone() {
+  const e = state.event;
+  if (!e || !(e.picked || []).length) return;
+  e.pickDone = true;
+  save();
+  render();
 }
 
 // Played cards leave the game; only reshuffleEvents() brings them back, once none are left.
@@ -92,10 +124,11 @@ function drawEvent(automatic, fixedIndex) {
   cardDrawn("event");
   if (EVENTS[index].isPrivate) { privateEvent(index, automatic); return; }
   // a new card ends everything that lasted "until the next event"
-  state.seersNight = false;
-  state.freeGuesses = false;
-  const onDraw = EFFECTS_ON_DRAW[EVENTS[index].effect];
+  const effect = EVENTS[index].effect;
+  state.lasting = null;
+  const onDraw = EFFECTS_ON_DRAW[effect];
   const remembered = onDraw ? onDraw(index) : null;
+  if (LASTING[effect]) state.lasting = { effect, title: EVENTS[index].title };
   state.lastWinnings = {};
   state.lastParticipants = [];
 
@@ -187,6 +220,7 @@ function drawTimedCard() {
 
 // A player buys a secret event card: coins go to the bank, the card goes to the secret view.
 function privateCards() { return playableEvents().filter(i => EVENTS[i].isPrivate); }
+function privateCardCost() { return lasting("secretSale") ? RULES.privateCardCostSale : RULES.privateCardCost; }
 
 function startBuyCard() {
   state.buyCard = { player: null };
@@ -195,7 +229,7 @@ function startBuyCard() {
 
 function screenBuyCard() {
   const b = state.buyCard || { player: null };
-  const cost = RULES.privateCardCost;
+  const cost = privateCardCost();
   const heading = `<div class="heading"><span class="eyebrow">Geheimkarte</span><h2>Wer kauft eine geheime Karte?</h2></div>`;
   if (!privateCards().length) {
     return `${heading}<p class="note">In diesem Abenteuer gibt es noch keine geheimen Ereigniskarten. Im CMS lassen sie sich mit der Sichtbarkeit „geheim“ anlegen.</p>`;
@@ -203,7 +237,7 @@ function screenBuyCard() {
   if (b.player === null || !state.players[b.player]) {
     return `
       ${heading}
-      <p class="muted">Eine geheime Ereigniskarte kostet ${coinsText(cost)}. Nur wer sie kauft, erfährt, was darauf steht.</p>
+      <p class="muted">Eine geheime Ereigniskarte kostet ${lasting("secretSale") ? `gerade nur ${coinsText(cost)} (${state.lasting.title})` : coinsText(cost)}. Nur wer sie kauft, erfährt, was darauf steht.</p>
       <div class="choices">
         ${state.players.map((s, i) => `
           <button class="choice" onclick="state.buyCard.player = ${i}; render()" ${s.coins < cost ? "disabled" : ""}>
@@ -226,7 +260,7 @@ function screenBuyCard() {
 function buyCard() {
   const i = state.buyCard && state.buyCard.player;
   const s = state.players[i];
-  const cost = RULES.privateCardCost;
+  const cost = privateCardCost();
   const cards = privateCards();
   if (!s || !cards.length || s.coins < cost) return;
   const had = new Set((s.secrets || []).map(p => p.title));
@@ -294,7 +328,7 @@ async function showConnection() {
 function eventAction(gi, bi) {
   const e = state.event;
   const button = eventEffect().groups[gi].buttons[bi];
-  if (e.done[gi] !== undefined) return;
+  if (e.done[gi] !== undefined || button.disabled) return;
   const before = state.players.map(s => s.coins);
   if (button.apply) button.apply();
   e.losses = e.losses || {}; // remembered for luckBringer and heartySoup
@@ -317,7 +351,8 @@ function eventAction(gi, bi) {
 function eventPending() {
   const e = state.event;
   if (!e || e.isPrivate) return false;
-  return (eventEffect().groups || []).some((a, i) => e.done[i] === undefined);
+  const effect = eventEffect();
+  return Boolean(effect.pick) || (effect.groups || []).some((a, i) => e.done[i] === undefined);
 }
 
 // Next n cards that would be drawn (top first) without drawing them; fewer if fewer are left.

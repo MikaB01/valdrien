@@ -58,8 +58,8 @@ function seatData(s) {
     timerEnd: state.running && state.timerEnd && !timerPaused() && settings.showTimer !== false ? state.timerEnd : 0,
     secrets: (s.secrets || []).slice(-12).reverse(),
     notes: [
-      state.seersNight && `Die Nacht der Seher: Bis zum nächsten Ereignis bringt ein Treffer beim Raten ${RULES.hitRewardSeers} Münzen.`,
-      state.freeGuesses && "Lose Zungen: Bis zum nächsten Ereignis kostet Raten keine Münze.",
+      lastingNote(),
+      state.tableRule && tableRuleNote(),
       state.winBonus && state.players[state.winBonus.player] === s && `Gewinnst du das nächste Minispiel, gibt es ${state.winBonus.amount} Münzen extra.`,
       state.pause && state.players[state.pause.player] === s && "Du machst Pinkelpause: Ereigniskarten gelten nicht für dich, bis du am Spielleiter-Handy wieder einsteigst."
     ].filter(Boolean)

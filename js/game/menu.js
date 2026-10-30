@@ -121,6 +121,23 @@ function rolesSection(segment) {
       </section>`;
 }
 
+// Only offered while an adventure has drinking cards (the Henkersmahl). Unlike the roles it applies at once.
+function drinkingSection(segment) {
+  if (!Object.values(ADVENTURES).some(hasDrinkingCards)) return "";
+  const on = drinkingOn();
+  return `
+      <section id="settings-drinking" class="${settingsFocus === "drinking" ? "focus" : ""}">
+        ${sectionHead("drinking", "Trinkspiel")}
+        ${hint("drinking", on
+          ? "Ereigniskarten mit Trinkrunden und Trinkregeln sind im Stapel. Alkohol ist trotzdem nie Pflicht: Wasser oder Saft zählen genauso. Gilt sofort, auch in einer laufenden Partie."
+          : "Ereigniskarten mit Trinkrunden und Trinkregeln bleiben aus dem Stapel, ihr spielt ganz normal. Gilt sofort, auch in einer laufenden Partie.")}
+        <div class="segmented" role="group" aria-label="Trinkspiel">
+          ${segment(on, "setSetting('drinking', true)", "Mit Trinkkarten")}
+          ${segment(!on, "setSetting('drinking', false)", "Ohne")}
+        </div>
+      </section>`;
+}
+
 function screenSettings() {
   const random = settings.timerMode === "random";
   const visible = settings.showTimer !== false;
@@ -148,6 +165,7 @@ function screenSettings() {
         </div>
       </section>
       ${rolesSection(segment)}
+      ${drinkingSection(segment)}
       <section>
         ${sectionHead("time", "Zeit bis zum Ereignis")}
         ${hint("time", random ? randomHint() : "Nach Ablauf der Zeit deckt die App automatisch eine Ereigniskarte auf. Beim Wandern passen 15 Minuten gut, am Tisch eher 10.")}

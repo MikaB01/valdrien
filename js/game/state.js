@@ -11,6 +11,7 @@ let settings = {
   minigameShare: RULES.minigameShareDefault,
   sound: true, // short reward sound when the time is up
   roles: true, // deal secret roles; without them guessing, abilities, tasks and role events are left out
+  drinking: false, // drinking game: event cards marked "drinking" join the deck (applies at once, also in a running game)
   rerolls: RULES.rerollsDefault // how often each player may draw a new role during the handover
 };
 try { Object.assign(settings, JSON.parse(localStorage.getItem("valdrien-settings") || "{}")); } catch (e) {}
@@ -37,6 +38,8 @@ function setSetting(key, value) {
   render();
 }
 
+function drinkingOn() { return settings.drinking === true; }
+
 function rerollSetting() {
   const n = Math.round(Number(settings.rerolls));
   return Number.isFinite(n) ? Math.max(0, Math.min(Math.max(...RULES.rerollOptions), n)) : RULES.rerollsDefault;
@@ -51,7 +54,8 @@ let sheet = null;
 // players[]: { name, role (index into ROLES, null without roles), coins, revealed, abilityUsed, taskDone, accessCode, secrets[], rerolls }
 // roles: false for a game without roles (fixed when the game is dealt); rerollLimit, discardedRoles: drawing new roles at the handover.
 // Further fields are added during play: adventure, running, timerEnd, eventDeck (top = last), playedEvents, playedMinigames, event, minigame,
-// timerPaused, timerDuration, timerWindow, guess, ability, peekRole, seersNight, freeGuesses, winBonus, lastWinnings, lastParticipants, slots, session,
+// timerPaused, timerDuration, timerWindow, guess, ability, peekRole, lasting (effect until the next event card), tableRule (until the next
+// minigame), winBonus, lastWinnings, lastParticipants, slots, session,
 // and for the newer abilities and the keys goal: players[].keys, buyKey, escaped, tip, pause, curiosity, cardCount.
 let state = {
   screen: "start",
@@ -72,6 +76,11 @@ function load() {
   } catch (e) {}
   // games saved while event cards still started minigames
   if (state.minigame && state.minigame.fromEvent) state.minigame = null;
+  // games saved before lasting effects were kept in state.lasting
+  if (state.seersNight) state.lasting = { effect: "seers", title: "Die Nacht der Seher" };
+  else if (state.freeGuesses) state.lasting = { effect: "looseTongues", title: "Lose Zungen" };
+  delete state.seersNight;
+  delete state.freeGuesses;
   selectAdventureData(state.adventure);
 }
 

@@ -71,6 +71,11 @@ function screenRules() {
       </section>
 
       <section>
+        <h3>Trinkspiel (Verlies)</h3>
+        <p>Im Henkersmahl gibt es Ereigniskarten mit Trinkrunden und Trinkregeln. Sie kommen nur in den Stapel, wenn in den Einstellungen das Trinkspiel eingeschaltet ist, sonst spielt ihr ganz normal ohne sie. Die Einstellung gilt sofort, auch mitten in einer Partie. Alkohol ist auch im Trinkspiel nie Pflicht.</p>
+      </section>
+
+      <section>
         <h3>Ohne Rollen spielen</h3>
         <p>In den Einstellungen lassen sich die geheimen Rollen vor einer Partie abschalten. Dann gibt es kein Raten, keine Fähigkeiten und keine geheimen Aufgaben. Ereigniskarten, die Rollen brauchen, bleiben aus dem Stapel. Jeder startet mit ${coinsText(RULES.startingCoinsFallback)}, es spielen ${RULES.minPlayers} bis ${RULES.maxPlayersWithoutRoles} Spieler, und am Ende zählen nur die Münzen.</p>
       </section>

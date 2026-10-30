@@ -1,29 +1,54 @@
 // Event card mechanics, keyed like CATALOG.effects. A handler receives a toolkit k
 // (k.all = players the card applies to, k.b = coin snapshot at draw time {all, most, fewest, revealed, hidden}, k.allEqual, k.e)
-// and returns { who, note, groups: [{ title, buttons: [{ text, apply, stay? }] }] }.
+// and returns { who, note, html, pick, groups: [{ title, row, buttons: [{ text, apply, stay?, disabled? }] }] }.
 // who: [{ label, players }] names the players the card is about (shown prominently). Exactly one button per group is pressed.
+// pick: { title, players, confirm } lets the table tap several players first (state.event.picked); the groups follow once confirmed.
 const EFFECTS = {};
 
-// Run when the card is drawn (effects that last until the next event card, or change the game at once).
-// May return fields to remember on state.event.
+// Effects that last until the next event card from the deck; bought secret cards do not end them.
+// state.lasting = { effect, title } of the card that started it.
+const LASTING = {
+  seers: () => `Bis zum nächsten Ereignis bringt ein Treffer beim Raten ${RULES.hitRewardSeers} Münzen.`,
+  bounty: () => `Bis zum nächsten Ereignis bringt ein Treffer beim Raten ${RULES.hitRewardBounty} Münzen.`,
+  looseTongues: () => "Bis zum nächsten Ereignis kostet Raten keine Münze.",
+  costlyGuess: () => `Bis zum nächsten Ereignis kostet Raten ${coinsText(RULES.guessCostCostly)}.`,
+  secretSale: () => `Bis zum nächsten Ereignis kostet eine geheime Karte ${coinsText(RULES.privateCardCostSale)}.`,
+  keyPriceSet: () => `Bis zum nächsten Ereignis kostet ein Schlüssel ${coinsText(RULES.keyPrice.muddled)}.`
+};
+function lasting(effect) { return Boolean(state.lasting) && state.lasting.effect === effect; }
+function lastingNote() {
+  const l = state.lasting;
+  return l && LASTING[l.effect] ? `${l.title}: ${LASTING[l.effect]()}` : "";
+}
+
+// Run when the card is drawn (effects that change the game at once). May return fields to remember on state.event.
 const EFFECTS_ON_DRAW = {
-  seers: () => { state.seersNight = true; },
-  looseTongues: () => { state.freeGuesses = true; },
   jailerDrinks: () => {
-    const before = keyPrice();
+    const before = jailerPrice();
     state.jailerDrinks = (state.jailerDrinks || 0) + 1;
-    return { keyPrice: [before, keyPrice()] };
-  }
+    return { keyPrice: [before, jailerPrice()] };
+  },
+  keyPriceSet: () => ({ keyPrice: [jailerPrice(), RULES.keyPrice.muddled] }),
+  untilMinigame: index => { state.tableRule = { title: EVENTS[index].title }; }
 };
 
 // A card whose effect needs a state the game has not reached yet (no role guessed, all coins equal, the jailer's
 // earlier rounds) stays in the deck but is skipped until this returns true, so it never comes as a dud.
 // New effects bound to a game state belong here too.
+const guessesLeft = () => state.players.some(s => !s.revealed);
 const EFFECTS_READY = {
   exposed: () => inPlay().some(i => state.players[i].revealed),
   disguise: () => inPlay().some(i => !state.players[i].revealed),
   envy: () => new Set(inPlay().map(i => state.players[i].coins)).size > 1,
-  jailerDrinks: index => keysGoal() && keyPrice() > RULES.keyPrice.min && jailerStage(index) === (state.jailerDrinks || 0)
+  seers: guessesLeft,
+  bounty: guessesLeft,
+  looseTongues: guessesLeft,
+  costlyGuess: guessesLeft,
+  secretSale: () => privateCards().length > 0,
+  untilMinigame: () => remainingMinigames().length > 0,
+  jailerDrinks: index => keysGoal() && jailerPrice() > RULES.keyPrice.min && jailerStage(index) === (state.jailerDrinks || 0),
+  keyPriceSet: () => keysGoal() && jailerPrice() !== RULES.keyPrice.muddled,
+  searchPockets: () => keysGoal() && inPlay().some(i => totalKeys(i) > 0)
 };
 
 function eventReady(index) {
@@ -110,12 +135,6 @@ EFFECTS.lottery = k => {
     text: `${playerName(i)} erhält ${coinsText(RULES.lotteryWin)}`, apply: () => addCoins([i], RULES.lotteryWin) }] }] };
 };
 
-EFFECTS.misfortune = k => {
-  const i = luckyOne(k);
-  return { who: [{ label: "Das Los fällt auf", players: [i] }], groups: [{ buttons: [{
-    text: `${playerName(i)} verliert ${coinsText(RULES.misfortuneLoss)}`, apply: () => addCoins([i], -RULES.misfortuneLoss) }] }] };
-};
-
 EFFECTS.oracle = ({ b, all }) => ({ who: [{ label: coinGroupLabel("most", b.most, all), players: b.most }], groups: b.most.map(i => ({ title: `${playerName(i)}`, buttons: [
   { text: `${playerName(i)} verrät ein Merkmal`, apply: () => {} },
   { text: `${playerName(i)} schweigt und zahlt 2 Münzen`, apply: () => addCoins([i], -2) }
@@ -133,13 +152,46 @@ EFFECTS.generosity = ({ b, all }) => ({ who: [{ label: `Entscheidet: ${coinGroup
   { text: `${playerName(i)} zahlt 3 Münzen an die Spielbank`, apply: () => addCoins([i], -3) }
 ] })) });
 
-EFFECTS.looseTongues = ({ all }) =>
-  ({ who: everyone(all), note: "Die App hat es sich gemerkt: Bis zum nächsten Ereignis kostet Raten keine Münze." });
-
 EFFECTS.jailerDrinks = ({ e }) => {
-  const [before, after] = e.keyPrice || [keyPrice() + 1, keyPrice()];
+  const [before, after] = e.keyPrice || [jailerPrice() + 1, jailerPrice()];
   return { note: `Der Kerkermeister ist jetzt ${jailerMood(after)}. Neuer Schlüsselpreis: ${coinsText(after)} statt ${before}.` };
 };
 
-EFFECTS.seers = ({ all }) =>
-  ({ who: everyone(all), note: `Die App hat es sich gemerkt: Bis zum nächsten Ereignis bringt ein Treffer beim Raten ${RULES.hitRewardSeers} Münzen.` });
+["seers", "bounty", "looseTongues", "costlyGuess", "secretSale"].forEach(effect => {
+  EFFECTS[effect] = ({ all }) => ({ who: everyone(all), note: `Die App hat es sich gemerkt: ${LASTING[effect]()}` });
+});
+
+EFFECTS.keyPriceSet = ({ e }) => {
+  const [before, after] = e.keyPrice || [jailerPrice(), RULES.keyPrice.muddled];
+  return { note: `Die App hat es sich gemerkt: Bis zum nächsten Ereignis kostet ein Schlüssel ${coinsText(after)} statt ${before}.` };
+};
+
+// Everyone calls heads or tails, a real coin is thrown; the table enters each result.
+EFFECTS.fateManual = ({ all }) => ({ who: everyone(all), groups: all.map(i => ({ title: playerName(i), row: true, buttons: [
+  { text: "Richtig: +1", apply: () => addCoins([i], 1) },
+  { text: "Falsch: −1", apply: () => addCoins([i], -1) }
+] })) });
+
+EFFECTS.spotlightMost = ({ b, all }) => ({ who: [{ label: coinGroupLabel("most", b.most, all), players: b.most }] });
+EFFECTS.spotlightFewest = ({ b, all }) => ({ who: [{ label: coinGroupLabel("fewest", b.fewest, all), players: b.fewest }] });
+
+EFFECTS.coinCount = ({ all }) => ({ note: all.slice().sort((a, c) => state.players[c].coins - state.players[a].coins)
+  .map(i => `${playerName(i)}: ${coinsText(state.players[i].coins)}`).join("<br>") });
+
+EFFECTS.untilMinigame = () => ({ note: "Die App erinnert auf der Hauptseite daran, bis das nächste Minispiel kommt." });
+
+// The table points at a suspect (several on a tie); each one pays or shows everyone their keys.
+EFFECTS.searchPockets = ({ e, all }) => {
+  if (!e.pickDone) {
+    return { pick: { title: "Wer hat die meisten Finger auf sich? Bei Gleichstand alle antippen", players: all, confirm: "Weiter" } };
+  }
+  const shown = e.shown || [];
+  return {
+    who: [{ label: "Verdächtigt", players: e.picked }],
+    html: shown.map(i => `<section class="shown-keys"><span class="label">Die Schlüssel von ${playerName(i)}</span>${keyStrip(keysOf(i))}</section>`).join(""),
+    groups: e.picked.map(i => ({ title: `${playerName(i)} entscheidet`, buttons: [
+      { text: `${playerName(i)} zahlt 2 Münzen an die Spielbank`, disabled: state.players[i].coins < 2, apply: () => addCoins([i], -2) },
+      { text: `${playerName(i)} zeigt allen seine Schlüssel`, stay: true, apply: () => { e.shown = (e.shown || []).concat(i); } }
+    ] }))
+  };
+};

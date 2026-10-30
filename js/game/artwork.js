@@ -163,6 +163,7 @@ function icon(name) {
     settings: `<g transform="scale(1.6667)" stroke-width="1.1"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v2.6M12 18.9v2.6M21.5 12h-2.6M5.1 12H2.5M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8M18.7 18.7l-1.8-1.8M7.1 7.1L5.3 5.3"/><circle cx="12" cy="12" r="6.6"/></g>`,
     redraw: `<path d="M32 21a12 12 0 1 1-3.5-8.5"/><path d="M30 5v8h-8"/>`,
     flag: `<path d="M11 35 V6"/><path d="M11 7 C17 3 22 11 30 7 V21 C22 25 17 17 11 21"/>`,
+    mug: `<path d="M9 12 H26 V32 a3 3 0 0 1 -3 3 H12 a3 3 0 0 1 -3 -3 Z"/><path d="M26 16 H30 a3 3 0 0 1 3 3 V25 a3 3 0 0 1 -3 3 H26"/><path d="M9 12 C9 7 13 6 15 8 C16 5 21 5 22 8 C24 6 27 8 26 12"/><path d="M14 18 V29 M20.5 18 V29"/>`,
     rules: `<path d="M20 11 C15 8 10 8 6 9 V31 C10 30 15 30 20 33 C25 30 30 30 34 31 V9 C30 8 25 8 20 11 Z M20 11 V33"/>`
   };
   return `<svg viewBox="0 0 40 40" aria-hidden="true">${shapes[name]}</svg>`;

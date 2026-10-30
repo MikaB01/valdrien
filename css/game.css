@@ -171,6 +171,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outl
 .action.chosen { background: var(--paper); color: var(--accent); border-color: var(--accent); box-shadow: none; text-shadow: none; }
 .actions { display: flex; flex-direction: column; gap: 16px; }
 .action-group { display: flex; flex-direction: column; gap: 8px; }
+.action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.action-row .action { padding: 10px 8px; }
+.shown-keys { display: flex; flex-direction: column; gap: 6px; }
 
 .btn, .btn-quiet, .action, .choice, .tile { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 @media (prefers-reduced-motion: no-preference) {
