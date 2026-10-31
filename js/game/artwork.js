@@ -169,3 +169,11 @@ function icon(name) {
   };
   return `<svg viewBox="0 0 40 40" aria-hidden="true">${shapes[name]}</svg>`;
 }
+
+// Painted role portraits (2:3, own frame), images/roles/<role name>.jpeg
+const ROLE_PORTRAITS = {
+  dungeon: ["Wolfram", "Roderick", "Zacharias", "Magnus", "Hilda", "Vlad", "Dietrich", "Heinrich", "Gregor", "Gunther"]
+};
+function rolePortrait(adventure, role) {
+  return role && (ROLE_PORTRAITS[adventure] || []).includes(role.name) ? `images/roles/${role.name}.jpeg` : "";
+}

@@ -98,6 +98,7 @@ function screenHandover() {
         <p class="name-large">${escapeName(s.name)}</p>
         <p class="muted">Nur ${escapeName(s.name)} darf jetzt hinsehen. Halte das Handy so, dass niemand mitliest.</p>
         <button class="btn" onclick="state.cardVisible = true; render()">Ich bin ${escapeName(s.name)}, Rolle zeigen</button>
+        ${preloadPortrait(state.adventure, ROLES[s.role])}
       </div>`;
   }
 
@@ -105,7 +106,7 @@ function screenHandover() {
   const last = state.current === state.players.length - 1;
   return `
     <p class="muted" style="text-align:center">Deine geheime Rolle, ${escapeName(s.name)}</p>
-    ${roleCard(r)}
+    ${roleCard(r, state.adventure)}
     ${rerollBox(state.current)}
     ${qrSection(state.current)}
     <button class="btn" onclick="nextPlayer()">
@@ -114,13 +115,15 @@ function screenHandover() {
   `;
 }
 
-function roleCard(r) {
-  return `
-    <article class="card">
+// With a portrait the whole picture comes first; the text follows on a frosted sheet that slides up over it.
+function roleCard(r, adventure) {
+  const portrait = rolePortrait(adventure, r);
+  const title = `
       <div class="title">
         <div class="card-name">${r.name}</div>
         <div class="role-title">${r.title}</div>
-      </div>
+      </div>`;
+  const body = `
       <p class="narrative">${r.background}</p>
       ${r.character ? `
       <div class="section">
@@ -144,8 +147,28 @@ function roleCard(r) {
         <p>${r.task.text}</p>
         ${r.task.bonus ? `<span class="chip chip-gold section-bonus">Bonus: +${r.task.bonus} Münzen</span>` : ""}
       </div>` : ""}
-      <p class="coin-line">Startkapital: ${r.startingCoins} Münzen</p>
+      <p class="coin-line">Startkapital: ${r.startingCoins} Münzen</p>`;
+  if (!portrait) return `<article class="card">${title}${body}</article>`;
+  return `
+    <article class="card role-card" style="--portrait: url('${portrait}')">
+      <button class="portrait" aria-label="Bild von ${r.name} im Vollbild zeigen" onclick="showPortraitFullscreen(this)">
+        <img src="${portrait}" alt="${r.name}, ${r.title}" decoding="async">
+        <span class="portrait-zoom" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></span>
+      </button>
+      <div class="role-sheet">
+        <button class="role-peek" aria-label="Zum Text der Rolle" onclick="this.parentNode.scrollIntoView({ behavior: 'smooth' })">
+          ${title}
+          <svg class="peek-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        ${body}
+      </div>
     </article>`;
+}
+
+// Fetches a portrait while the card is still covered, so it is there the moment the role is shown.
+function preloadPortrait(adventure, r) {
+  const src = rolePortrait(adventure, r);
+  return src ? `<img src="${src}" alt="" hidden>` : "";
 }
 
 // "Charakter und Verhalten" holds one point per line.

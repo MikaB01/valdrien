@@ -232,6 +232,20 @@ function showCardFullscreen(event, card) {
   layer.addEventListener("click", closeCardFullscreen);
   document.body.appendChild(layer);
 }
+// The role portrait alone, as large as the screen allows
+function showPortraitFullscreen(button) {
+  const img = button.querySelector("img");
+  closeCardFullscreen();
+  const layer = document.createElement("div");
+  layer.className = "card-fullscreen portrait-fullscreen";
+  layer.id = "card-fullscreen";
+  layer.setAttribute("role", "dialog");
+  layer.setAttribute("aria-modal", "true");
+  layer.setAttribute("aria-label", img.alt);
+  layer.innerHTML = `<img src="${img.getAttribute("src")}" alt="${escapeHtml(img.alt)}"><span class="portrait-close">Antippen zum Schließen</span>`;
+  layer.addEventListener("click", closeCardFullscreen);
+  document.body.appendChild(layer);
+}
 function closeCardFullscreen() {
   const layer = document.getElementById("card-fullscreen");
   if (layer) layer.remove();

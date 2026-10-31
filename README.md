@@ -17,7 +17,7 @@ A social deduction party game with secret roles, events and minigames, plus a co
 | `js/cms/cms.js` | CMS code. |
 | `js/lib/qrcode.js` | Vendored QR code generator (MIT), do not modify. |
 | `css/` | `game.css`, `cms.css`. Color tokens at the top, light and dark theme. |
-| `images/` | Painted artwork, e.g. `forest-guild.jpg`; dungeon pictures (`dungeon-*.jpg`) and key icons (`key-*.webp`) for the Halloween adventure. |
+| `images/` | Painted artwork, e.g. `forest-guild.jpg`; dungeon pictures (`dungeon-*.jpg`) and key icons (`key-*.webp`) for the Halloween adventure; role portraits in `roles/<role name>.jpeg` (listed in `ROLE_PORTRAITS`, `js/game/artwork.js`). |
 | `content/` | Initial content of all adventures: `content.json` (backup) and `initial-content.js` (CMS preview mode and game fallback). |
 | `database/` | `setup.sql` (full Supabase setup, idempotent), `migrate-to-english.sql` (one-time upgrade from the old German schema). |
 

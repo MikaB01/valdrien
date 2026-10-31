@@ -167,6 +167,7 @@ function screenMyRole() {
         <p class="name-large">${escapeName(s.name)}</p>
         <p class="muted">Nur ${escapeName(s.name)} darf jetzt hinsehen.</p>
         <button class="btn" onclick="openMyRole()">Ich bin ${escapeName(s.name)}, zeigen</button>
+        ${rolesOn() ? preloadPortrait(state.adventure, ROLES[s.role]) : ""}
       </div>`;
   }
   const notes = seatData(s).notes.map(n => `<p class="note">${escapeName(n)}</p>`).join("");
@@ -181,7 +182,7 @@ function screenMyRole() {
     <span class="label">Geheime Ereignisse</span>
     ${secretEntries(i, m.fresh || [])}
     ${rolesOn() ? `<span class="label">Deine Rolle</span>
-    ${roleCard(ROLES[s.role])}
+    ${roleCard(ROLES[s.role], state.adventure)}
     ${taskCashIn(i)}` : ""}
     ${qrSection(i)}
     <button class="btn" onclick="closeMyRole()">Verbergen und zurückgeben</button>`;

@@ -190,6 +190,13 @@ function tickOwnClock() {
   if (field && d && d.timerEnd) field.textContent = timeText(Math.max(0, d.timerEnd - Date.now()));
 }
 
+function openOwnRole() {
+  own.open = true;
+  renderOwn();
+  const card = document.querySelector(".role-card");
+  if (card) card.scrollIntoView({ behavior: "smooth" });
+}
+
 function screenOwnPage() {
   const a = ADVENTURES[own.adventure];
   const noRole = own.roleId === NO_ROLE_ID;
@@ -235,12 +242,13 @@ function screenOwnPage() {
     ${notes}
     ${secretsHtml(d)}
     ${noRole ? "" : own.open ? `
-      ${roleCard(r)}
+      ${roleCard(r, own.adventure)}
       <button class="btn-quiet" onclick="own.open = false; renderOwn()">Rolle verdecken</button>` : `
       <div class="covered">
         <span class="card-name">Deine Rolle</span>
         <p class="muted">Verdeckt, damit niemand mitliest.</p>
-        <button class="btn" onclick="own.open = true; renderOwn()">Rolle aufdecken</button>
+        <button class="btn" onclick="openOwnRole()">Rolle aufdecken</button>
+        ${preloadPortrait(own.adventure, r)}
       </div>`}
     <p class="muted" style="text-align:center">Diese Seite aktualisiert sich von selbst. Leg sie dir auf den Home-Bildschirm, dann findest du sie schnell wieder.</p>
   `;
