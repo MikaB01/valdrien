@@ -222,7 +222,10 @@ function dealRoles() {
   state.ability = null;
   state.buyCard = null;
   state.lasting = null;
-  state.tableRule = null;
+  state.tableRules = [];
+  state.handCard = null;
+  state.keyGlimpse = null;
+  state.recentLoss = {};
   state.winBonus = null;
   state.lastWinnings = {};
   state.lastParticipants = [];

@@ -29,7 +29,7 @@ const EFFECTS_ON_DRAW = {
     return { keyPrice: [before, jailerPrice()] };
   },
   keyPriceSet: () => ({ keyPrice: [jailerPrice(), RULES.keyPrice.muddled] }),
-  untilMinigame: index => { state.tableRule = { title: EVENTS[index].title }; }
+  untilMinigame: index => { addTableRule({ title: EVENTS[index].title }); }
 };
 
 // A card whose effect needs a state the game has not reached yet (no role guessed, all coins equal, the jailer's
@@ -48,12 +48,18 @@ const EFFECTS_READY = {
   untilMinigame: () => remainingMinigames().length > 0,
   jailerDrinks: index => keysGoal() && jailerPrice() > RULES.keyPrice.min && jailerStage(index) === (state.jailerDrinks || 0),
   keyPriceSet: () => keysGoal() && jailerPrice() !== RULES.keyPrice.muddled,
-  searchPockets: () => keysGoal() && inPlay().some(i => totalKeys(i) > 0)
+  searchPockets: () => keysGoal() && inPlay().some(i => totalKeys(i) > 0),
+  // private cards (hand cards and tasks) that only work in some games
+  whisper: guessesLeft,
+  fortuneTip: guessesLeft,
+  peekKeys: () => keysGoal(),
+  redrawKey: () => keysGoal(),
+  keyDeal: () => keysGoal()
 };
 
 function eventReady(index) {
   const card = EVENTS[index];
-  if (!card || card.isPrivate) return Boolean(card);
+  if (!card) return false;
   const ready = EFFECTS_READY[card.effect];
   return !ready || ready(index);
 }

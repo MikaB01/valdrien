@@ -20,6 +20,7 @@ function screenGuess() {
   if (r.step === "stake") {
     const cost = guessCost();
     return `
+      ${r.tip ? `<p class="note">${tipEntry(r) ? tipEntry(r).title : ""}: Ein Treffer bringt ${coinsText(tipReward())} statt ${hitReward()}.</p>` : ""}
       ${cost ? `
       <h2>${escapeName(guesser.name)}, ${stakeText("eine Münze", coinsText(cost), cost)} setzen, um auf eine Rolle zu raten?</h2>
       <p class="muted">${guessPriceChanged() ? guessPriceText() + " " : ""}Du hast ${guesser.coins} Münzen. ${stakeText("Die gesetzte Münze geht", "Die gesetzten Münzen gehen", cost)} an die Spielbank.</p>
@@ -33,6 +34,7 @@ function screenGuess() {
   if (r.step === "result") {
     return `
       <h2>${r.free ? "Dein Tipp, bitte!" : stakeText("Die Münze ist gesetzt", "Die Münzen sind gesetzt", r.cost)}</h2>
+      ${r.tip ? `<p class="note">${tipEntry(r) ? tipEntry(r).title : ""}: Ein Treffer bringt ${coinsText(tipReward())}.</p>` : ""}
       <p class="narrative">${escapeName(guesser.name)}, sprich deinen Tipp laut aus: Wer ist welche Rolle? Die Person, auf die getippt wurde, sagt ehrlich, ob es stimmt.</p>
       <button class="btn" onclick="guessResult(true)">Rolle richtig erraten</button>
       <button class="btn-quiet" onclick="guessResult(false)">Falsch geraten</button>`;
@@ -91,6 +93,8 @@ function placeStake() {
   const cost = guessCost();
   if (guesser.coins < cost) return;
   guesser.coins -= cost;
+  const tip = tipEntry(state.guess);
+  if (tip) { tip.status = "used"; tip.result = "Beim Raten eingesetzt."; }
   state.guess.cost = cost;
   state.guess.free = cost === 0;
   state.guess.step = "result";
@@ -98,6 +102,8 @@ function placeStake() {
 }
 
 function guessResult(correct) {
+  const tip = tipEntry(state.guess);
+  if (tip && !correct) tip.result = "Beim Raten eingesetzt, aber daneben getippt.";
   state.guess.step = correct ? "whom" : "wrong";
   show("guess");
 }
@@ -105,7 +111,12 @@ function guessResult(correct) {
 function guessTarget(i) {
   if (state.players[i].revealed) return;
   const c = state.curiosity;
-  const bonus = c && c.player === state.guess.player && c.target === i ? Math.max(RULES.curiosityHitReward, hitReward()) : hitReward();
+  let bonus = c && c.player === state.guess.player && c.target === i ? Math.max(RULES.curiosityHitReward, hitReward()) : hitReward();
+  const tip = tipEntry(state.guess);
+  if (tip) {
+    bonus = Math.max(bonus, tipReward());
+    tip.result = `Beim Raten eingesetzt: Treffer bei ${playerName(i)}, ${coinsText(bonus)}.`;
+  }
   state.players[state.guess.player].coins += bonus;
   state.guess.bonus = bonus;
   state.players[i].revealed = true;
@@ -127,6 +138,12 @@ function guessPriceText() {
 function hitReward() {
   return lasting("seers") ? RULES.hitRewardSeers : lasting("bounty") ? RULES.hitRewardBounty : RULES.hitReward;
 }
+
+// Hand card "fortuneTip" (Der Tipp der Wahrsagerin): played under "Nachsehen", it starts this guess (state.guess.tip = card id).
+function tipEntry(r) {
+  return r && r.tip && state.players[r.player] ? (state.players[r.player].secrets || []).find(p => p.id === r.tip) || null : null;
+}
+function tipReward() { return Math.max(RULES.fortuneTipHitReward, hitReward()); }
 
 function stakeText(oneCoin, severalCoins, cost = RULES.guessCost) { return cost === 1 ? oneCoin : severalCoins; }
 

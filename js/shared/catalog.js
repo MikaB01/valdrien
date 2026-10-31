@@ -62,6 +62,29 @@ const CATALOG = {
     searchPockets: "Verdächtigte wählen: 2 an die Bank zahlen oder Schlüssel zeigen (nur Schlüssel-Abenteuer)"
   },
 
+  // What a private card does besides its coins, per privateType ("instant" has none).
+  // keep = hand card: the player keeps it and plays it later under "Nachsehen" (js/game/hand-cards.js).
+  privateEffects: {
+    task: {
+      "":      "Nichts weiter: Münzen, sobald die Aufgabe geschafft ist",
+      witness: "Zeuge: wer es zuerst bemerkt, erhält dieselben Münzen",
+      keyDeal: "Schlüsselhandel: ein Mitspieler zahlt 1 Münze und sieht die Schlüssel (nur Schlüssel-Abenteuer)"
+    },
+    keep: {
+      "":         "Nichts zu buchen, das Einsetzen wird nur vermerkt",
+      waiver:     "Freibrief: den letzten Verlust zurück",
+      doubleWin:  "Nach gewonnenem Minispiel den Gewinn verdoppeln",
+      scapegoat:  "Verlust durch ein Minispiel zahlt ein Mitspieler der Wahl",
+      shareLoss:  "Ein Mitspieler der Wahl zahlt die Hälfte des letzten Verlusts (aufgerundet)",
+      whisper:    "Heimliche Ja-Nein-Frage zur Rolle eines Mitspielers (nur mit Rollen)",
+      fortuneTip: "Gleich raten: Treffer bringt 5 statt 3 (nur mit Rollen)",
+      peekKeys:   "Die Schlüssel eines Mitspielers ansehen (nur Schlüssel-Abenteuer)",
+      redrawKey:  "Beim Schlüsselkauf einen doppelten Schlüssel zurückgeben und neu ziehen (nur Schlüssel-Abenteuer)",
+      tableRule:  "Gilt bis zum nächsten Minispiel, Erinnerung auf der Hauptseite",
+      freeBeer:   "Münzen der Karte, dann so viele Schlücke verteilen, wie man Münzen hat"
+    }
+  },
+
   // Effects that started a minigame. Event cards no longer do that: the app draws either an event card or a minigame.
   // Events still set to one of these stay out of the deck until another effect is chosen in the CMS.
   retiredEffects: {
@@ -80,14 +103,25 @@ const CATALOG = {
 
   // Effects that only make sense with roles (guessing, revealed/hidden, traits).
   // Events with one of these, or with requiresRoles: true, are left out of games without roles.
-  roleEffects: ["exposed", "disguise", "oracle", "seers", "looseTongues", "bounty", "costlyGuess"]
+  roleEffects: ["exposed", "disguise", "oracle", "seers", "looseTongues", "bounty", "costlyGuess"],
+  privateRoleEffects: ["whisper", "fortuneTip"]
 };
 
 // e: an event as stored in the content JSON
 function eventRetired(e) {
   return Boolean(e) && e.visibility !== "private" && !CATALOG.effects[e.effect || "calm"];
 }
+function privateType(e) { return e.privateType === "task" || e.privateType === "keep" ? e.privateType : "instant"; }
+// A private card's effect if its type knows it, otherwise "" (an effect left over from a public card does nothing).
+function privateEffect(e) {
+  const known = CATALOG.privateEffects[privateType(e)];
+  return known && e.effect && known[e.effect] ? e.effect : "";
+}
+// The effect alone needs roles (guessing, revealed players, questions about a role).
+function effectNeedsRoles(e) {
+  return Boolean(e) && (e.visibility === "private"
+    ? CATALOG.privateRoleEffects.includes(privateEffect(e)) : CATALOG.roleEffects.includes(e.effect));
+}
 function eventRequiresRoles(e) {
-  if (!e) return false;
-  return e.requiresRoles === true || (e.visibility !== "private" && CATALOG.roleEffects.includes(e.effect));
+  return Boolean(e) && (e.requiresRoles === true || effectNeedsRoles(e));
 }

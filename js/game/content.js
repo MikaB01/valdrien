@@ -35,13 +35,13 @@ function convertEvent(id, e) {
     pos: num(e.pos, 0),
     title: escapeHtml(e.name || "Ohne Namen"),
     category: escapeHtml(e.category || ""),
-    effect: e.effect || "calm",
+    effect: e.visibility === "private" ? privateEffect(e) : e.effect || "calm",
     text: escapeHtml(e.description || ""),
     isPrivate: e.visibility === "private",
     requiresRoles: eventRequiresRoles(e),
     drinking: e.drinking === true,
     retired: eventRetired(e),
-    privateType: e.privateType === "task" ? "task" : "instant",
+    privateType: privateType(e),
     privateCoins: num(e.privateCoins, 0)
   };
 }

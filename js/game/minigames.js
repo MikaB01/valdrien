@@ -119,7 +119,7 @@ function drawMinigame(category, player, again) {
   if (resume) { show("minigame"); return; }
   if (player === undefined && !again) cardDrawn("minigame");
   state.tip = null; // Trinkgeld lasts until a minigame is drawn
-  state.tableRule = null;
+  state.tableRules = [];
   let options = remainingMinigames(category);
   // an ability still needs its minigame, even if all of that kind were played
   if (!options.length && (category || player !== undefined)) {
@@ -244,6 +244,7 @@ function scoreMinigame(k) {
   const before = state.players.map(s => s.coins);
   result.apply();
   minigameFinished(result.winners || [], before, minigameParticipants());
+  noteLosses(before, "minigame", MINIGAMES[state.minigame.index].title);
   markMinigamePlayed();
   show("overview");
 }
@@ -252,6 +253,7 @@ function minigameFinished(winners, before, participants) {
   state.lastParticipants = participants || state.players.map((_, i) => i);
   tournamentPayout(winners, state.lastParticipants);
   state.lastWinnings = {};
+  state.lastWinningsCard = state.cardCount || 0;
   winners.forEach(i => {
     const gained = state.players[i].coins - before[i];
     if (gained > 0) state.lastWinnings[i] = gained;

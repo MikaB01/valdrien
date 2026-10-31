@@ -347,7 +347,8 @@ function subtitle(e) {
   if (cms.section === "roles") return [e.title, (e.startingCoins ?? "?") + " Münzen"].filter(Boolean).join(" · ");
   if (cms.section === "minigames") return (CATEGORIES[e.category]?.name || "Ohne Kategorie") + rewardShort(e);
   if (cms.section === "events") return e.visibility === "private"
-    ? [e.category, e.privateType === "task" ? "Aufgabe" : "", e.privateCoins ? (e.privateCoins > 0 ? "+" : "") + e.privateCoins : ""].filter(Boolean).join(" · ")
+    ? [e.category, { task: "Aufgabe", keep: "Handkarte" }[privateType(e)] || "", e.privateCoins ? (e.privateCoins > 0 ? "+" : "") + e.privateCoins : ""]
+        .filter((x, k, list) => x && !(k === 1 && String(list[0] || "").includes(x))).join(" · ")
     : [e.category, eventRetired(e) ? "kommt nicht ins Spiel" : ""].filter(Boolean).join(" · ");
   return "";
 }
@@ -445,12 +446,16 @@ document.addEventListener("input", e => {
   if (value === undefined) return;
   const path = el.dataset.path.split("\u0001");
   const structural = type === "select" || type === "segment" || type === "flag";
-  const before = getPath(cms.content, path);
+  const eventPath = path[2] === "events" && path.length === 5 ? path.slice(0, -1) : null;
+  const eventBefore = eventPath && JSON.parse(JSON.stringify(getPath(cms.content, eventPath) || {}));
   change(path, value, structural);
-  // an effect that needs roles marks the event, so the stored content says it too; switching away clears the mark again
-  if (path[path.length - 1] === "effect") {
-    const roleEffect = v => CATALOG.roleEffects.includes(v);
-    if (roleEffect(value) !== roleEffect(before)) change([...path.slice(0, -1), "requiresRoles"], roleEffect(value), true);
+  if (eventPath && ["effect", "privateType", "visibility"].includes(path[4])) {
+    const ev = getPath(cms.content, eventPath) || {};
+    // a private card keeps only an effect its type knows
+    if (ev.visibility === "private" && ev.effect && !privateEffect(ev)) change([...eventPath, "effect"], "", true);
+    if (ev.visibility !== "private" && !ev.effect) change([...eventPath, "effect"], "calm", true);
+    // an effect that needs roles marks the event, so the stored content says it too; switching away clears the mark again
+    if (effectNeedsRoles(ev) !== effectNeedsRoles(eventBefore)) change([...eventPath, "requiresRoles"], effectNeedsRoles(ev), true);
   }
   if (path[path.length - 1] === "name") {
     const title = document.getElementById("editor-title");
@@ -610,11 +615,14 @@ function entryEditor() {
         ${field([...p, "description"], e.visibility === "private" ? "Text für den Spieler" : "Beschreibung", "textarea", { rows: 5,
           help: e.visibility === "private" ? "Sprich den Spieler direkt an, z. B. „Bring jemanden dazu, das Wort Drache zu sagen.“" : "" })}
         ${e.visibility === "private" ? `
-          ${field([...p, "privateType"], "Wann gibt es die Münzen?", "segment", { values: { instant: "Sofort", task: "Wenn die Aufgabe geschafft ist" }, defaultValue: "instant" })}
-          <p class="explain">${(e.privateType || "instant") === "task"
-            ? "Aufgabe: Der Spieler sagt dem Spielleiter, wenn er es geschafft hat. Der Spielleiter bestätigt das im Geldbeutel, dann bucht die App die Münzen."
-            : "Sofort: Die App bucht die Münzen, sobald das Ereignis eintritt. Bei 0 ist es nur eine geheime Information."}</p>
-          ${field([...p, "privateCoins"], "Münzen für den Spieler", "number", { help: "Minus heißt Verlust, z. B. −2" })}`
+          ${field([...p, "privateType"], "Wann gibt es die Münzen?", "segment", { values: { instant: "Sofort", task: "Wenn die Aufgabe geschafft ist", keep: "Handkarte: beim Einsetzen" }, defaultValue: "instant" })}
+          <p class="explain">${{
+            task: "Aufgabe: Der Spieler sagt dem Spielleiter, wenn er es geschafft hat. Der Spielleiter bestätigt das im Geldbeutel, dann bucht die App die Münzen.",
+            keep: "Handkarte: Der Spieler hebt die Karte auf und setzt sie später am Spielleiter-Handy unter „Nachsehen“ ein. Dann bucht die App die Münzen und tut, was unten eingestellt ist. Danach ist die Karte verbraucht."
+          }[privateType(e)] || "Sofort: Die App bucht die Münzen, sobald das Ereignis eintritt. Bei 0 ist es nur eine geheime Information."}</p>
+          ${privateType(e) !== "instant" ? field([...p, "effect"], "Was die App dabei tut", "select", { values: CATALOG.privateEffects[privateType(e)],
+            defaultValue: "", help: "Die App kann nur diese Wirkungen. Neue müssen programmiert werden." }) : ""}
+          ${field([...p, "privateCoins"], privateType(e) === "keep" ? "Münzen beim Einsetzen" : "Münzen für den Spieler", "number", { help: "Minus heißt Verlust, z. B. −2" })}`
         : `${eventRetired(e) ? `<p class="explain warning">${CATALOG.retiredEffects[e.effect]
             ? `Diese Wirkung löste ein Minispiel aus. Das gibt es nicht mehr: Die App zieht entweder eine Ereigniskarte oder ein Minispiel.`
             : `Diese Wirkung kennt die App nicht.`} Solange keine andere gewählt ist, kommt das Ereignis nicht ins Spiel.</p>` : ""}
@@ -624,7 +632,7 @@ function entryEditor() {
       </div>
       <div class="group">
         <h3>Partien ohne Rollen</h3>
-        ${e.visibility !== "private" && CATALOG.roleEffects.includes(e.effect)
+        ${effectNeedsRoles(e)
           ? `<p class="explain">Diese Wirkung braucht Rollen (Raten, Erratene, Erkennungsmerkmale). Das Ereignis kommt deshalb nur in Partien mit Rollen vor.</p>`
           : `${field([...p, "requiresRoles"], "Wann kommt das Ereignis vor?", "flag", { values: { false: "Immer", true: "Nur mit Rollen" }, defaultValue: false })}
             <p class="explain">${e.requiresRoles === true

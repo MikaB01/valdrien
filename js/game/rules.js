@@ -37,5 +37,7 @@ const RULES = {
 
   lotteryWin: 3, // event effect "lottery"
   curiosityHitReward: 6, // Neugiernase: a later hit on the questioned player
+  fortuneTipHitReward: 5, // hand card "fortuneTip" (Der Tipp der Wahrsagerin)
+  keyDealPrice: 1, // task "keyDeal" (Der Schlüsselschwindler): what the other player pays to see the keys
   bathroomBreakMax: 10 // Pinkelpause: at most this many coins
 };

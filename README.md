@@ -37,10 +37,11 @@ No build step: plain `<script>` files loaded in order, all top-level declaration
 | `timer.js` | Countdown to the next event card: fixed or random interval; the clock in the corner of the main screen is the pause/play button. |
 | `guessing.js` | Guessing a role. |
 | `abilities.js` | `ABILITIES`: one handler per ability mechanic. |
-| `events.js` | Drawing and resolving event cards, private events. |
+| `events.js` | Drawing and resolving event cards, private events, secret tasks (`TASK_EFFECTS`). |
 | `effects.js` | `EFFECTS`: one handler per event effect. |
 | `minigames.js` | Drawing minigames, line-ups, scoring. |
-| `keys.js` | Adventures with goal `keys` (Henkersmahl): key price and the jailer's mood, buying random keys, the secret key display, breakout and its end screen. |
+| `keys.js` | Adventures with goal `keys` (Henkersmahl): key price and the jailer's mood, buying random keys, the secret key display, showing one player's keys to another, breakout and its end screen. |
+| `hand-cards.js` | `HAND_CARDS`: private cards the player keeps and plays later under "Nachsehen". |
 | `ending.js` | Secret tasks, final count, play again. |
 | `player-page.js` | QR links, syncing seats to Supabase, the player's own page. |
 | `speech.js` | Read-aloud buttons via the browser's Web Speech API (on-device voices, no service). |
@@ -70,14 +71,16 @@ No build step: plain `<script>` files loaded in order, all top-level declaration
     minigames: { <id>: { pos, name, category (duel|all|oneVsAll|team|uneven), description,
                          reward: { winner, loser, judge, solo, group, fail, team, single, pair, singleName, pairName } } },
     events: { <id>: { pos, name, category, visibility (public|private), description, effect,
-                      privateType (instant|task), privateCoins, requiresRoles, drinking } } } } }
+                      privateType (instant|task|keep), privateCoins, requiresRoles, drinking } } } } }
 ```
 
 `goal: "keys"` (Das Henkersmahl im Verlies): instead of counting coins at the end, players buy random keys for `keyPrice()`: `RULES.keyPrice.start` (7), 1 coin less with every event card with effect `jailerDrinks` (they come in list order), down to `RULES.keyPrice.min` (2); the chances and key pictures are in `RULES.keys`. Whoever first holds all three kinds breaks out and wins at once; each player sees only their own keys. Role tasks are cashed in during the game under "Nachsehen", because the end comes without warning.
 
 `drinking: true` marks a drinking card (Trinkrunde, Trinkregel): it only comes into the deck while the drinking game is switched on in the settings (`settings.drinking`, per device, applies at once, also in a running game).
 
-Effects that last "until the next event card" (`seers`, `bounty`, `looseTongues`, `costlyGuess`, `secretSale`, `keyPriceSet`) are listed in `LASTING` in `js/game/effects.js` and stored as `state.lasting = { effect, title }`; bought secret cards do not end them. `untilMinigame` keeps a reminder (`state.tableRule`) on the main screen until the next minigame.
+Effects that last "until the next event card" (`seers`, `bounty`, `looseTongues`, `costlyGuess`, `secretSale`, `keyPriceSet`) are listed in `LASTING` in `js/game/effects.js` and stored as `state.lasting = { effect, title }`; bought secret cards do not end them. `untilMinigame` keeps a reminder (`state.tableRules`) on the main screen until the next minigame.
+
+Private events (`visibility: "private"`) go to one player. `privateType` decides what happens: `instant` books `privateCoins` at once, `task` books them once the game master confirms the task in the purse, `keep` is a hand card: the player keeps it and plays it later under "Nachsehen" (coins are booked when it is played). For `task` and `keep` the `effect` comes from `CATALOG.privateEffects` (empty = nothing beyond the coins); hand card effects are implemented in `HAND_CARDS` (`js/game/hand-cards.js`), task effects in `TASK_EFFECTS` (`js/game/events.js`). Hand cards that act on a loss or a won minigame use `recentLoss(i)` / `recentWin(i)` (state.js): only losses through event cards, minigames and other players' abilities or cards count, never a player's own spending, and only until the next card is drawn. `CATALOG.privateRoleEffects` keep a card out of games without roles; private effects that need the keys goal are checked in `EFFECTS_READY`.
 
 Event cards never start a minigame: when the time is up the app draws either an event card or a minigame. Events still set to one of the former minigame effects (`CATALOG.retiredEffects`) or to any unknown effect stay out of the deck (`retired`); the CMS marks them so another effect can be chosen.
 

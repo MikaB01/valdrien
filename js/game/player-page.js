@@ -59,7 +59,7 @@ function seatData(s) {
     secrets: (s.secrets || []).slice(-12).reverse(),
     notes: [
       lastingNote(),
-      state.tableRule && tableRuleNote(),
+      ...tableRuleNotes(),
       state.winBonus && state.players[state.winBonus.player] === s && `Gewinnst du das nächste Minispiel, gibt es ${state.winBonus.amount} Münzen extra.`,
       state.pause && state.players[state.pause.player] === s && "Du machst Pinkelpause: Ereigniskarten gelten nicht für dich, bis du am Spielleiter-Handy wieder einsteigst."
     ].filter(Boolean)

@@ -50,6 +50,8 @@ function backAction() {
     case "end":
       if (keysGoal()) return state.escaped !== undefined && state.escaped !== null ? null : resumeAdventure;
       return rolesOn() ? go("tasks") : resumeAdventure;
+    case "keyGlimpse": return () => { state.keyGlimpse = null; show("overview"); };
+    case "handCard": return state.handCard && state.handCard.played ? finishHandCard : backToSecrets;
     case "buyKey": {
       const b = state.buyKey || {};
       if (b.step === "handover") return () => { state.buyKey = { step: "who", player: null }; render(); };
@@ -78,8 +80,8 @@ function renderFrame() {
   layer.innerHTML = sheet === "menu" ? menuSheet() : sheet === "purse" ? purseSheet() : "";
 }
 
-function openSheet(which) { sheet = sheet === which ? null : which; confirmFinish = false; confirmRedraw = false; renderFrame(); }
-function closeSheet() { sheet = null; confirmFinish = false; confirmRedraw = false; renderFrame(); }
+function openSheet(which) { sheet = sheet === which ? null : which; confirmFinish = false; confirmRedraw = false; taskPick = null; renderFrame(); }
+function closeSheet() { sheet = null; confirmFinish = false; confirmRedraw = false; taskPick = null; renderFrame(); }
 document.addEventListener("keydown", e => { if (e.key === "Escape" && sheet) closeSheet(); });
 
 function menuSheet() {
@@ -135,9 +137,10 @@ function purseSheet() {
         ${openTasks().map(({ i, p }) => `
           <div class="confirm">
             <strong style="font-size:1.1rem">${playerName(i)} hat eine geheime Aufgabe</strong>
+            ${taskPick && taskPick.id === p.id ? taskPickHtml() : `
             <p class="muted">${playerName(i)} sagt dir, ob es geklappt hat. Den Inhalt kennt nur ${playerName(i)}.</p>
             <button class="btn" onclick="resolveTask(${i}, '${p.id}', true)">Geschafft (${signed(p.coins)})</button>
-            <button class="btn-quiet" onclick="resolveTask(${i}, '${p.id}', false)">Nicht geschafft</button>
+            <button class="btn-quiet" onclick="resolveTask(${i}, '${p.id}', false)">Nicht geschafft</button>`}
           </div>`).join("")}` : ""}
       <button class="btn-quiet" onclick="openReference('coins')">Münzen von Hand ändern</button>
     </div>`;
@@ -163,6 +166,7 @@ function show(screen) {
   confirmFinish = false;
   confirmRedraw = false;
   confirmReroll = false;
+  taskPick = null;
   sheet = null;
   if (screen === "overview" && state.running && !state.timerEnd) startRound();
   save();

@@ -179,8 +179,10 @@ function givePrivateCard(index, player) {
     title: card.title,
     text: card.text,
     kind: card.privateType,
+    effect: card.effect,
     coins: card.privateCoins,
-    status: card.privateType === "task" ? "open" : "received",
+    drinking: card.drinking,
+    status: { task: "open", keep: "kept" }[card.privateType] || "received",
     time: Date.now()
   };
   if (entry.kind === "instant" && entry.coins) addCoins([player], entry.coins);
@@ -189,13 +191,18 @@ function givePrivateCard(index, player) {
 }
 
 // What a secret card means for the player's coins, stated so nobody books them a second time.
-function secretOutcome(p) {
+// holder: set on the game master phone ("Nachsehen"), where hand cards are played (handCardControl adds the button).
+function secretOutcome(p, holder) {
   const n = Math.abs(p.coins || 0);
   const coins = `${n} ${n === 1 ? "Münze" : "Münzen"}`;
   if (p.kind === "task") {
     if (p.status === "open") return `<p class="outcome outcome-open"><strong>Noch offen</strong>Schaffst du es, ${p.coins < 0 ? "verlierst du" : "bekommst du"} ${coins}. Sag dem Spielleiter Bescheid, sobald du es geschafft hast. Erst dann bucht die App die Münzen.</p>`;
-    if (p.status === "done") return `<p class="outcome outcome-done"><strong>✓ Geschafft und verbucht</strong>Die App hat dir ${coins} ${p.coins < 0 ? "abgezogen" : "gutgeschrieben"}.</p>`;
+    if (p.status === "done") return `<p class="outcome outcome-done"><strong>✓ Geschafft und verbucht</strong>Die App hat dir ${coins} ${p.coins < 0 ? "abgezogen" : "gutgeschrieben"}.${p.result ? ` ${p.result}` : ""}</p>`;
     return `<p class="outcome"><strong>Nicht geschafft</strong>Es gibt keine Münzen.</p>`;
+  }
+  if (p.kind === "keep") {
+    if (p.status === "used") return `<p class="outcome outcome-done"><strong>✓ Eingesetzt</strong>${p.result || "Die Karte ist verbraucht."}</p>`;
+    return `<p class="outcome outcome-open"><strong>Auf der Hand</strong>${holder !== undefined ? handCardHint(holder, p) : "Einsetzen kannst du sie am Spielleiter-Handy unter „Nachsehen“."}</p>`;
   }
   if (!p.coins) return "";
   return `<p class="outcome outcome-done"><strong>✓ Schon verbucht</strong>Die App hat dir ${coins} ${p.coins < 0 ? "abgezogen" : "gutgeschrieben"}. Du musst nichts weiter tun.</p>`;
@@ -219,7 +226,7 @@ function drawTimedCard() {
 }
 
 // A player buys a secret event card: coins go to the bank, the card goes to the secret view.
-function privateCards() { return playableEvents().filter(i => EVENTS[i].isPrivate); }
+function privateCards() { return playableEvents().filter(i => EVENTS[i].isPrivate && eventReady(i)); }
 function privateCardCost() { return lasting("secretSale") ? RULES.privateCardCostSale : RULES.privateCardCost; }
 
 function startBuyCard() {
@@ -273,14 +280,49 @@ function buyCard() {
   startMyRole(i);
 }
 
-function resolveTask(i, id, success) {
+// Tasks with an effect ask the purse for one more player first (taskPick), e.g. who noticed it first.
+function resolveTask(i, id, success, other) {
   const p = (state.players[i].secrets || []).find(x => x.id === id);
   if (!p || p.status !== "open") return;
+  const effect = success && TASK_EFFECTS[p.effect];
+  if (effect && other === undefined) { taskPick = { i, id }; renderFrame(); return; }
+  taskPick = null;
   p.status = success ? "done" : "missed";
   if (success && p.coins) addCoins([i], p.coins);
+  if (effect) p.result = effect.apply(i, p, other);
+  if (effect && effect.after) { effect.after(i, other); return; }
   save();
   renderFrame();
   render();
+}
+
+// Task effects, keyed like CATALOG.privateEffects.task: pick = who else is involved, apply books it and returns
+// the line kept on the card, after may open a screen.
+const TASK_EFFECTS = {
+  witness: {
+    pick: () => "Wer hat es zuerst bemerkt? Er bekommt dieselben Münzen.",
+    players: i => state.players.map((_, j) => j).filter(j => j !== i),
+    apply: (i, p, j) => { addCoins([j], p.coins); return `${playerName(j)} hat es zuerst bemerkt und ${coinsText(p.coins)} bekommen.`; }
+  },
+  keyDeal: {
+    pick: () => `Wer hat ${coinsText(RULES.keyDealPrice)} gezahlt, um die Schlüssel zu sehen?`,
+    players: i => state.players.map((_, j) => j).filter(j => j !== i && state.players[j].coins >= RULES.keyDealPrice),
+    apply: (i, p, j) => { transfer(j, i, RULES.keyDealPrice); return `${playerName(j)} hat dir ${coinsText(RULES.keyDealPrice)} gezahlt und deine Schlüssel gesehen.`; },
+    after: (i, j) => startKeyGlimpse(i, j)
+  }
+};
+
+function taskPickHtml() {
+  const t = taskPick;
+  const p = t && state.players[t.i] && (state.players[t.i].secrets || []).find(x => x.id === t.id);
+  const effect = p && TASK_EFFECTS[p.effect];
+  if (!effect) return "";
+  const players = effect.players(t.i);
+  return `
+    <span class="label">${effect.pick()}</span>
+    ${players.length ? players.map(j => `<button class="action" onclick="resolveTask(${t.i}, '${p.id}', true, ${j})">${playerName(j)}</button>`).join("")
+      : `<p class="muted">Gerade kommt dafür niemand infrage.</p>`}
+    <button class="link-button" onclick="taskPick = null; renderFrame()">Abbrechen</button>`;
 }
 
 function openTasks() {
@@ -331,6 +373,7 @@ function eventAction(gi, bi) {
   if (e.done[gi] !== undefined || button.disabled) return;
   const before = state.players.map(s => s.coins);
   if (button.apply) button.apply();
+  noteLosses(before, "event", EVENTS[e.index].title);
   e.losses = e.losses || {}; // remembered for luckBringer and heartySoup
   state.players.forEach((s, i) => {
     const diff = s.coins - before[i];

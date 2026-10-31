@@ -124,9 +124,12 @@ function screenBuyKey() {
         <p class="narrative" style="text-align:center">Eisentür, Silbergitter, Knochentor: Für jede Tür hast du den passenden Schlüssel. Jetzt aber schnell, bevor der Kerkermeister aufwacht.</p>
         ${keyStrip(keysOf(i))}
         <button class="btn btn-large btn-escape" onclick="breakOut(${i})">Ausbrechen!</button>` : `
+        ${b.redrawn ? `<p class="note">${b.redrawn}: Den doppelten Schlüssel hast du zurückgegeben und noch einmal gezogen.</p>` : ""}
         <p class="muted" style="text-align:center">${before
           ? `Den hattest du schon. Doppelt hält besser, öffnet aber keine neue Tür.`
           : `Damit öffnest du ${kind.id === "iron" ? "die" : "das"} ${kind.door}. ${RULES.keys.length - distinctKeys(i) === 1 ? "Nur noch ein Schlüssel fehlt!" : `Noch ${RULES.keys.length - distinctKeys(i)} Schlüssel fehlen.`}`}</p>
+        ${before && !b.redrawn ? keptCards(i, "redrawKey").slice(0, 1).map(p => `
+          <button class="btn" onclick="redrawKey('${p.id}')">${p.title}: zurückgeben und noch einmal ziehen</button>`).join("") : ""}
         <span class="label">Deine Schlüssel, ${name}</span>
         ${keyStrip(keysOf(i))}
         <p class="muted" style="text-align:center">Du hast noch ${coinsText(state.players[i].coins)}.</p>
@@ -146,6 +149,12 @@ function buyKey() {
   const s = b && state.players[b.player];
   if (!s || s.coins < keyPrice() || hasAllKeys(b.player)) return;
   addCoins([b.player], -keyPrice());
+  b.redrawn = null;
+  drawKey(b);
+}
+
+function drawKey(b) {
+  const s = state.players[b.player];
   const id = randomKey();
   s.keys = s.keys || {};
   b.before = s.keys[id] || 0;
@@ -155,6 +164,20 @@ function buyKey() {
   b.line = jailerLine();
   playKeySound(hasAllKeys(b.player));
   show("buyKey");
+}
+
+// Hand card "redrawKey" (Noch ein Griff in den Bund): a key the buyer already had goes back, he draws once more for free.
+function redrawKey(id) {
+  const b = state.buyKey;
+  const p = b && b.step === "result" && b.before && !b.redrawn && keptCards(b.player, "redrawKey").find(x => x.id === id);
+  if (!p) return;
+  const returned = keyKind(b.result).name;
+  state.players[b.player].keys[b.result] -= 1;
+  b.redrawn = p.title;
+  p.status = "used";
+  drawKey(b);
+  p.result = `Beim Schlüsselkauf eingesetzt: ${returned} zurückgegeben, ${keyKind(b.result).name} gezogen.`;
+  save();
 }
 
 function breakOut(i) {
@@ -238,6 +261,31 @@ function cashInTask(i) {
   render();
 }
 
+// One player shows another his keys on the phone (task "keyDeal"): handover first, so only the viewer sees them.
+function startKeyGlimpse(owner, viewer) {
+  state.keyGlimpse = { owner, viewer, open: false };
+  show("keyGlimpse");
+}
+
+function screenKeyGlimpse() {
+  const g = state.keyGlimpse;
+  if (!g || !state.players[g.owner] || !state.players[g.viewer]) return screenOverview();
+  const viewer = playerName(g.viewer), owner = playerName(g.owner);
+  if (!g.open) return `
+    <div class="handover">
+      <div class="emblem emblem-keys" aria-hidden="true"></div>
+      <p class="muted">Gib das Handy an</p>
+      <p class="name-large">${viewer}</p>
+      <p class="muted">${owner} zeigt dir seine Schlüssel. Nur ${viewer} darf jetzt hinsehen.</p>
+      <button class="btn" onclick="state.keyGlimpse.open = true; save(); render()">Ich bin ${viewer}, zeigen</button>
+    </div>`;
+  return `
+    <div class="heading"><span class="eyebrow">Nur für ${viewer}</span><h2>Die Schlüssel von ${owner}</h2></div>
+    ${keyStrip(keysOf(g.owner))}
+    <button class="btn" onclick="state.keyGlimpse = null; show('overview')">Verbergen und zurückgeben</button>`;
+}
+
 Object.assign(SCREENS, {
-  buyKey: screenBuyKey
+  buyKey: screenBuyKey,
+  keyGlimpse: screenKeyGlimpse
 });

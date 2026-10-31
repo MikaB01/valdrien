@@ -26,7 +26,7 @@ function screenOverview() {
     </div>
     ${reshuffleBox() || `<div class="scene-banner">${adventureArt(currentAdventure().id, true)}</div>`}
     ${lastingNote() ? `<p class="note">${lastingNote()}</p>` : ""}
-    ${state.tableRule ? `<p class="note">${tableRuleNote()}</p>` : ""}
+    ${tableRuleNotes().map(n => `<p class="note">${n}</p>`).join("")}
     ${state.winBonus ? `<p class="note">Gewinnt ${playerName(state.winBonus.player)} das nächste Minispiel, gibt es ${state.winBonus.amount} Münzen extra.</p>` : ""}
     ${tipNote()}
     ${pauseNote()}
@@ -65,7 +65,11 @@ function screenOverview() {
   `;
 }
 
-function tableRuleNote() { return `${state.tableRule.title}: Gilt bis zum nächsten Minispiel.`; }
+// Rules that last until the next minigame (event card "untilMinigame", hand card "tableRule"): [{ title, player? }]
+function addTableRule(rule) { state.tableRules = (state.tableRules || []).concat(rule); }
+function tableRuleNotes() {
+  return (state.tableRules || []).map(r => `${r.title}${r.player !== undefined && state.players[r.player] ? ` (${playerName(r.player)})` : ""}: Gilt bis zum nächsten Minispiel.`);
+}
 
 // Shown instead of the picture once all event cards or all minigames are played; each button mixes only its own kind back in.
 function eventsUsedUp() { return playableEvents().some(eventReady) && !drawableEvents().length; }
@@ -129,7 +133,8 @@ function secretEntries(i, fresh) {
             ${isNew ? `<span class="chip chip-gold">Neu</span>` : ""}
             <strong class="secret-title">${escapeName(p.title || "")}</strong>
             <p>${escapeName(p.text || "")}</p>
-            ${secretOutcome(p)}
+            ${secretOutcome(p, i)}
+            ${handCardControl(i, p)}
           </article>`;
       }).join("")}
     </section>`;

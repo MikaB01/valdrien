@@ -254,9 +254,11 @@ function luckyFairy(side) {
 function luckyFairyVictim(j, quiet) {
   const f = state.ability;
   if (!f.won || f.victim !== undefined || !f.candidates.includes(j)) return;
+  const before = state.players.map(s => s.coins);
   f.victim = j;
   f.gain = Math.ceil(state.players[j].coins / 2);
   transfer(j, f.player, f.gain);
+  noteLosses(before, "ability", roleOf(f.player).ability.name, f.player);
   if (!quiet) { save(); render(); }
 }
 
@@ -604,9 +606,11 @@ function spinTheft() {
   if (target === undefined) return;
   const k = Math.floor(Math.random() * WHEEL.length);
   const value = WHEEL[k];
+  const before = state.players.map(s => s.coins);
   let amount;
   if (value > 0) { amount = Math.min(value, state.players[target].coins); transfer(target, i, value); }
   else { amount = Math.min(1, state.players[i].coins); transfer(i, target, 1); }
+  noteLosses(before, "ability", roleOf(i).ability.name, i);
   f.spins.push({ target, value, amount });
   f.from = f.angle || 0;
   const turns = f.from - (f.from % 360) + 360 * 5;

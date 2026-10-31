@@ -48,15 +48,17 @@ function rerollSetting() {
 let confirmFinish = false;
 let confirmRedraw = false;
 let confirmReroll = false;
+let taskPick = null; // { i, id }: a task with an effect waits for the other player in the purse
 let sheet = null;
 
 // The whole game state; saved to localStorage after every change.
 // players[]: { name, role (index into ROLES, null without roles), coins, revealed, abilityUsed, taskDone, accessCode, secrets[], rerolls }
 // roles: false for a game without roles (fixed when the game is dealt); rerollLimit, discardedRoles: drawing new roles at the handover.
 // Further fields are added during play: adventure, running, timerEnd, eventDeck (top = last), playedEvents, playedMinigames, event, minigame,
-// timerPaused, timerDuration, timerWindow, guess, ability, peekRole, lasting (effect until the next event card), tableRule (until the next
-// minigame), winBonus, lastWinnings, lastParticipants, slots, session,
+// timerPaused, timerDuration, timerWindow, guess, ability, peekRole, lasting (effect until the next event card), tableRules (until the next
+// minigame), winBonus, lastWinnings, lastWinningsCard, lastParticipants, slots, session, handCard, keyGlimpse, recentLoss,
 // and for the newer abilities and the keys goal: players[].keys, buyKey, escaped, tip, pause, curiosity, cardCount.
+// players[].secrets[]: { id, title, text, kind (instant|task|keep), effect, coins, drinking, status, result, seen, time }
 let state = {
   screen: "start",
   names: ["Anna", "Ben", "Clara", "David"],
@@ -81,6 +83,9 @@ function load() {
   else if (state.freeGuesses) state.lasting = { effect: "looseTongues", title: "Lose Zungen" };
   delete state.seersNight;
   delete state.freeGuesses;
+  // games saved while only one rule could last until the next minigame
+  if (state.tableRule) state.tableRules = [state.tableRule];
+  delete state.tableRule;
   selectAdventureData(state.adventure);
 }
 
@@ -125,4 +130,30 @@ function transfer(from, to, n) {
   const amount = Math.min(n, state.players[from].coins);
   state.players[from].coins -= amount;
   state.players[to].coins += amount;
+  return amount;
+}
+
+// Coins a player lost through an event card, a minigame, another player's ability or hand card; never what a player
+// spends himself (keys, guesses, secret cards). Hand cards (Freibrief, Sündenbock, …) act on the last loss until the
+// next card is drawn. state.recentLoss[i] = { amount, source: "event"|"minigame"|"ability"|"card", title, card }
+function noteLosses(before, source, title, except) {
+  const card = state.cardCount || 0;
+  state.players.forEach((s, i) => {
+    const lost = before[i] - s.coins;
+    if (lost <= 0 || i === except) return;
+    state.recentLoss = state.recentLoss || {};
+    const r = state.recentLoss[i];
+    const same = r && r.card === card && r.source === source && r.title === title;
+    state.recentLoss[i] = { amount: (same ? r.amount : 0) + lost, source, title, card };
+  });
+}
+function recentLoss(i) {
+  const r = (state.recentLoss || {})[i];
+  return r && r.card === (state.cardCount || 0) ? r : null;
+}
+function clearLoss(i) { if (state.recentLoss) delete state.recentLoss[i]; }
+
+// The gain of the minigame just won (state.lastWinnings), until the next card is drawn.
+function recentWin(i) {
+  return state.lastWinningsCard === (state.cardCount || 0) ? (state.lastWinnings || {})[i] || 0 : 0;
 }

@@ -1505,51 +1505,6 @@
           "effect": "jailerDrinks",
           "requiresRoles": false
         },
-        "fund-im-eintopf": {
-          "pos": 210,
-          "name": "Fund im Eintopf",
-          "category": "Glück",
-          "visibility": "private",
-          "description": "Du fischst etwas Hartes aus deinem Eintopf. Kein Zahn, sondern zwei Münzen! Wem sie vorher gehörten, fragst du lieber nicht. Du erhältst 2 Münzen.",
-          "privateType": "instant",
-          "privateCoins": 2
-        },
-        "rattenbiss": {
-          "pos": 220,
-          "name": "Rattenbiss",
-          "category": "Pech",
-          "visibility": "private",
-          "description": "Gustav, die Ratte, beißt dich in den großen Zeh und verschwindet mit einer deiner Münzen im Mauerloch. Du verlierst 1 Münze.",
-          "privateType": "instant",
-          "privateCoins": -1
-        },
-        "das-lose-mauerstueck": {
-          "pos": 230,
-          "name": "Das lose Mauerstück",
-          "category": "Glück",
-          "visibility": "private",
-          "description": "Hinter deinem Rücken wackelt ein Stein in der Wand. Dahinter liegt das Versteck eines früheren Gefangenen. Er braucht es nicht mehr. Du erhältst 3 Münzen.",
-          "privateType": "instant",
-          "privateCoins": 3
-        },
-        "der-henker-nimmt-mass": {
-          "pos": 240,
-          "name": "Der Henker nimmt Maß",
-          "category": "Pech",
-          "visibility": "private",
-          "description": "Der Henker schleicht vorbei und misst mit einem Seil deinen Hals ab. Vor Schreck lässt du zwei Münzen fallen, und eine Ratte ist schneller. Du verlierst 2 Münzen.",
-          "privateType": "instant",
-          "privateCoins": -2
-        },
-        "eine-verwechslung": {
-          "pos": 250,
-          "name": "Eine Verwechslung",
-          "category": "Glück",
-          "visibility": "private",
-          "description": "Der Kerkermeister hält dich für seine verstorbene Mutter, weint sich an deiner Schulter aus und steckt dir eine Münze zu. Lass ihn in dem Glauben. Du erhältst 1 Münze.",
-          "privateType": "instant",
-          "privateCoins": 1
-        },
         "das-zauberwort": {
           "pos": 260,
           "name": "Das Zauberwort",
@@ -1557,7 +1512,9 @@
           "visibility": "private",
           "description": "Bring einen Mitspieler dazu, das Wort „Henker“ zu sagen, ohne dass du es vorher selbst sagst. Schaffst du es, erhältst du 2 Münzen.",
           "privateType": "task",
-          "privateCoins": 2
+          "privateCoins": 2,
+          "requiresRoles": false,
+          "drinking": false
         },
         "ein-hoch-auf-den-kerkermeister": {
           "pos": 270,
@@ -1566,7 +1523,9 @@
           "visibility": "private",
           "description": "Bring mindestens drei Mitspieler dazu, gleichzeitig mit dir auf den Kerkermeister anzustoßen. Wasser zählt genauso. Schaffst du es, erhältst du 3 Münzen.",
           "privateType": "task",
-          "privateCoins": 3
+          "privateCoins": 3,
+          "requiresRoles": false,
+          "drinking": false
         },
         "geisterstunde": {
           "pos": 280,
@@ -1575,7 +1534,9 @@
           "visibility": "private",
           "description": "Bring zwei Mitspieler dazu, gleichzeitig mit dir wie ein Gespenst „Huuuu!“ zu heulen. Schaffst du es, erhältst du 2 Münzen.",
           "privateType": "task",
-          "privateCoins": 2
+          "privateCoins": 2,
+          "requiresRoles": false,
+          "drinking": false
         },
         "mundraub": {
           "pos": 290,
@@ -1584,7 +1545,9 @@
           "visibility": "private",
           "description": "Bring einen Mitspieler dazu, dir freiwillig etwas von seinem Teller oder aus seinem Glas anzubieten. Schaffst du es, erhältst du 2 Münzen.",
           "privateType": "task",
-          "privateCoins": 2
+          "privateCoins": 2,
+          "requiresRoles": false,
+          "drinking": false
         },
         "unschuldig": {
           "pos": 300,
@@ -1593,7 +1556,9 @@
           "visibility": "private",
           "description": "Erzähl einem Mitspieler, warum du völlig zu Unrecht hier unten sitzt, bis er laut sagt, dass er dir glaubt. Schaffst du es, erhältst du 2 Münzen.",
           "privateType": "task",
-          "privateCoins": 2
+          "privateCoins": 2,
+          "requiresRoles": false,
+          "drinking": false
         },
         "kopfgeld": {
           "pos": 310,
@@ -1703,6 +1668,162 @@
           "description": "Wer am meisten hat, gibt einen aus. Wer die meisten Münzen hat, bestimmt zwei Mitspieler, die mit ihm einen Schluck trinken. Bei Gleichstand bestimmt jeder der Reichsten einen.",
           "effect": "spotlightMost",
           "requiresRoles": false,
+          "drinking": true
+        },
+        "der-freibrief": {
+          "pos": 410,
+          "name": "Der Freibrief",
+          "category": "Handkarte",
+          "visibility": "private",
+          "description": "Ein zerknitterter Freibrief mit dem Siegel des Kerkermeisters, betrunken unterschrieben, aber gültig. Heb diese Karte auf. Setze sie ein, wenn du Münzen verlierst: Der Verlust gilt für dich nicht. Münzen, die du selbst ausgibst, etwa für Schlüssel oder beim Raten, zählen nicht als Verlust. Danach ist die Karte verbraucht.",
+          "privateType": "keep",
+          "privateCoins": 0,
+          "requiresRoles": false,
+          "effect": "waiver",
+          "drinking": false
+        },
+        "doppelte-ration": {
+          "pos": 420,
+          "name": "Doppelte Ration",
+          "category": "Handkarte",
+          "visibility": "private",
+          "description": "Die Kerkerköchin zwinkert dir zu: Für Sieger gibt es Nachschlag. Heb diese Karte auf. Hast du ein Minispiel gewonnen, zeig sie vor: Dein Gewinn wird verdoppelt. Danach ist die Karte verbraucht.",
+          "privateType": "keep",
+          "privateCoins": 0,
+          "requiresRoles": false,
+          "effect": "doubleWin",
+          "drinking": false
+        },
+        "der-suendenbock": {
+          "pos": 430,
+          "name": "Der Sündenbock",
+          "category": "Handkarte",
+          "visibility": "private",
+          "description": "Im Verlies war es immer der andere. Heb diese Karte auf. Verlierst du durch ein Minispiel Münzen, zeig sie vor und bestimme einen Mitspieler: Er zahlt deinen Verlust statt dir. Münzen, die du selbst ausgibst, etwa für Schlüssel oder beim Raten, zählen nicht als Verlust. Danach ist die Karte verbraucht.",
+          "privateType": "keep",
+          "privateCoins": 0,
+          "requiresRoles": false,
+          "effect": "scapegoat",
+          "drinking": false
+        },
+        "mitgefangen-mitgehangen": {
+          "pos": 440,
+          "name": "Mitgefangen, mitgehangen",
+          "category": "Handkarte",
+          "visibility": "private",
+          "description": "Geteiltes Leid ist halbes Leid, vor allem, wenn der andere zahlt. Heb diese Karte auf. Verlierst du Münzen, zeig sie vor und bestimme einen Mitspieler: Er zahlt die Hälfte deines Verlusts (aufgerundet), du nur den Rest. Münzen, die du selbst ausgibst, etwa für Schlüssel oder beim Raten, zählen nicht als Verlust. Danach ist die Karte verbraucht.",
+          "privateType": "keep",
+          "privateCoins": 0,
+          "requiresRoles": false,
+          "effect": "shareLoss",
+          "drinking": false
+        },
+        "fluestern-durch-die-wand": {
+          "pos": 450,
+          "name": "Flüstern durch die Wand",
+          "category": "Handkarte",
+          "visibility": "private",
+          "description": "Durch einen Riss in der Mauer kann man nebenan jedes Wort hören. Heb diese Karte auf. Einmal darfst du einem Mitspieler heimlich eine Ja-Nein-Frage zu seiner Rolle stellen, zum Beispiel ins Ohr geflüstert. Nach dem Namen der Rolle darfst du nicht fragen. Er muss ehrlich antworten.",
+          "privateType": "keep",
+          "privateCoins": 0,
+          "requiresRoles": true,
+          "effect": "whisper",
+          "drinking": false
+        },
+        "der-tipp-der-wahrsagerin": {
+          "pos": 460,
+          "name": "Der Tipp der Wahrsagerin",
+          "category": "Handkarte",
+          "visibility": "private",
+          "description": "Die Wahrsagerin aus Zelle dreizehn hat dir etwas zugeraunt. Heb diese Karte auf. Zeig sie vor, bevor du auf eine Rolle rätst. Liegst du richtig, erhältst du 5 statt 3 Münzen. Liegst du falsch, ist die Karte trotzdem verbraucht.",
+          "privateType": "keep",
+          "privateCoins": 0,
+          "requiresRoles": true,
+          "effect": "fortuneTip",
+          "drinking": false
+        },
+        "ein-blick-in-fremde-taschen": {
+          "pos": 470,
+          "name": "Ein Blick in fremde Taschen",
+          "category": "Handkarte",
+          "visibility": "private",
+          "description": "Während alle zum Kerkermeister schauen, linst du in die Tasche deines Nachbarn. Heb diese Karte auf. Setze sie ein, um dir die Schlüssel eines Mitspielers deiner Wahl anzusehen. Nur du siehst sie. Was du davon weitererzählst, ist deine Sache, und lügen darfst du auch.",
+          "privateType": "keep",
+          "privateCoins": 0,
+          "requiresRoles": false,
+          "effect": "peekKeys",
+          "drinking": false
+        },
+        "noch-ein-griff-in-den-bund": {
+          "pos": 480,
+          "name": "Noch ein Griff in den Bund",
+          "category": "Handkarte",
+          "visibility": "private",
+          "description": "Der Kerkermeister fummelt ewig an seinem Schlüsselbund herum, und du darfst noch einmal hineingreifen. Heb diese Karte auf. Bekommst du beim Schlüsselkauf einen Schlüssel, den du schon hast, setze sie ein: Du gibst ihn zurück und ziehst noch einmal, ohne erneut zu bezahlen.",
+          "privateType": "keep",
+          "privateCoins": 0,
+          "requiresRoles": false,
+          "effect": "redrawKey",
+          "drinking": false
+        },
+        "der-imaginaere-krug": {
+          "pos": 490,
+          "name": "Der imaginäre Krug",
+          "category": "Geheimer Auftrag",
+          "visibility": "private",
+          "description": "Trink aus einem unsichtbaren Krug, als wäre darin das beste Bier der ganzen Burg: ansetzen, schlucken, zufrieden seufzen. Sag kein Wort dazu. Wer es als Erster bemerkt und laut anspricht, erhält 2 Münzen, und du erhältst ebenfalls 2 Münzen.",
+          "privateType": "task",
+          "privateCoins": 2,
+          "requiresRoles": false,
+          "effect": "witness",
+          "drinking": false
+        },
+        "der-schluesselschwindler": {
+          "pos": 500,
+          "name": "Der Schlüsselschwindler",
+          "category": "Geheimer Auftrag",
+          "visibility": "private",
+          "description": "Behaupte vor allen, du hättest schon zwei verschiedene Schlüssel, und biete an, sie einer Person für 1 Münze zu zeigen. Willigt jemand ein, zahlt er dir 1 Münze, und du zeigst ihm deine echten Schlüssel, ganz gleich, ob du gelogen hast oder nicht. Schaffst du es, erhältst du zusätzlich 2 Münzen.",
+          "privateType": "task",
+          "privateCoins": 2,
+          "requiresRoles": false,
+          "effect": "keyDeal",
+          "drinking": false
+        },
+        "der-fragenmeister": {
+          "pos": 510,
+          "name": "Der Fragenmeister",
+          "category": "Handkarte, Trinkkarte",
+          "visibility": "private",
+          "description": "Heb diese Karte auf. Willst du sie einsetzen, zeig sie vor: Ab jetzt bist du der Fragenmeister. Wer dir eine Frage beantwortet oder auf eine deiner Fragen eingeht, trinkt einen Schluck. Mit dem nächsten Minispiel ist die Karte ungültig, und du bist kein Fragenmeister mehr.",
+          "privateType": "keep",
+          "privateCoins": 0,
+          "requiresRoles": false,
+          "effect": "tableRule",
+          "drinking": true
+        },
+        "das-kerkergesetz": {
+          "pos": 520,
+          "name": "Das Kerkergesetz",
+          "category": "Handkarte, Trinkkarte",
+          "visibility": "private",
+          "description": "Heb diese Karte auf. Willst du sie einsetzen, zeig sie vor und stelle eine Regel rund ums Trinken auf, zum Beispiel „Nur mit der linken Hand trinken“ oder „Vor jedem Schluck ‚Auf den Kerkermeister!‘ rufen“. Wer sich nicht daran hält, trinkt einen Schluck. Mit dem nächsten Minispiel erlischt die Regel.",
+          "privateType": "keep",
+          "privateCoins": 0,
+          "requiresRoles": false,
+          "effect": "tableRule",
+          "drinking": true
+        },
+        "ein-beutel-voll-freibier": {
+          "pos": 530,
+          "name": "Ein Beutel voll Freibier",
+          "category": "Handkarte, Trinkkarte",
+          "visibility": "private",
+          "description": "Heb diese Karte auf. Willst du sie einsetzen, zeig sie vor: Du erhältst 2 Münzen. Danach darfst du so viele Schlücke an deine Mitspieler verteilen, wie du jetzt Münzen hast.",
+          "privateType": "keep",
+          "privateCoins": 2,
+          "requiresRoles": false,
+          "effect": "freeBeer",
           "drinking": true
         }
       }
