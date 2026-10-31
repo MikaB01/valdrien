@@ -11,13 +11,14 @@ A social deduction party game with secret roles, events and minigames, plus a co
 |---|---|
 | `index.html` | Game shell (game master phone and player pages opened via QR code). |
 | `cms.html` | CMS shell ("Valdrien Redaktion"): edit adventures, roles, minigames and events together and live. |
+| `manifest.webmanifest`, `sw.js` | Installable web app (PWA): app manifest and service worker (offline cache: code network first, images and fonts cache first; Supabase calls are never cached). New published files belong in `CORE` in `sw.js`; bump `VERSION` when that list changes. |
 | `connection.js` | Supabase project URL and public anon key, shared by game and CMS. |
 | `js/shared/` | Loaded by game and CMS: `helpers.js`, `catalog.js` (available mechanics), `content-format.js` (content JSON format + upgrade from format 1). |
 | `js/game/` | Game code, one file per topic (see below). |
 | `js/cms/cms.js` | CMS code. |
 | `js/lib/qrcode.js` | Vendored QR code generator (MIT), do not modify. |
 | `css/` | `game.css`, `cms.css`. Color tokens at the top, light and dark theme. |
-| `images/` | Painted artwork, e.g. `forest-guild.jpg`; dungeon pictures (`dungeon-*.jpg`) and key icons (`key-*.webp`) for the Halloween adventure; role portraits in `roles/<role name>.jpeg` (listed in `ROLE_PORTRAITS`, `js/game/artwork.js`). |
+| `images/` | Painted artwork, e.g. `forest-guild.jpg`; dungeon pictures (`dungeon-*.jpg`) and key icons (`key-*.webp`) for the Halloween adventure; role portraits in `roles/<role name>.jpeg` (listed in `ROLE_PORTRAITS`, `js/game/artwork.js`); app icons in `icons/` (cut from the Henkersmahl castle picture, `maskable` versions with a wider cut for round Android masks). |
 | `content/` | Initial content of all adventures: `content.json` (backup) and `initial-content.js` (CMS preview mode and game fallback). |
 | `database/` | `setup.sql` (full Supabase setup, idempotent), `migrate-to-english.sql` (one-time upgrade from the old German schema). |
 
@@ -33,6 +34,7 @@ No build step: plain `<script>` files loaded in order, all top-level declaration
 | `state.js` | `state` (saved to localStorage), settings, coin helpers. |
 | `artwork.js` | Drawn forest and tavern artwork, icons. |
 | `frame.js` | `show(screen)`, `render()`, `SCREENS` registry, bottom app bar (back, purse, menu) and its sheets. |
+| `install.js` | Registers the service worker; "Als App installieren" (start screen and menu) uses the browser's install prompt, on iOS the screen `install` explains "Zum Home-Bildschirm". |
 | `menu.js`, `rulebook.js`, `setup.js`, `overview.js` | Screens before and around play. |
 | `material.js` | Preparation list: material of the minigames and event cards, following the settings and the number of players. |
 | `timer.js` | Countdown to the next event card: fixed or random interval; the clock in the corner of the main screen is the pause/play button. |

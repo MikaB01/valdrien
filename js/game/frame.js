@@ -1,4 +1,4 @@
-const REFERENCE_SCREENS = ["rules", "settings", "quickGuide", "coins", "material"];
+const REFERENCE_SCREENS = ["rules", "settings", "quickGuide", "coins", "material", "install"];
 
 // from: where the back button leads, when a reference screen links to another one (rules -> quick guide)
 function openReference(target, from) {
@@ -95,6 +95,7 @@ function menuSheet() {
         ${entry(icon("lightning"), "In einer Minute erklärt", "openReference('quickGuide')")}
         ${entry(icon("settings"), "Einstellungen", "openReference('settings')")}
         ${inGame || ["names", "intro"].includes(state.screen) ? entry(icon("list"), "Materialliste", "openReference('material')") : ""}
+        ${canInstall() ? entry(icon("install"), "Als App installieren", "installApp()") : ""}
       </div>
       ${inGame ? `
         <span class="menu-divider">Dieses Abenteuer</span>

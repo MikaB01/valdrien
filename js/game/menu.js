@@ -17,6 +17,7 @@ function screenStart() {
           <button class="btn-quiet" onclick="openReference('rules')">Spielregeln</button>
           <button class="btn-quiet" onclick="openReference('settings')">Einstellungen</button>
         </div>
+        ${canInstall() ? `<button class="link-button" onclick="installApp()">Als App installieren</button>` : ""}
       </div>
     </div>
   `;
