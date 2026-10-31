@@ -1067,14 +1067,15 @@
           "title": "der Werwolf",
           "startingCoins": 3,
           "background": "Wolfram ist Schweinehirt im Dorf unter der Burg, ein gutmütiger Kerl mit sehr viel Bart. Nur bei Vollmond wird er ein bisschen haariger. Beim Erntefest ging der Mond genau in dem Moment auf, als das Spanferkel des Burgherrn am Spieß drehte. Am Morgen wachte Wolfram nackt im Hühnerstall auf, ein Schweineohr im Mund und Federn an Stellen, die man nicht nennen will. Angeklagt wegen Spanferkelraubs und unsittlicher Entblößung. Er schwört, er ist unschuldig: Das war der Wolf.",
-          "character": "Schnupper an deinem Essen, bevor du isst, und ab und zu unauffällig an deinem Nachbarn.\nKratz dich hinter dem Ohr oder am Hals, als würde es dort jucken.\nFrag hin und wieder: „Ist heute eigentlich Vollmond?“\nÜbertreib es nicht: Ein kurzes Heulen am Abend reicht.",
+          "character": "Schnupper an deinem Essen, bevor du isst, und ab und zu unauffällig an deinem Nachbarn.\nKratz dich hinter dem Ohr oder am Hals, als würde es dort jucken.\nFrag hin und wieder: „Ist heute eigentlich Vollmond?“ Oder geh raus, schau dir den Mond an und bewundere ihn.\nWenn du dich traust: ein kurzes Heulen am Abend oder zum Mond. Übertreib es aber nicht.",
           "traits": [
-            "ist der Werwolf aus dem Dorf",
+            "ist der Werwolf",
             "schnuppert an Essen und Mitspielern",
-            "kratzt sich ständig hinter dem Ohr"
+            "kratzt sich ständig an Ohren und Hals",
+            "ist besessen vom Mond und heult"
           ],
           "ability": {
-            "name": "Goldfinger",
+            "name": "Die Kraft des Mondes",
             "text": "Direkt nachdem du ein Minispiel gewonnen hast, verdoppelst du deinen Gewinn.",
             "mechanic": "goldFinger"
           }
@@ -1084,12 +1085,14 @@
           "name": "Roderick",
           "title": "der Ritter",
           "startingCoins": 3,
-          "background": "Roderick ist ein fahrender Ritter mit verbeulter Rüstung und unverbeulter Ehre. Er rettet jede Dame, ob sie will oder nicht. Beim Fest oben sah er im Turmfenster eine Dame in Not, kletterte die Burgmauer hoch und warf sie sich über die Schulter. Es war die Schwiegermutter des Burgherrn, die nur Luft schnappen wollte. Sie zog ihm den Nachttopf über, er fiel in den Misthaufen und von dort direkt ins Verlies. Bei seiner Ehre: Er ist unschuldig. Sie hat sehr wohl „Hilfe!“ gerufen. Allerdings erst, als sie ihn sah.",
-          "character": "Sag oft „Bei meiner Ehre!“ und leg dabei die Hand aufs Herz.\nKündige vor Minispielen deinen Sieg an, als wäre es ein Turnier.\nVerbeug dich, wenn dir jemand etwas reicht.",
+          "background": "Roderick ist Turnierritter mit verbeulter Rüstung und unverbeulter Ehre. Er hat noch nie ein Turnier gewonnen, nimmt aber jedes todernst, sogar das Sackhüpfen beim Kinderfest. Zum Fest oben kam er für das große Lanzenstechen und kündigte seinen Sieg schon beim Frühstück an. Er verlor in der ersten Runde. Daraufhin forderte er den Sieger zum Duell, dann den Schiedsrichter und zuletzt den Burgherrn selbst. Dem warf er den Fehdehandschuh hin, leider mitten ins Gesicht, und leider war der Handschuh aus Eisen. Der Burgherr verlor zwei Zähne, Roderick die Freiheit: Die Wachen schleppten ihn noch vom Turnierplatz direkt ins Verlies. Bei seiner Ehre: Er ist unschuldig. Der Burgherr hätte ja fangen können.",
+          "character": "Sag oft „Bei meiner Ehre!“ und leg dabei die Hand aufs Herz.\nKündige vor Minispielen deinen Sieg an, als wäre es ein Turnier.\nNimm jedes Minispiel sehr ernst, als ginge es um Leben und Tod.\nVerbeug dich, wenn dir jemand etwas reicht.",
           "traits": [
-            "ist ein fahrender Ritter",
+            "ist ein Ritter",
             "schwört „Bei meiner Ehre!“",
-            "kündigt vor Minispielen seinen Sieg an"
+            "kündigt vor Minispielen seinen Sieg an",
+            "nimmt Minispiele etwas zu ernst",
+            "verbeugt sich oft"
           ],
           "ability": {
             "name": "Das Turnier",
@@ -1103,11 +1106,14 @@
           "title": "der Zocker",
           "startingCoins": 3,
           "background": "Zacharias ist Spieler aus Leidenschaft und pleite aus Gewohnheit. Er hat schon Haus, Hof und einen Backenzahn verwettet. Beim Fest oben würfelte er gegen den Burgvogt und verlor alles: Geld, Pferd, Hose. Dann setzte er die Burg selbst, die ihm nicht gehörte, und gewann. Als er die Schlüssel abholen wollte, bekam er nur einen einzigen: den zu Zelle sieben. Er schwört, er ist unschuldig. Gewonnen ist gewonnen.",
-          "character": "Sag „Alles oder nichts!“, wann immer es um Münzen geht.\nLass eine Münze, einen Korken oder Kronkorken über deine Finger wandern oder klimpere damit.\nErzähl, dass du heute eine Glückssträhne spürst.",
+          "character": "Sag „Alles oder nichts!“, wann immer es um Münzen geht.\nLass eine Münze, einen Korken oder Kronkorken über deine Finger wandern oder klimpere damit.\nErzähl, dass du heute eine Glückssträhne spürst.\nFordere andere immer wieder zu Wetten oder kleinen Glücksspielen heraus: „Kopf oder Zahl?“, „Wetten, dass …?“\nFreu dich übertrieben über jedes Ereignis, bei dem es um Glück geht.",
           "traits": [
-            "ist ein Zocker",
+            "ist ein Zocker und Glücksspieler",
             "sagt „Alles oder nichts!“",
-            "spielt ständig mit einer Münze oder einem Korken"
+            "spielt ständig mit einer Münze oder einem Korken",
+            "ist glücksspielsüchtig",
+            "erzählt von Glückssträhnen",
+            "will ständig wetten oder um etwas spielen"
           ],
           "ability": {
             "name": "Glücksfee",
@@ -1120,12 +1126,14 @@
           "name": "Magnus",
           "title": "der Mundschenk",
           "startingCoins": 3,
-          "background": "Magnus ist Mundschenk des Burgherrn und nimmt seinen Beruf sehr ernst. Seine wichtigste Pflicht: jeden Becher vorkosten, damit niemand den Herrn vergiftet. Beim Herbstbankett kostete er so gründlich vor, dass für den Burgherrn nur ein leeres Fass blieb und Magnus singend unter der Tafel lag, die Hose auf dem Kopf. Angeklagt wegen Veruntreuung von zwölf Fässern Wein. Er schwört, er ist unschuldig: Es hätte ja Gift drin sein können.",
-          "character": "Schenk deinen Mitspielern nach, ob sie wollen oder nicht. Wasser zählt genauso, und niemand muss trinken.\nBring Trinksprüche aus, zum Beispiel: „Auf den Kerkermeister, möge er nie nüchtern werden!“\nPrüf jedes Getränk mit einem kleinen Schluck und einem Kennerblick.",
+          "background": "Magnus ist Mundschenk des Burgherrn und nimmt seinen Beruf sehr ernst. Seine wichtigste Pflicht: jeden Becher vorkosten, damit niemand den Herrn vergiftet. Beim Herbstbankett kostete er so gründlich vor, dass für den Burgherrn nur noch leere Fässer blieben und Magnus singend unter der Tafel lag, die Hose auf dem Kopf. Angeklagt wegen Veruntreuung von zwölf Fässern Wein. Er schwört, er ist unschuldig: Es hätte ja Gift drin sein können.",
+          "character": "Schenk deinen Mitspielern nach, ob sie wollen oder nicht, und schau, dass alle immer gut mit Getränken versorgt sind. Wasser zählt genauso, und niemand muss trinken.\nBring Trinksprüche aus, zum Beispiel: „Auf den Kerkermeister, möge er nie nüchtern werden!“\nRuf Trinkrunden und Shotrunden aus.\nPrüf jedes Getränk mit einem kleinen Schluck und einem Kennerblick.",
           "traits": [
-            "ist der Mundschenk des Burgherrn",
+            "ist der Mundschenk",
             "schenkt allen nach",
-            "bringt Trinksprüche aus"
+            "bringt Trinksprüche aus",
+            "veranstaltet Trink- und Shotrunden",
+            "kostet Getränke vor"
           ],
           "ability": {
             "name": "Trinkgeld",
@@ -1139,11 +1147,14 @@
           "title": "die Hexe",
           "startingCoins": 3,
           "background": "Hilda ist Kräuterweib, Hebamme und Fluchexpertin aus dem Moor. Sie verkauft Liebestränke, Warzensalbe und Flüche nach Maß. Auf dem Herbstmarkt kaufte der Burgvogt einen Liebestrank für die Wirtin. Leider trank er ihn selbst, und leider stand gerade sein Ziegenbock daneben. Die beiden sind seitdem unzertrennlich, und Hilda sitzt wegen Hexerei. Sie schwört, sie ist unschuldig: Auf der Flasche stand groß „Nicht selbst trinken!“.",
-          "character": "Murmle leise Flüche und Zaubersprüche vor dich hin, gern gereimt.\nRühr in deinem Becher oder auf deinem Teller immer gegen den Uhrzeigersinn.\nKicher, wenn jemandem ein Missgeschick passiert: „Das war ich nicht. Vielleicht.“",
+          "character": "Murmle leise Flüche und Zaubersprüche vor dich hin, gern gereimt.\nRühr in deinem Becher oder auf deinem Teller (immer gegen den Uhrzeigersinn).\nNimm, was gerade da ist, als Zauberstab: eine Gabel, einen Löffel, ein Stück Brot.\nSei ein bisschen abergläubisch: Die 13 bringt Unglück, und eine heruntergefallene Gabel ist ein böses Omen.\nKicher wie eine Hexe, wenn jemandem ein Missgeschick passiert.",
           "traits": [
-            "ist eine Hexe aus dem Moor",
+            "ist eine Hexe",
             "murmelt Flüche und Zaubersprüche",
-            "rührt gegen den Uhrzeigersinn"
+            "rührt gegen den Uhrzeigersinn",
+            "benutzt Zauberstäbe",
+            "ist abergläubisch",
+            "kichert wie eine Hexe"
           ],
           "ability": {
             "name": "Gezinkt",
@@ -1156,12 +1167,15 @@
           "name": "Vlad",
           "title": "der Vampir",
           "startingCoins": 3,
-          "background": "Vlad ist ein Graf aus dem fernen Osten: sehr blass, sehr höflich und sehr durstig. Er reiste zum Fest auf Burg Schwarzfels, weil man ihm ein blutiges Steak versprochen hatte. Es kam durchgebraten. Enttäuscht biss er stattdessen der Gräfin in den Hals. Die Gräfin fand es aufregend, der Graf weniger. Jetzt sitzt Vlad hier unten, wo es endlich schön dunkel ist. Er schwört, er ist unschuldig: Er wollte ihr nur etwas ins Ohr flüstern und ist abgerutscht.",
-          "character": "Halt dir die Serviette wie einen Umhang vors Gesicht, wenn dich jemand ansieht.\nStarr ab und zu verträumt auf den Hals deines Nachbarn.\nMeide Licht: Rück von Kerzen und Lampen ab oder schirm deine Augen ab.",
+          "background": "Vlad ist ein Graf aus dem fernen Osten: sehr blass, sehr höflich und sehr durstig. Er reiste zum Fest auf Burg Schwarzfels, weil man ihm ein blutiges Steak versprochen hatte. Es kam durchgebraten. Enttäuscht biss er stattdessen der Burgherrin in den Hals. Sie fand es aufregend, der Burgherr weniger. Jetzt sitzt Vlad hier unten, wo es endlich schön dunkel ist. Er schwört, er ist unschuldig: Er wollte ihr nur etwas ins Ohr flüstern und ist abgerutscht.",
+          "character": "Starr ab und zu verträumt auf den Hals deines Nachbarn, oder sag ihm, was für einen schönen Hals er hat.\nMeide Licht: Rück von Kerzen und Lampen ab oder schirm deine Augen ab.\nEkel dich vor Knoblauch: Frag beim Essen, ob da Knoblauch drin ist, und beschwer dich, dass es danach stinkt.\nMeide Kreuze: Leg dein Besteck nie über Kreuz und zuck zusammen, wenn es jemand anders tut.\nSei fasziniert von Blut: Bei Rotwein, Ketchup oder einem kleinen Kratzer wirst du ganz andächtig.",
           "traits": [
-            "ist ein Vampirgraf aus dem Osten",
+            "ist ein Vampirgraf",
             "starrt auf Hälse",
-            "versteckt sich hinter der Serviette wie hinter einem Umhang"
+            "meidet Licht",
+            "mag keinen Knoblauch",
+            "meidet Kreuze",
+            "ist fasziniert von Blut"
           ],
           "ability": {
             "name": "Herausforderung",
@@ -1175,11 +1189,12 @@
           "title": "der Dieb",
           "startingCoins": 3,
           "background": "Dietrich ist Taschendieb, Einbrecher und Hühnerdieb, je nach Tageszeit. Er hat flinke Finger und ein ehrliches Gesicht, das macht die Sache leichter. Beim Fest oben ließ er die Silberlöffel des Burgherrn mitgehen, alle achtundvierzig, versteckt in seiner Hose. Auf dem Weg hinaus klimperte er wie ein Glockenspiel, und die Wache tanzte noch eine Runde mit ihm, bevor sie ihn festnahm. Er schwört, er ist unschuldig: Die Löffel sind ihm von selbst in die Hose gefallen.",
-          "character": "Lass harmlose Kleinigkeiten vom Tisch mitgehen: Korken, Bierdeckel, Servietten. Nichts Wertvolles, kein Handy, kein Geld, keine Schlüssel.\nBeteuere bei jeder Gelegenheit: „Ich hab nichts genommen!“\nTast immer wieder deine Taschen ab, als würdest du nachzählen.",
+          "character": "Lass harmlose Kleinigkeiten mitgehen, vom Tisch und von deinen Mitspielern: Korken, Bierdeckel, Servietten. Nichts Wertvolles, kein Handy, kein Geld, keine Schlüssel. Am Ende gibst du alles zurück.\nBeteuere bei jeder Gelegenheit: „Ich hab nichts genommen! Ich bin unschuldig!“\nTast immer wieder deine Taschen ab, als würdest du nachzählen.",
           "traits": [
             "ist ein Dieb",
-            "lässt Kleinigkeiten vom Tisch mitgehen",
-            "beteuert „Ich hab nichts genommen!“"
+            "lässt Kleinigkeiten vom Tisch und von Mitspielern mitgehen",
+            "beteuert „Ich hab nichts genommen! Ich bin unschuldig!“",
+            "kontrolliert seine eigenen Taschen"
           ],
           "ability": {
             "name": "Langfinger",
@@ -1193,11 +1208,13 @@
           "title": "der Harnharte",
           "startingCoins": 3,
           "background": "Heinrich ist ein geselliger Bürger mit sehr großem Durst und sehr kleiner Blase. Er war als Gast zum Fest oben in der Burg eingeladen. Nach dem dritten Krug musste er mal, wie immer. Die Abtritte waren besetzt, also stellte er sich in den Burghof und erleichterte sich ausgiebig an die Burgmauer. Leider genau unter dem Fenster des Burgherrn, der gerade frische Luft schnappen wollte. Jetzt sitzt Heinrich wegen „Beschmutzung herrschaftlichen Gemäuers“ im Verlies und schwört, er sei unschuldig. Die Mauer hätte schließlich im Weg gestanden.",
-          "character": "Sag immer wieder: „Ich muss mal wieder.“\nFrag in die Runde: „Muss noch wer?“\nRutsch unruhig auf deinem Platz herum, wenn es spannend wird.",
+          "character": "Sag immer wieder: „Ich muss mal wieder.“\nFrag in die Runde: „Muss noch wer?“\nGeh öfter mal auf die Toilette.\nRutsch unruhig auf deinem Platz herum, wenn es spannend wird, als müsstest du es dir mit aller Kraft verkneifen.\nWenn du es extrem spielen willst: Steht jemand auf, um zur Toilette zu gehen, steh auch auf: „Warte, ich komm mit!“ Begleite ihn aber nur bis zur Tür, nie hinein, und lass es, wenn er das nicht lustig findet.",
           "traits": [
-            "war Gast beim Fest oben",
+            "ist der Harnharte, eigentlich eher der Harnschwache",
             "muss ständig mal",
-            "fragt, ob noch wer muss"
+            "fragt, ob noch wer muss",
+            "sitzt auf dem Stuhl, als müsste er sich das Pinkeln verkneifen",
+            "folgt anderen Richtung Toilette"
           ],
           "ability": {
             "name": "Pinkelpause",
@@ -1210,12 +1227,13 @@
           "name": "Gregor",
           "title": "der Gelehrte",
           "startingCoins": 3,
-          "background": "Gregor ist Medicus, Sterndeuter und Leichenaufschneider, alles im Namen der Wissenschaft. Er weiß viel und erzählt noch mehr. Als der Hofnarr der Burg starb, wollte Gregor endlich herausfinden, wo bei einem Narren der Witz sitzt. Er schlich nachts in die Gruft und schnitt nach. Den Witz fand er nicht, dafür fand ihn die Witwe des Narren. Jetzt sitzt er wegen Grabschändung hier und schwört, er ist unschuldig: Der Narr hätte es lustig gefunden.",
-          "character": "Fang Sätze an mit „Wusstet ihr eigentlich …?“ und erzähl dann eine Kerkerweisheit, gern erfunden.\nSag „Faszinierend!“, wenn etwas Ekliges oder Seltsames passiert.\nFrag die anderen neugierig nach den Einzelheiten ihrer Verbrechen.",
+          "background": "Gregor ist Medicus, Sterndeuter und Leichenaufschneider, alles im Namen der Wissenschaft. Er weiß viel und erzählt noch mehr. Als der Hofnarr der Burg starb, wollte Gregor endlich herausfinden, wo bei einem Narren der Witz sitzt. Er schlich nachts in die Gruft und schnitt den Narren auf, um nachzusehen. Den Witz fand er nicht, dafür fand ihn die Witwe des Narren. Jetzt sitzt er wegen Grabschändung hier und schwört, er ist unschuldig: Der Narr hätte es lustig gefunden.",
+          "character": "Fang Sätze an mit „Wusstet ihr eigentlich …?“ und erzähl dann Fakten zu allen möglichen Themen, gern auch Kerkerweisheiten. Die Fakten müssen nicht stimmen.\nSag „Faszinierend!“, wenn etwas Ekliges oder Seltsames passiert.\nSei neugierig und wissbegierig: Frag die anderen über alles aus, am liebsten über die Einzelheiten ihrer Verbrechen.",
           "traits": [
             "ist ein Gelehrter und Medicus",
-            "beginnt Sätze mit „Wusstet ihr eigentlich …?“",
-            "sagt „Faszinierend!“"
+            "beginnt Sätze mit „Wusstet ihr eigentlich …?“ und erzählt viele Fakten",
+            "sagt „Faszinierend!“",
+            "ist neugierig und wissbegierig"
           ],
           "ability": {
             "name": "Neugiernase",
@@ -1228,12 +1246,14 @@
           "name": "Gunther",
           "title": "der Gaukler",
           "startingCoins": 3,
-          "background": "Gunther ist Gaukler, Feuerspucker und Witzeerzähler, wobei die Witze das Gefährlichste sind. Er sollte beim Fest den Burgherrn zum Lachen bringen. Er jonglierte mit drei Fackeln, verbrannte sich nur ein bisschen und erzählte dann den Witz über die Burgherrin und den Stallknecht. Der ganze Saal lachte. Nur der Burgherr nicht, und der Stallknecht auch nicht. Gunther schwört, er ist unschuldig: Woher sollte er wissen, dass der Witz wahr ist?",
-          "character": "Ruf „Tadaa!“, wenn dir etwas gelingt, und sei es nur, dass du dein Glas abstellst.\nErzähl schlechte Witze und lach selbst am lautesten.\nMach kleine Kunststückchen: einen Löffel balancieren, einen Korken verschwinden lassen.",
+          "background": "Gunther ist Gaukler, Feuerspucker und Witzeerzähler, wobei die Witze das Gefährlichste sind. Ab und zu singt er Balladen und spielt dazu Laute, Flöte oder Dudelsack, alles mehr schlecht als recht. Er sollte beim Fest den Burgherrn zum Lachen bringen. Er jonglierte mit drei Fackeln, verbrannte sich nur ein bisschen und erzählte dann den Witz über die Burgherrin und den Stallknecht. Der ganze Saal lachte. Nur der Burgherr nicht, und der Stallknecht auch nicht. Gunther schwört, er ist unschuldig: Woher sollte er wissen, dass der Witz wahr ist?",
+          "character": "Ruf „Tadaa!“, wenn dir etwas gelingt, und sei es nur, dass du dein Glas abstellst.\nErzähl schlechte Witze und lach selbst am lautesten.\nMach kleine Kunststückchen: einen Löffel balancieren, einen Korken verschwinden lassen.\nSing, summ oder tu so, als würdest du ein Instrument spielen, gern eine traurige Ballade über deine eigene Verhaftung.",
           "traits": [
             "ist ein Gaukler",
             "ruft „Tadaa!“",
-            "erzählt schlechte Witze"
+            "erzählt schlechte Witze",
+            "macht kleine Kunststücke",
+            "singt, summt und spielt Instrumente"
           ],
           "ability": {
             "name": "Narrenrätsel",
