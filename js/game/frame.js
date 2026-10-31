@@ -1,4 +1,4 @@
-const REFERENCE_SCREENS = ["rules", "settings", "quickGuide", "coins"];
+const REFERENCE_SCREENS = ["rules", "settings", "quickGuide", "coins", "material"];
 
 // from: where the back button leads, when a reference screen links to another one (rules -> quick guide)
 function openReference(target, from) {
@@ -94,6 +94,7 @@ function menuSheet() {
         ${entry(icon("rules"), "Regelwerk", "openReference('rules')")}
         ${entry(icon("lightning"), "In einer Minute erklärt", "openReference('quickGuide')")}
         ${entry(icon("settings"), "Einstellungen", "openReference('settings')")}
+        ${inGame || ["names", "intro"].includes(state.screen) ? entry(icon("list"), "Materialliste", "openReference('material')") : ""}
       </div>
       ${inGame ? `
         <span class="menu-divider">Dieses Abenteuer</span>
@@ -168,6 +169,7 @@ function show(screen) {
   confirmReroll = false;
   taskPick = null;
   sheet = null;
+  closeCardFullscreen();
   if (screen === "overview" && state.running && !state.timerEnd) startRound();
   save();
   render();
@@ -189,11 +191,12 @@ function render() {
   document.getElementById("app").innerHTML = fn();
   document.body.dataset.screen = state.screen;
   const inAdventure = !["start", "adventures"].includes(state.screen);
-  const id = inAdventure ? (state.screen === "names" ? setupAdventure() : currentAdventure()).id : null;
+  const id = inAdventure ? (state.screen === "names" ? setupAdventure() : state.screen === "material" ? materialSetup().adventure : currentAdventure()).id : null;
   const look = backdropClass(id);
   document.getElementById("backdrop").className = look === "tavern" ? look : [look, state.screen === "intro" ? "intro" : ""].join(" ").trim();
   setAdventureLook(id);
   if (state.screen === "names") validateNames();
+  minigameMounted();
   renderFrame();
   updateMusic();
 }

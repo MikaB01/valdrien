@@ -208,6 +208,36 @@ function secretOutcome(p, holder) {
   return `<p class="outcome outcome-done"><strong>✓ Schon verbucht</strong>Die App hat dir ${coins} ${p.coins < 0 ? "abgezogen" : "gutgeschrieben"}. Du musst nichts weiter tun.</p>`;
 }
 
+// Tapping a secret card shows only its title and text full screen, so a player can prove it to the table
+// without anyone seeing the role, keys or coins on the same page. Buttons on the card keep their own action.
+const SHOW_HINT = `<span class="show-hint" aria-hidden="true">Antippen zum Vorzeigen ⤢</span>`;
+function showCardFullscreen(event, card) {
+  if (event && event.target.closest("button, a, input")) return;
+  const title = (card.querySelector(".secret-title") || {}).textContent || "";
+  const text = (card.querySelector(".secret-text") || {}).textContent || "";
+  closeCardFullscreen();
+  const layer = document.createElement("div");
+  layer.className = "card-fullscreen";
+  layer.id = "card-fullscreen";
+  layer.setAttribute("role", "dialog");
+  layer.setAttribute("aria-modal", "true");
+  layer.setAttribute("aria-label", title);
+  layer.innerHTML = `
+    <article class="card">
+      <span class="label">Geheime Ereigniskarte</span>
+      <div class="card-name">${escapeHtml(title)}</div>
+      <p class="narrative">${escapeHtml(text)}</p>
+      <p class="muted">Antippen zum Schließen</p>
+    </article>`;
+  layer.addEventListener("click", closeCardFullscreen);
+  document.body.appendChild(layer);
+}
+function closeCardFullscreen() {
+  const layer = document.getElementById("card-fullscreen");
+  if (layer) layer.remove();
+}
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeCardFullscreen(); });
+
 // When the time is up: an event card or, by the share set in the settings, a minigame; only what is left can come.
 function canDrawTimed() { return drawableEvents().length > 0 || remainingMinigames().length > 0; }
 

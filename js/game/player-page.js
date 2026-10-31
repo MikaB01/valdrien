@@ -163,12 +163,13 @@ function secretsHtml(d) {
       ${list.map(p => {
         const fresh = !seen.includes(p.id);
         return `
-        <article class="secret-card ${fresh ? "new" : ""}">
+        <article class="secret-card showable ${fresh ? "new" : ""}" onclick="showCardFullscreen(event, this)">
           ${fresh ? `<span class="chip chip-gold">Neu</span>` : ""}
           <strong class="secret-title">${escapeName(p.title || "")}</strong>
-          <p>${escapeName(p.text || "")}</p>
+          <p class="secret-text">${escapeName(p.text || "")}</p>
           ${secretOutcome(p)}
           ${fresh ? `<button class="btn-quiet" onclick="markSecretSeen('${escapeName(p.id)}')">Gelesen</button>` : ""}
+          ${SHOW_HINT}
         </article>`;
       }).join("")}
     </section>`;

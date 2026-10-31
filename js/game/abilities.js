@@ -329,7 +329,7 @@ ABILITIES.heartySoup = {
 ABILITIES.encore = {
   prepare: (i, f) => {
     const fresh = shuffle(remainingMinigames());
-    f.options = fresh.concat(shuffle(activeIndices(MINIGAMES).filter(k => !fresh.includes(k)))).slice(0, 3);
+    f.options = fresh.concat(shuffle(playableMinigames().filter(k => !fresh.includes(k)))).slice(0, 3);
   },
   show: (i, f, header) => header + `
         <div class="action-group">
@@ -351,7 +351,9 @@ ABILITIES.loadedDice = {
 function useLoadedDice(i) {
   if (state.players[i].abilityUsed) return;
   state.players[i].abilityUsed = true;
-  state.minigame.loadedDice = i;
+  const m = state.minigame;
+  m.loadedDice = i;
+  if (lineupComplete(m)) prepareMinigame(m); // the first try does not count: the app's help starts over
   save();
   render();
 }
@@ -375,13 +377,16 @@ function foresight(first, next) {
 }
 
 // Duel against an opponent of choice; the winner gets half of the loser's coins (rounded up), nothing else.
+// Any minigame that works for two can be the duel (duelReady), drinking games never.
 ABILITIES.challenge = {
-  show: (i, f, header) => header + abilityButton(`${playerName(i)} fordert zum Duell`, "challenge()")
+  show: (i, f, header) => header + (remainingMinigames("duel").length || playableMinigames().some(duelReady)
+    ? abilityNote("Die App zieht ein Duell oder ein Minispiel, das sich zu zweit spielen lässt.") + abilityButton(`${playerName(i)} fordert zum Duell`, "challenge()")
+    : abilityNote("In diesem Abenteuer gibt es kein Minispiel, das sich zu zweit spielen lässt."))
 };
 function challenge() {
   const i = state.ability.player;
+  if (state.players[i].abilityUsed || !drawMinigame("duel", i)) return;
   state.players[i].abilityUsed = true;
-  drawMinigame("duel", i);
   state.minigame.stakes = "half";
   save();
   render();
@@ -418,7 +423,7 @@ function minigameAbilities() {
 // Rules and opponents must be fixed and the player must take part.
 function tournamentReady(i) {
   const m = state.minigame;
-  if (MINIGAMES[m.index].category === "duel" && m.opponent === undefined) return false;
+  if (!lineupComplete(m) || (MINIGAMES[m.index].scoring === "none" && !isDuel(m))) return false;
   return minigameParticipants().includes(i);
 }
 
@@ -516,7 +521,7 @@ function refreshCard(card) {
   if (card.kind === "minigame") {
     const m = state.minigame;
     const keep = {};
-    ["request", "card", "automatic", "stakes", "tournament", "loadedDice"].forEach(k => { if (m[k] !== undefined) keep[k] = m[k]; });
+    ["request", "card", "automatic", "stakes", "tournament", "loadedDice", "duel"].forEach(k => { if (m[k] !== undefined) keep[k] = m[k]; });
     startMinigame(m.index);
     Object.assign(state.minigame, keep);
   }

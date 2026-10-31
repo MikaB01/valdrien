@@ -73,13 +73,13 @@ function tableRuleNotes() {
 
 // Shown instead of the picture once all event cards or all minigames are played; each button mixes only its own kind back in.
 function eventsUsedUp() { return playableEvents().some(eventReady) && !drawableEvents().length; }
-function minigamesUsedUp() { return activeIndices(MINIGAMES).length > 0 && !remainingMinigames().length; }
+function minigamesUsedUp() { return playableMinigames().length > 0 && !remainingMinigames().length; }
 
 function reshuffleBox() {
   const events = eventsUsedUp(), minigames = minigamesUsedUp();
   if (!events && !minigames) return "";
   const text = events && minigames ? "Alle Ereigniskarten und Minispiele sind gespielt."
-    : events ? `Alle Ereigniskarten sind gespielt.${activeIndices(MINIGAMES).length ? " Es kommen nur noch Minispiele." : ""}`
+    : events ? `Alle Ereigniskarten sind gespielt.${playableMinigames().length ? " Es kommen nur noch Minispiele." : ""}`
     : "Alle Minispiele sind gespielt. Es kommen nur noch Ereigniskarten.";
   return `
     <div class="reshuffle note">
@@ -129,12 +129,13 @@ function secretEntries(i, fresh) {
       ${list.map(p => {
         const isNew = fresh.includes(p.id);
         return `
-          <article class="secret-card ${isNew ? "new" : ""}">
+          <article class="secret-card showable ${isNew ? "new" : ""}" onclick="showCardFullscreen(event, this)">
             ${isNew ? `<span class="chip chip-gold">Neu</span>` : ""}
             <strong class="secret-title">${escapeName(p.title || "")}</strong>
-            <p>${escapeName(p.text || "")}</p>
+            <p class="secret-text">${escapeName(p.text || "")}</p>
             ${secretOutcome(p, i)}
             ${handCardControl(i, p)}
+            ${SHOW_HINT}
           </article>`;
       }).join("")}
     </section>`;

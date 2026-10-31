@@ -17,6 +17,7 @@ function screenNames() {
     <p class="muted" id="names-error"></p>
     ${modeCard()}
     ${drinkingCard()}
+    ${materialCard()}
     <button class="btn" id="deal-btn" onclick="dealRoles()">${settings.roles !== false ? "Rollen geheim verteilen" : "Abenteuer beginnen"}</button>
   `;
 }
@@ -41,21 +42,23 @@ function modeCard() {
     </section>`;
 }
 
-// Drinking game on or off, only for adventures with drinking cards.
+// Drinking game on or off, only for adventures with drinking cards or drinking minigames.
 function drinkingCard() {
   const a = setupAdventure();
   if (!hasDrinkingCards(a)) return "";
   const on = drinkingOn();
-  const count = a.events.filter(e => !e.deleted && !e.retired && e.drinking).length;
-  const cards = `${count} ${count === 1 ? "Ereigniskarte" : "Ereigniskarten"} mit Trinkrunden und Trinkregeln`;
+  const cards = a.events.filter(e => !e.deleted && !e.retired && e.drinking).length;
+  const games = a.minigames.filter(m => !m.deleted && m.drinking).length;
+  const what = [cards ? `${cards} ${cards === 1 ? "Ereigniskarte" : "Ereigniskarten"}` : "", games ? `${games} ${games === 1 ? "Minispiel" : "Minispiele"}` : ""]
+    .filter(Boolean).join(" und ") + " rund ums Trinken";
   return `
     <section class="mode-card" aria-label="Trinkspiel">
       <div class="mode-head">
         <span class="mode-icon">${icon("mug")}</span>
-        <span class="mode-title"><span class="label">Trinkspiel</span><strong>${on ? "Mit Trinkkarten" : "Ohne Trinkkarten"}</strong></span>
+        <span class="mode-title"><span class="label">Trinkspiel</span><strong>${on ? "Mit Trinkspiel" : "Ohne Trinkspiel"}</strong></span>
         <button class="mode-change" onclick="openSettingsAt('drinking')">Ändern</button>
       </div>
-      <ul class="mode-facts"><li>${on ? `${cards} sind im Stapel. Wasser oder Saft zählen genauso.` : `${cards} bleiben aus dem Stapel.`}</li></ul>
+      <ul class="mode-facts"><li>${on ? `${what} sind dabei. Wasser oder Saft zählen genauso.` : `${what} bleiben draußen.`}</li></ul>
     </section>`;
 }
 

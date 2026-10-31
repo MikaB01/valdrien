@@ -129,10 +129,10 @@ function drinkingSection(segment) {
       <section id="settings-drinking" class="${settingsFocus === "drinking" ? "focus" : ""}">
         ${sectionHead("drinking", "Trinkspiel")}
         ${hint("drinking", on
-          ? "Ereigniskarten und geheime Karten mit Trinkrunden und Trinkregeln sind im Stapel. Alkohol ist trotzdem nie Pflicht: Wasser oder Saft zählen genauso. Gilt sofort, auch in einer laufenden Partie."
-          : "Ereigniskarten und geheime Karten mit Trinkrunden und Trinkregeln bleiben aus dem Stapel, ihr spielt ganz normal. Gilt sofort, auch in einer laufenden Partie.")}
+          ? "Ereigniskarten, geheime Karten und Minispiele mit Trinkrunden und Trinkregeln sind dabei. Alkohol ist trotzdem nie Pflicht: Wasser oder Saft zählen genauso. Gilt sofort, auch in einer laufenden Partie."
+          : "Ereigniskarten, geheime Karten und Minispiele mit Trinkrunden und Trinkregeln bleiben draußen, ihr spielt ganz normal. Gilt sofort, auch in einer laufenden Partie.")}
         <div class="segmented" role="group" aria-label="Trinkspiel">
-          ${segment(on, "setSetting('drinking', true)", "Mit Trinkkarten")}
+          ${segment(on, "setSetting('drinking', true)", "Mit Trinkspiel")}
           ${segment(!on, "setSetting('drinking', false)", "Ohne")}
         </div>
       </section>`;

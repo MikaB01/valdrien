@@ -143,6 +143,17 @@ function playChime() {
   }
 }
 
+// The signal of a countdown or drawing time running out. Part of the game, so it sounds even with the reward sound off.
+function playSignal() {
+  const ctx = audioGraph();
+  if (!ctx) return;
+  if (ctx.state === "suspended") ctx.resume().catch(() => {});
+  const t = ctx.currentTime + 0.02, out = music.sfx;
+  bell(t, 62, { gain: 0.2, length: 2.2, out });
+  tone(t, 74, 0.5, { type: "square", gain: 0.06, attack: 0.002, filter: 2400, out });
+  tone(t + 0.18, 74, 0.5, { type: "square", gain: 0.06, attack: 0.002, filter: 2400, out });
+}
+
 // Buying a key: the jailer's bunch jingles, a lock clicks; the third key ends with an opening rattle.
 function playKeySound(complete) {
   if (!soundOn()) return;

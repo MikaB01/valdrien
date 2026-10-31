@@ -103,6 +103,7 @@ function tick() {
     document.getElementById("timer-ring").style.setProperty("--left", Math.min(1, remaining / roundMs()));
   }
 
+  minigameTimerTick(remaining);
   if (remaining === 0) {
     // never interrupt a minigame or a running flow; the card comes once the overview is shown again
     const interruptible = ["overview", "coins", "rules", "quickGuide", "roles", "settings"].includes(state.screen);

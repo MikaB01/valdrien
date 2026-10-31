@@ -42,16 +42,41 @@ function convertEvent(id, e) {
     drinking: e.drinking === true,
     retired: eventRetired(e),
     privateType: privateType(e),
-    privateCoins: num(e.privateCoins, 0)
+    privateCoins: num(e.privateCoins, 0),
+    material: materialLines(e.material)
   };
 }
+
+// Material for the preparation list: one item per line, "Streichhölzer: 3 pro Spieler" is counted for the table.
+function materialLines(list) { return (Array.isArray(list) ? list : []).map(x => String(x).trim()).filter(Boolean).map(escapeHtml); }
 
 function convertMinigame(id, m) {
   const b = m.reward || {};
   const category = CATEGORY_NAMES[m.category] ? m.category : "all";
-  const mg = { id, title: escapeHtml(m.name || "Ohne Namen"), category, text: escapeHtml(m.description || "") };
-  const fields = CATALOG.categories[category].fields.map(([field]) => field);
-  fields.forEach(f => { if (typeof b[f] === "number") mg[f] = b[f]; });
+  const scorings = CATALOG.scorings[category] || {};
+  const scoring = scorings[m.scoring] ? m.scoring : "";
+  const tool = CATALOG.minigameTools[m.tool] ? m.tool : "";
+  const mg = {
+    id, title: escapeHtml(m.name || "Ohne Namen"), category, text: escapeHtml(m.description || ""),
+    scoring, tool,
+    alone: CATALOG.alone[m.alone] ? m.alone : "",
+    opener: CATALOG.openers[m.opener] ? m.opener : "",
+    drinking: m.drinking === true,
+    twoPlayer: m.twoPlayer === true,
+    prompts: (Array.isArray(m.prompts) ? m.prompts : []).map(escapeHtml).filter(Boolean),
+    material: materialLines(m.material)
+  };
+  const fields = (scoring ? scorings[scoring] : CATALOG.categories[category]).fields.map(([field]) => field);
+  fields.forEach(f => { if (typeof b[f] === "number") mg[f] = b[f]; else if (scoring) mg[f] = 0; });
+  CATALOG.minigameTools[tool].fields.forEach(([f]) => { if (typeof m[f] === "number") mg[f] = m[f]; });
+  if (scoring === "perPoint" || tool === "vote") mg.rounds = Math.max(1, num(scoring === "perPoint" ? b.rounds : m.rounds, 3));
+  if (tool === "countdown" || tool === "sketch") mg.seconds = Math.max(1, num(mg.seconds, 10));
+  if (tool === "hourglass" || tool === "length") {
+    const lo = num(mg.min, tool === "length" ? 30 : 10), hi = num(mg.max, tool === "length" ? 100 : 30);
+    mg.min = Math.min(lo, hi); mg.max = Math.max(lo, hi);
+  }
+  if (scoring === "shown") mg.maxShown = Math.max(1, num(mg.maxShown, 10));
+  if (scoring) return mg;
   if (category === "duel" || category === "all") mg.winner = num(mg.winner, 0);
   if (category === "oneVsAll") mg.solo = num(mg.solo, 0);
   if (category === "team") mg.team = num(mg.team, 0);
@@ -165,7 +190,11 @@ function activeIndices(list) { return list.map((_, i) => i).filter(i => !list[i]
 function playableEvents() {
   return activeIndices(EVENTS).filter(i => !EVENTS[i].retired && (rolesOn() || !EVENTS[i].requiresRoles) && (drinkingOn() || !EVENTS[i].drinking));
 }
-function hasDrinkingCards(a) { return Boolean(a) && a.events.some(e => !e.deleted && !e.retired && e.drinking); }
+// Without the drinking game, drinking minigames stay out as well (also from abilities that need a minigame).
+function playableMinigames() { return activeIndices(MINIGAMES).filter(i => drinkingOn() || !MINIGAMES[i].drinking); }
+function hasDrinkingCards(a) {
+  return Boolean(a) && (a.events.some(e => !e.deleted && !e.retired && e.drinking) || a.minigames.some(m => !m.deleted && m.drinking));
+}
 
 let ROLES = [];
 let EVENTS = [];

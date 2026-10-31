@@ -334,7 +334,7 @@ function renderList() {
           <span class="right">
             ${cms.section === "events" && e.visibility === "private" ? `<span class="chip private">privat</span>` : ""}
             ${cms.section === "events" && eventRequiresRoles(e) ? `<span class="chip" title="Nur in Partien mit Rollen">Rollen</span>` : ""}
-            ${cms.section === "events" && e.drinking === true ? `<span class="chip" title="Nur im Trinkspiel">Trinken</span>` : ""}
+            ${(cms.section === "events" || cms.section === "minigames") && e.drinking === true ? `<span class="chip" title="Nur im Trinkspiel">Trinken</span>` : ""}
             ${here.map(p => `<span class="here-badge" title="${escapeHtml(p.email)} arbeitet hier">${escapeHtml(initials(p.email))}</span>`).join("")}
           </span>
         </button>`;
@@ -355,7 +355,10 @@ function subtitle(e) {
 function rewardShort(e) {
   const k = CATEGORIES[e.category];
   if (!k || !e.reward) return "";
-  const first = k.fields.map(([f]) => e.reward[f]).find(w => typeof w === "number");
+  const scoring = (CATALOG.scorings[e.category] || {})[e.scoring];
+  if (scoring && !scoring.fields.length) return " · keine Münzen";
+  if (e.scoring === "shown") return typeof e.reward.maxShown === "number" ? ` · bis +${e.reward.maxShown}` : "";
+  const first = (scoring || k).fields.map(([f]) => e.reward[f]).find(w => typeof w === "number");
   return typeof first === "number" ? ` · ${first > 0 ? "+" : ""}${first}` : "";
 }
 
@@ -457,6 +460,10 @@ document.addEventListener("input", e => {
     // an effect that needs roles marks the event, so the stored content says it too; switching away clears the mark again
     if (effectNeedsRoles(ev) !== effectNeedsRoles(eventBefore)) change([...eventPath, "requiresRoles"], effectNeedsRoles(ev), true);
   }
+  if (path[2] === "minigames" && path.length === 5 && path[4] === "category") {
+    const mg = getPath(cms.content, path.slice(0, -1)) || {};
+    if (mg.scoring && !(CATALOG.scorings[mg.category] || {})[mg.scoring]) change([...path.slice(0, -1), "scoring"], "", true);
+  }
   if (path[path.length - 1] === "name") {
     const title = document.getElementById("editor-title");
     if (title && path.length >= 3) title.textContent = value || "Ohne Namen";
@@ -520,7 +527,7 @@ function checkHtml() {
   if (!eventList.length) problems.push("Es gibt noch keine Ereignisse.");
   else if (retired.length === eventList.length) problems.push("Kein Ereignis hat eine Wirkung, die es im Spiel noch gibt.");
   if (retired.length) notes.push(`Kommen nicht ins Spiel, weil ihre Wirkung ein Minispiel auslöste (das gibt es nicht mehr): ${retired.map(e => e.name || "Ohne Namen").join(", ")}. Wähle dort eine andere Wirkung oder lösche sie.`);
-  Object.entries(CATEGORIES).forEach(([k, d]) => { if (!minigameList.some(m => m.category === k)) notes.push(`Kein Minispiel in der Kategorie „${d.name}“. Fähigkeiten, die so ein Minispiel brauchen, finden dann keins.`); });
+  if (!minigameList.some(m => m.drinking !== true && (m.category === "duel" || m.twoPlayer === true))) notes.push("Kein Duell und kein Minispiel, das zu zweit als Duell spielbar ist. Die Fähigkeit „Herausforderung“ findet dann keins.");
   const withoutMechanic = roles.filter(r => !r.ability?.mechanic).map(r => r.name || "Ohne Namen");
   if (withoutMechanic.length) notes.push(`Ohne Spielmechanik (Münzen von Hand): ${withoutMechanic.join(", ")}.`);
   const privateCount = eventList.filter(e => e.visibility === "private").length;
@@ -530,6 +537,8 @@ function checkHtml() {
   else if (roleEvents) notes.push(`${roleEvents} ${roleEvents === 1 ? "Ereignis kommt" : "Ereignisse kommen"} nur in Partien mit Rollen vor. Ohne Rollen bleiben ${inGame.length - roleEvents}.`);
   const drinkingCount = inGame.filter(e => e.drinking === true).length;
   if (drinkingCount) notes.push(`${drinkingCount} ${drinkingCount === 1 ? "Ereignis kommt" : "Ereignisse kommen"} nur vor, wenn in den Einstellungen das Trinkspiel an ist.`);
+  const drinkingGames = minigameList.filter(m => m.drinking === true).length;
+  if (drinkingGames) notes.push(`${drinkingGames} ${drinkingGames === 1 ? "Minispiel kommt" : "Minispiele kommen"} nur im Trinkspiel vor.`);
   if (privateCount) notes.push(`${privateCount} private ${privateCount === 1 ? "Ereignis geht" : "Ereignisse gehen"} jeweils an einen einzelnen Spieler auf seine QR-Seite.`);
   if (!problems.length && !notes.length) return `<div class="message">Spielbereit: ${roles.length} Rollen, ${minigameList.length} Minispiele, ${eventList.length} Ereignisse.</div>`;
   return `
@@ -583,6 +592,10 @@ function entryEditor() {
   if (cms.section === "minigames") {
     const k = CATEGORIES[e.category];
     const categoryOptions = Object.fromEntries(Object.entries(CATEGORIES).map(([id, d]) => [id, d.name]));
+    const scorings = CATALOG.scorings[e.category] || {};
+    const scoring = scorings[e.scoring] ? scorings[e.scoring] : null;
+    const rewardFields = scoring ? scoring.fields : k ? k.fields : [];
+    const tool = CATALOG.minigameTools[e.tool || ""] || CATALOG.minigameTools[""];
     html += `
       <div class="group">
         <div class="field-row">
@@ -590,13 +603,37 @@ function entryEditor() {
           ${field([...p, "category"], "Kategorie", "select", { values: categoryOptions })}
         </div>
         ${field([...p, "description"], "Beschreibung", "textarea", { rows: 6, help: "So wird gespielt. Wird vorgelesen." })}
+        ${e.category === "oneVsAll" ? field([...p, "alone"], "Wer spielt allein?", "select", { values: CATALOG.alone, defaultValue: "" }) : ""}
+        ${e.category === "duel" ? `<p class="explain">Duell: Die App lost aus, wer herausfordert. Er sucht sich seinen Gegner aus.</p>` : ""}
+        ${field([...p, "opener"], "Wer beginnt?", "select", { values: CATALOG.openers, defaultValue: "", help: "Die App zeigt es über dem Minispiel an." })}
       </div>
       <div class="group">
         <h3>Belohnung</h3>
-        ${k ? `<div class="field-row">${k.fields.map(([f, n]) => field([...p, "reward", f], n, "number")).join("")}</div>
-          ${k.names ? `<div class="field-row">${k.names.map(([f, n]) => field([...p, "reward", f], n, "text")).join("")}</div>` : ""}`
+        ${k ? `
+          ${Object.keys(scorings).length ? field([...p, "scoring"], "Wie wird gewertet?", "select", {
+            values: Object.assign({ "": "Wie in der Kategorie üblich" }, Object.fromEntries(Object.entries(scorings).map(([id, d]) => [id, d.name]))), defaultValue: "" }) : ""}
+          ${rewardFields.length ? `<div class="field-row">${rewardFields.map(([f, n]) => field([...p, "reward", f], n, "number")).join("")}</div>` : ""}
+          ${!scoring && k.names ? `<div class="field-row">${k.names.map(([f, n]) => field([...p, "reward", f], n, "text")).join("")}</div>` : ""}
+          ${scoring && /zahlt/.test(scoring.name) ? `<p class="explain">Hat der Zahlende nicht genug Münzen, legt die Spielbank den Rest drauf.</p>` : ""}`
         : `<p class="empty">Wähle zuerst eine Kategorie.</p>`}
-      </div>`;
+      </div>
+      <div class="group">
+        <h3>Was die App dabei tut</h3>
+        ${field([...p, "tool"], "Hilfe der App beim Spielen", "select", { values: Object.fromEntries(Object.entries(CATALOG.minigameTools).map(([id, d]) => [id, d.name])),
+          defaultValue: "", help: "Die App kann nur diese Hilfen. Neue müssen programmiert werden." })}
+        ${tool.fields.length ? `<div class="field-row">${tool.fields.map(([f, n]) => field([...p, f], n, "number")).join("")}</div>` : ""}
+        ${tool.prompts ? field([...p, "prompts"], tool.prompts, "lines", { rows: 6 }) : ""}
+      </div>
+      <div class="group">
+        <h3>Herausforderung und Trinkspiel</h3>
+        ${e.category === "duel" ? "" : `${field([...p, "twoPlayer"], "Auch zu zweit als Duell spielbar?", "flag", { values: { false: "Nein", true: "Ja" }, defaultValue: false })}
+        <p class="explain">Braucht eine Fähigkeit ein Duell (Herausforderung), kommen alle Duelle und alle Minispiele mit „Ja“ in Frage, Trinkspiele nie.</p>`}
+        ${field([...p, "drinking"], "Ist das ein Trinkspiel?", "flag", { values: { false: "Nein", true: "Ja, nur im Trinkspiel" }, defaultValue: false })}
+        <p class="explain">${e.drinking === true
+          ? "Trinkspiel: Es kommt nur vor, wenn in den Einstellungen der App das Trinkspiel eingeschaltet ist."
+          : "Kein Trinkspiel: Es kommt immer vor. Geht es ums Trinken, stell hier „Ja“ ein, dann lässt es sich mit dem Trinkspiel abschalten."}</p>
+      </div>
+      ${materialField(p)}`;
   }
 
   if (cms.section === "events") {
@@ -645,9 +682,19 @@ function entryEditor() {
         <p class="explain">${e.drinking === true
           ? "Trinkkarte: Sie kommt nur in den Stapel, wenn in den Einstellungen der App das Trinkspiel eingeschaltet ist."
           : "Keine Trinkkarte: Sie kommt immer vor. Geht es auf der Karte ums Trinken, stell hier „Ja“ ein, dann lässt sie sich mit dem Trinkspiel abschalten."}</p>
-      </div>`;
+      </div>
+      ${materialField(p)}`;
   }
   return html;
+}
+
+function materialField(p) {
+  return `
+      <div class="group">
+        <h3>Material</h3>
+        ${field([...p, "material"], "Was ihr dafür bereitlegen müsst", "lines", { rows: 3,
+          help: "Ein Teil pro Zeile. Erscheint in der Materialliste der App. „Streichhölzer: 3 pro Spieler“ rechnet die App für die Runde aus." })}
+      </div>`;
 }
 
 function ask(kind) { cms.dialog = { kind }; renderEditor(); document.querySelector(".confirm .btn")?.focus(); }
@@ -718,7 +765,9 @@ function teamHtml() {
 const FIELD_LABELS = { privateType: "Wann Münzen", privateCoins: "Münzen", name: "Name", startingCoins: "Startkapital", background: "Hintergrundgeschichte", character: "Charakter",
   traits: "Erkennungsmerkmale", ability: "Fähigkeit", task: "Geheime Aufgabe", text: "Beschreibung", mechanic: "Mechanik", bonus: "Bonus",
   category: "Kategorie", description: "Beschreibung", reward: "Belohnung", visibility: "Sichtbarkeit", effect: "Wirkung", setting: "Setting",
-  requiresRoles: "Nur mit Rollen", drinking: "Trinkkarte",
+  requiresRoles: "Nur mit Rollen", drinking: "Trinkspiel", scoring: "Wertung", tool: "Hilfe der App", prompts: "Begriffe/Fragen",
+  alone: "Wer spielt allein", opener: "Wer beginnt", twoPlayer: "Als Duell spielbar", material: "Material", seconds: "Sekunden",
+  min: "Kleinster Wert", max: "Größter Wert", rounds: "Runden",
   story: "Geschichte", epilogue: "Schlusstext", terms: "Begriffe", title: "Überschrift", paragraphs: "Text", closing: "Letzter Satz",
   before: "Text vorher", after: "Text nachher", pos: "Reihenfolge" };
 function historyText(v) {

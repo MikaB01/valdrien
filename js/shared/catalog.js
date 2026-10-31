@@ -10,6 +10,49 @@ const CATALOG = {
     uneven:   { name: "1 gegen 2", fields: [["single", "Einzelner gewinnt: erhält"], ["pair", "Paar gewinnt: jeder erhält"]], names: [["singleName", "Name des Einzelnen (z. B. Riese)"], ["pairName", "Name des Paars (z. B. Zwerge)"]] }
   },
 
+  // Other ways to score a minigame (field "scoring"); "" = the category's own reward fields above.
+  // Payments between players: if the payer has too little, the bank adds the rest.
+  scorings: {
+    duel: {
+      fromLoser: { name: "Verlierer zahlt dem Sieger", fields: [["fromLoser", "Verlierer zahlt dem Sieger"]] }
+    },
+    all: {
+      winners:          { name: "Ein oder mehrere Sieger", fields: [["winner", "Jeder Sieger erhält"]] },
+      shown:            { name: "Sieger erhält so viele Münzen, wie er zeigt", fields: [["maxShown", "Höchste Zahl, die man zeigen kann"]] },
+      worstToBest:      { name: "Wer am weitesten daneben liegt, zahlt dem Besten", fields: [["worstToBest", "Betrag"]] },
+      firstOutToWinner: { name: "Wer zuerst raus ist, zahlt dem Sieger", fields: [["firstOutToWinner", "Betrag"]] },
+      perPoint:         { name: "Punkte über mehrere Runden, Münzen je Punkt", fields: [["perPoint", "Münzen je Punkt"], ["rounds", "Runden"]] },
+      none:             { name: "Keine Münzen (z. B. Trinkspiel)", fields: [] }
+    },
+    oneVsAll: {
+      perCorrect: { name: "Jeder, der richtig liegt, erhält Münzen; keiner richtig: der Einzelne", fields: [["perCorrect", "Jeder Richtige erhält"], ["solo", "Keiner richtig: Einzelner erhält"]] },
+      none:       { name: "Keine Münzen (z. B. Trinkspiel)", fields: [] }
+    }
+  },
+
+  // What the app does while a minigame is played (field "tool"), with the settings each one needs.
+  minigameTools: {
+    "":         { name: "Nichts weiter", fields: [] },
+    untilTimer: { name: "Läuft, bis die Uhr abläuft (dann gewinnen alle, die noch dabei sind)", fields: [] },
+    countdown:  { name: "Countdown mit Ton", fields: [["seconds", "Sekunden"]] },
+    hourglass:  { name: "Blinde Stoppuhr reihum, die App lost die Zielzeit aus", fields: [["min", "Kürzeste Zielzeit (Sekunden)"], ["max", "Längste Zielzeit (Sekunden)"]] },
+    length:     { name: "Die App lost eine Länge aus", fields: [["min", "Kürzeste Länge (cm)"], ["max", "Längste Länge (cm)"]] },
+    sketch:     { name: "Reihum malen, danach alle Bilder zeigen", fields: [["seconds", "Sekunden zum Malen"]], prompts: "Begriffe zum Malen, einer pro Zeile" },
+    vote:       { name: "Reihum geheim abstimmen, die App zeigt nur die Stimmenzahl", fields: [["rounds", "Runden"]], prompts: "Fragen, eine pro Zeile" }
+  },
+
+  // One against all: who plays alone (field "alone"). Duels: the app draws the challenger, he picks his opponent.
+  alone: {
+    "":     "Wer die meisten Münzen hat",
+    fewest: "Wer die wenigsten Münzen hat",
+    vote:   "Die Gruppe wählt (Spielleiter tippt an)"
+  },
+  // Who starts (field "opener"), shown in the line-up.
+  openers: {
+    "":   "Keine Angabe",
+    most: "Wer die meisten Münzen hat"
+  },
+
   abilities: {
     "":             "Keine (nur Text, Münzen werden von Hand gebucht)",
     treasureHunter: "Schatzsucher: sofort +3 Münzen",

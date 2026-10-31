@@ -34,12 +34,13 @@ No build step: plain `<script>` files loaded in order, all top-level declaration
 | `artwork.js` | Drawn forest and tavern artwork, icons. |
 | `frame.js` | `show(screen)`, `render()`, `SCREENS` registry, bottom app bar (back, purse, menu) and its sheets. |
 | `menu.js`, `rulebook.js`, `setup.js`, `overview.js` | Screens before and around play. |
+| `material.js` | Preparation list: material of the minigames and event cards, following the settings and the number of players. |
 | `timer.js` | Countdown to the next event card: fixed or random interval; the clock in the corner of the main screen is the pause/play button. |
 | `guessing.js` | Guessing a role. |
 | `abilities.js` | `ABILITIES`: one handler per ability mechanic. |
 | `events.js` | Drawing and resolving event cards, private events, secret tasks (`TASK_EFFECTS`). |
 | `effects.js` | `EFFECTS`: one handler per event effect. |
-| `minigames.js` | Drawing minigames, line-ups, scoring. |
+| `minigames.js` | Drawing minigames, line-ups, the app's help while playing (`MINIGAME_TOOLS`: stopwatch, countdown, drawing, secret vote, …) and booking the result (`SCORINGS`). |
 | `keys.js` | Adventures with goal `keys` (Henkersmahl): key price and the jailer's mood, buying random keys, the secret key display, showing one player's keys to another, breakout and its end screen. |
 | `hand-cards.js` | `HAND_CARDS`: private cards the player keeps and plays later under "Nachsehen". |
 | `ending.js` | Secret tasks, final count, play again. |
@@ -69,14 +70,18 @@ No build step: plain `<script>` files loaded in order, all top-level declaration
     roles: { <id>: { pos, name, title, startingCoins, background, character, traits[],
                      ability: { name, text, mechanic }, task: { name, text, bonus } } },
     minigames: { <id>: { pos, name, category (duel|all|oneVsAll|team|uneven), description,
-                         reward: { winner, loser, judge, solo, group, fail, team, single, pair, singleName, pairName } } },
+                         reward: { winner, loser, judge, solo, group, fail, team, single, pair, singleName, pairName,
+                                   fromLoser, maxShown, worstToBest, firstOutToWinner, perPoint, rounds, perCorrect },
+                         scoring, tool, seconds, min, max, rounds, prompts[], alone, opener, twoPlayer, drinking, material[] } },
     events: { <id>: { pos, name, category, visibility (public|private), description, effect,
-                      privateType (instant|task|keep), privateCoins, requiresRoles, drinking } } } } }
+                      privateType (instant|task|keep), privateCoins, requiresRoles, drinking, material[] } } } } }
 ```
 
 `goal: "keys"` (Das Henkersmahl im Verlies): instead of counting coins at the end, players buy random keys for `keyPrice()`: `RULES.keyPrice.start` (7), 1 coin less with every event card with effect `jailerDrinks` (they come in list order), down to `RULES.keyPrice.min` (2); the chances and key pictures are in `RULES.keys`. Whoever first holds all three kinds breaks out and wins at once; each player sees only their own keys. Role tasks are cashed in during the game under "Nachsehen", because the end comes without warning.
 
-`drinking: true` marks a drinking card (Trinkrunde, Trinkregel): it only comes into the deck while the drinking game is switched on in the settings (`settings.drinking`, per device, applies at once, also in a running game).
+Minigames (2026-10-31): `scoring` picks how the result is booked (`CATALOG.scorings[category]`, empty = the category's own reward fields): `fromLoser` (duel, the loser pays the winner), `winners` (one or more winners), `shown` (the winner gets the number he showed, up to `maxShown`), `worstToBest` / `firstOutToWinner` (one player pays another), `perPoint` (points entered round by round, `reward.rounds`), `perCorrect` (each right guesser, otherwise the single player), `none` (no coins). Payments between players are topped up by the bank (`payWithBank`). The scoring's fields live in `reward`. `tool` (`CATALOG.minigameTools`, implemented in `MINIGAME_TOOLS`) is what the app does while the minigame is played; its settings (`seconds`, `min`, `max`, `rounds`, `prompts`) sit on the minigame itself: `untilTimer` (plays until the event timer runs out), `countdown`, `hourglass` (blind stopwatch in turns, the app books closest/farthest itself), `length` (random length), `sketch` (drawing in turns, then a gallery and the solution), `vote` (secret vote in turns, only the counts are shown). `alone` decides who plays alone in one against all (`""` most coins, `fewest`, `vote`: the table picks), `opener: "most"` shows who starts. Duels: the app draws the challenger at random, he picks his opponent. An ability duel (Herausforderung) draws a duel or a minigame with `twoPlayer: true`, never a drinking game (`duelReady`); such a minigame is played by the two (`state.minigame.duel`). `material` (one item per line, also on events) feeds the preparation list; `"Streichhölzer: 3 pro Spieler"` is multiplied by the number of players.
+
+`drinking: true` marks a drinking card (Trinkrunde, Trinkregel): it only comes into the deck while the drinking game is switched on in the settings (`settings.drinking`, per device, applies at once, also in a running game). The same field on a minigame keeps it out of draws and ability duels (`playableMinigames()`).
 
 Effects that last "until the next event card" (`seers`, `bounty`, `looseTongues`, `costlyGuess`, `secretSale`, `keyPriceSet`) are listed in `LASTING` in `js/game/effects.js` and stored as `state.lasting = { effect, title }`; bought secret cards do not end them. `untilMinigame` keeps a reminder (`state.tableRules`) on the main screen until the next minigame.
 

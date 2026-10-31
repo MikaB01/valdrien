@@ -753,7 +753,10 @@
           "description": "Abwechselnd schiebt jeder eine Münze oder einen Bierdeckel mit einem Fingerschnipp über den Tisch. Wer näher an der Kante liegt, ohne herunterzufallen, gewinnt die Runde. Wer zuerst 2 Runden gewinnt, siegt.",
           "reward": {
             "winner": 2
-          }
+          },
+          "material": [
+            "Zwei Münzen oder Bierdeckel"
+          ]
         },
         "daumenringen": {
           "pos": 20,
@@ -781,7 +784,10 @@
           "reward": {
             "winner": 2,
             "loser": -1
-          }
+          },
+          "material": [
+            "Ein Korken"
+          ]
         },
         "die-gefuehlte-minute": {
           "pos": 50,
@@ -856,7 +862,11 @@
           "reward": {
             "solo": 3,
             "group": 1
-          }
+          },
+          "material": [
+            "Drei Becher",
+            "Ein Kronkorken"
+          ]
         },
         "pantomime-der-taverne": {
           "pos": 130,
@@ -1233,150 +1243,270 @@
         }
       },
       "minigames": {
-        "die-henkersgrimasse": {
-          "pos": 10,
-          "name": "Die Henkersgrimasse",
-          "category": "duel",
-          "description": "Ihr schaut euch über den Tisch in die Augen. Abwechselnd schneidet ihr die grausigste Fratze, die ihr könnt, jeder dreimal. Wer zuerst lacht oder grinst, verliert. Lacht keiner, gewinnt die gruseligere Fratze, darüber entscheidet die Gruppe per Handzeichen.",
-          "reward": {
-            "winner": 3
-          }
-        },
-        "der-loeffel-am-galgen": {
-          "pos": 20,
-          "name": "Der Löffel am Galgen",
-          "category": "duel",
-          "description": "Jeder hängt sich einen Löffel an die Nase. Auf „Los!“ zählt die Gruppe laut die Sekunden. Wessen Löffel länger hängen bleibt, gewinnt. Wer ihn mit der Hand berührt, verliert sofort. Jeder hat drei Versuche, der längste zählt.",
-          "reward": {
-            "winner": 3
-          }
-        },
-        "das-letzte-wort": {
-          "pos": 30,
-          "name": "Das letzte Wort",
-          "category": "duel",
-          "description": "Ihr nennt abwechselnd ein gruseliges Wort: Sarg, Galgen, Nebel, Leiche … Jedes neue Wort muss mit dem letzten Buchstaben des vorigen beginnen. Wer länger als fünf Sekunden zögert oder ein Wort wiederholt, verliert. Ob ein Wort gruselig genug ist, entscheidet die Gruppe.",
-          "reward": {
-            "winner": 3
-          }
-        },
-        "der-beste-kerkermeister": {
-          "pos": 40,
-          "name": "Der beste Kerkermeister",
-          "category": "duel",
-          "description": "Wer kann den betrunkenen Kerkermeister besser? Jeder hat zehn Sekunden: lallen, schwanken, den richtigen Schlüssel suchen, ein Lied anstimmen. Der Herausforderer beginnt. Danach stimmt die Gruppe per Handzeichen ab. Bei Gleichstand gibt es eine zweite Runde mit fünf Sekunden.",
-          "reward": {
-            "winner": 3
-          }
-        },
-        "die-henkersmahlzeit": {
-          "pos": 50,
-          "name": "Die Henkersmahlzeit",
-          "category": "all",
-          "description": "Jeder beschreibt in einem Satz seine letzte Mahlzeit vor dem Galgen, so köstlich oder so eklig, wie er will. Der Richter spielt den Kerkermeister, hört sich alles an und kürt das beste Henkersmahl. Sein Wort gilt.",
-          "reward": {
-            "winner": 3,
-            "judge": 1
-          }
-        },
         "stellt-euch-tot": {
           "pos": 60,
           "name": "Stellt euch tot",
           "category": "all",
-          "description": "Auf Kommando stirbt jeder einen dramatischen Tod und bleibt danach regungslos auf seinem Platz. Wer sich bewegt, lacht oder spricht, ist raus. Die Ausgeschiedenen dürfen die Übrigen mit Grimassen und Gruselgeräuschen zum Lachen bringen, aber niemanden anfassen. Wer zuletzt noch tot ist, gewinnt.",
+          "scoring": "winners",
+          "description": "Auf Kommando stirbt jeder einen dramatischen Tod, ob auf dem Stuhl, am Tisch oder auf dem Boden, und bleibt danach regungslos liegen. Wer sich bewegt, lacht oder spricht, ist raus. Die Ausgeschiedenen dürfen die Übrigen mit Grimassen und Gruselgeräuschen zum Lachen bringen, aber niemanden anfassen. Wer zuletzt noch tot ist, gewinnt. Sind bei der nächsten zufällig gezogenen Ereigniskarte noch mehrere tot, gewinnen sie alle.",
           "reward": {
             "winner": 3
-          }
+          },
+          "tool": "untilTimer",
+          "twoPlayer": true
         },
         "das-rattenrennen": {
           "pos": 70,
-          "name": "Das Rattenrennen",
+          "name": "Gustav ins Loch",
           "category": "all",
-          "description": "Stellt ein Glas als Käse in die Tischmitte. Jeder legt einen Korken oder Kronkorken als Ratte an die Tischkante vor sich. Reihum schnippt jeder seine Ratte zweimal in Richtung Käse. Wessen Ratte am Ende am nächsten am Käse liegt, gewinnt. Ratten, die vom Tisch fallen, sind tot. Bei Streit entscheidet die Gruppe.",
+          "scoring": "winners",
+          "description": "Stellt einen Becher als Gustavs Mauerloch nah an die Tischkante und legt gemeinsam eine Stelle fest, von der aus alle schnippen. Reihum schnippt jeder von dort einen Kronkorken in Richtung Becher, Runde um Runde, bis einer trifft. Dann wird die Runde zu Ende gespielt: Wer in dieser Runde noch nicht dran war, darf noch schnippen. Alle, die treffen, gewinnen.",
           "reward": {
             "winner": 3
-          }
+          },
+          "twoPlayer": true,
+          "material": [
+            "Ein Becher als Mauerloch",
+            "Kronkorken: 1 pro Spieler"
+          ]
         },
-        "das-monsterverzeichnis": {
-          "pos": 80,
-          "name": "Das Monsterverzeichnis",
-          "category": "all",
-          "description": "Reihum nennt jeder ein Ungeheuer, eine Spukgestalt oder ein Gruselwesen: Vampir, Ghul, Schwiegermutter … Wer länger als fünf Sekunden zögert oder etwas wiederholt, ist raus. Wer zuletzt übrig bleibt, gewinnt. Ob etwas zählt, entscheidet die Gruppe per Handzeichen.",
-          "reward": {
-            "winner": 3
-          }
-        },
-        "wer-hat-den-schluessel": {
-          "pos": 90,
-          "name": "Wer hat den Schlüssel?",
+        "das-gestaendnis": {
+          "pos": 410,
+          "name": "Das Geständnis",
           "category": "oneVsAll",
-          "description": "Der Einzelne spielt den Kerkermeister und schließt die Augen. Die anderen geben unter dem Tisch einen Korken als Schlüssel herum, bis jemand „Fertig!“ ruft. Dann legen alle beide Fäuste auf den Tisch. Der Kerkermeister darf so oft raten, wie halb so viele Gefangene mitspielen (aufgerundet); jede Faust, auf die er zeigt, öffnet sich. Findet er den Schlüssel, gewinnt er, sonst gewinnt die Gruppe.",
+          "scoring": "perCorrect",
+          "description": "Der Einzelne erzählt drei kurze Geschichten aus seinem echten Leben, zum Beispiel Missetaten, peinliche Momente oder sonst etwas, das er erlebt hat. Zwei sind wahr, eine ist erfunden. Harmloses reicht völlig. Auf „Eins, zwei, drei, schuldig!“ zeigen alle anderen gleichzeitig mit den Fingern, welche Geschichte (1, 2 oder 3) erfunden ist. Jeder, der richtig liegt, bekommt 1 Münze. Liegt keiner richtig, bekommt der Einzelne 4 Münzen.",
+          "reward": {
+            "solo": 4,
+            "perCorrect": 1
+          },
+          "twoPlayer": true
+        },
+        "welche-zelle-ist-deine": {
+          "pos": 420,
+          "name": "Welche Zelle ist deine?",
+          "category": "duel",
+          "scoring": "fromLoser",
+          "description": "Jeder denkt sich heimlich eine Zellennummer von 0 bis 100. Abwechselnd stellt ihr euch Ja-Nein-Fragen, um die Zahl des anderen herauszufinden. Verboten sind Fragen nach der Zahl selbst, etwa »Ist sie größer als 50?« oder »Ist sie gerade?«. Erlaubt sind nur Fragen aus dem echten Leben: »Dürfte man in dem Alter schon Auto fahren?«, »Wäre das mit so vielen Gästen eine gute Party?«, »Wären so viele Ratten in einer Zelle zu viele?« Geantwortet wird ehrlich, nach eigenem Gefühl. Statt einer Frage darf man auch eine Zahl raten. Wer zuerst die Zahl des anderen trifft, gewinnt. Hat nach fünf Fragen pro Person keiner getroffen, nennt jeder einen letzten Tipp, und wer näher dran ist, gewinnt. Der Verlierer zahlt dem Gewinner 2 Münzen. Hat er nicht genug, legt die Spielbank den Rest drauf.",
+          "reward": {
+            "fromLoser": 2
+          }
+        },
+        "die-zahl-des-henkers": {
+          "pos": 430,
+          "name": "Die Zahl des Henkers",
+          "category": "all",
+          "scoring": "shown",
+          "description": "Wer das Handy hat, zählt laut bis drei. Bei drei zeigen alle mit beiden Händen eine Zahl von 0 bis 10. Gewonnen hat, wer die höchste Zahl zeigt, die sonst niemand gezeigt hat. Er bekommt so viele Münzen, wie er zeigt. Gibt es keinen Gewinner, wird wiederholt.",
+          "reward": {
+            "maxShown": 10
+          }
+        },
+        "die-sanduhr-des-henkers": {
+          "pos": 440,
+          "name": "Die Sanduhr des Henkers",
+          "category": "all",
+          "scoring": "worstToBest",
+          "description": "Der Henker dreht seine Sanduhr um, doch die Zeit läuft nur in eurem Kopf. Die App gibt eine Zeit vor, zum Beispiel 17 Sekunden. Reihum bekommt jeder das Handy, startet die Stoppuhr und stoppt sie blind, wenn er glaubt, dass die Zeit um ist. Die App zeigt die Ergebnisse erst, wenn alle dran waren. Wer am weitesten danebenliegt, zahlt dem, der am nächsten dran ist, 3 Münzen. Hat er nicht genug, legt die Spielbank den Rest drauf.",
+          "reward": {
+            "worstToBest": 3
+          },
+          "tool": "hourglass",
+          "min": 10,
+          "max": 30,
+          "twoPlayer": true
+        },
+        "die-gestalt-im-nebel": {
+          "pos": 450,
+          "name": "Die Gestalt im Nebel",
+          "category": "oneVsAll",
+          "description": "Der Einzelne denkt an eine berühmte Gruselgestalt oder einen Schurken aus Filmen, Serien, Büchern oder Sagen, zum Beispiel Graf Dracula, Frankensteins Monster, die Mumie, den Sensenmann, Freddy Krueger oder Darth Vader. Die Gruppe hat zusammen 10 Ja-Nein-Fragen. Errät sie die Gestalt, bekommt jeder in der Gruppe 1 Münze. Sonst bekommt der Einzelne 3 Münzen.",
+          "reward": {
+            "solo": 3,
+            "group": 1
+          },
+          "twoPlayer": true
+        },
+        "der-krug-des-kerkermeisters": {
+          "pos": 460,
+          "name": "Der Krug des Kerkermeisters",
+          "category": "all",
+          "scoring": "firstOutToWinner",
+          "description": "Der Kerkermeister will sehen, wer noch Kraft für die Flucht hat. Jeder spielt mit seinem eigenen Glas, Becher oder seiner eigenen Flasche. Nur wer vor dem Start nichts mehr darin hat, füllt nach. Die App zählt zehn Sekunden herunter. In dieser Zeit darf jeder so viel trinken, wie er schafft oder möchte. Beim Ton streckt jeder sofort den Arm mit seinem Getränk gerade nach vorn. Wer den Arm sinken lässt oder beugt, das Getränk abstellt oder etwas verschüttet, ist raus. Wer zuletzt noch durchhält, gewinnt. Wer als Erster raus war, zahlt dem Gewinner 2 Münzen. Hat er nicht genug, legt die Spielbank den Rest drauf.",
+          "reward": {
+            "firstOutToWinner": 2
+          },
+          "tool": "countdown",
+          "seconds": 10,
+          "drinking": true,
+          "material": [
+            "Getränke: 1 pro Spieler (Glas, Becher oder Flasche)"
+          ]
+        },
+        "fotzig-atzig-mausig": {
+          "pos": 470,
+          "name": "Fotzig, atzig, mausig",
+          "category": "all",
+          "scoring": "winners",
+          "description": "Reihum nennt jeder einen Begriff, zum Beispiel ein Getränk, ein Kleidungsstück, ein Urlaubsziel oder etwas aus dem Verlies. Dann zählen alle gemeinsam »Eins, zwei, drei!« und zeigen mit den Fingern, wie sie den Begriff einordnen: 1 für fotzig, 2 für atzig, 3 für mausig. Was die drei Wörter bedeuten, entscheidet jeder nach Gefühl. Alle, die das zeigen, was am häufigsten gezeigt wurde, bekommen einen Punkt. Wird zum Beispiel fotzig und mausig gleich oft gezeigt, gibt es in dieser Runde keine Punkte. Jeder merkt sich seine Punkte oder schreibt sie auf, auf einen Zettel oder ins Handy. Gespielt wird, bis jeder einen Begriff genannt hat. Wer dann die meisten Punkte hat, gewinnt. Bei Gleichstand gewinnen alle mit den meisten Punkten und bekommen jeweils 2 Münzen.",
+          "reward": {
+            "winner": 2
+          },
+          "material": [
+            "Zettel und Stifte für die Punkte (oder ein Handy)"
+          ]
+        },
+        "den-eigenen-strick-drehen": {
+          "pos": 480,
+          "name": "Den eigenen Strick drehen",
+          "category": "all",
+          "scoring": "worstToBest",
+          "description": "Wer gehängt wird, soll wenigstens den passenden Strick haben. Die App lost eine Länge zwischen 30 und 100 Zentimetern aus. Jeder schneidet, ohne nachzumessen, ein Stück Garn von der Rolle ab, das genau so lang sein soll. Danach wird nachgemessen. Wessen Strick am weitesten danebenliegt, zahlt dem, dessen Strick am nächsten dran ist, 3 Münzen. Hat er nicht genug, legt die Spielbank den Rest drauf.",
+          "reward": {
+            "worstToBest": 3
+          },
+          "tool": "length",
+          "min": 30,
+          "max": 100,
+          "twoPlayer": true,
+          "material": [
+            "Eine Rolle Garn oder Schnur",
+            "Eine Schere",
+            "Ein Maßband oder Zollstock"
+          ]
+        },
+        "das-phantombild": {
+          "pos": 490,
+          "name": "Das Phantombild",
+          "category": "all",
+          "scoring": "winners",
+          "description": "Der Henker braucht Steckbriefe. Reihum bekommt jeder das Handy und hat 30 Sekunden Zeit, den Begriff zu malen, den die App nur ihm zeigt, zum Beispiel Galgen, Fledermaus oder Kürbis. Danach zeigt die App alle Bilder nacheinander, und jeder schreibt zu jedem Bild seinen Tipp auf einen Zettel. Für jeden richtigen Tipp gibt es einen Punkt, und für jeden, der dein Bild richtig erraten hat, bekommst du ebenfalls einen Punkt. Wer die meisten Punkte hat, gewinnt.",
+          "reward": {
+            "winner": 4
+          },
+          "tool": "sketch",
+          "seconds": 30,
+          "prompts": [
+            "Galgen",
+            "Fledermaus",
+            "Kürbis",
+            "Sensenmann",
+            "Spinnennetz",
+            "Totenkopf",
+            "Kerze",
+            "Hexenbesen",
+            "Vampirzähne",
+            "Sarg",
+            "Geist",
+            "Ratte",
+            "Schlüssel",
+            "Mumie",
+            "Grabstein",
+            "Henkersbeil",
+            "Eule",
+            "Zaubertrank",
+            "Gitterstäbe",
+            "Spinne",
+            "Vollmond",
+            "Fackel",
+            "Kette",
+            "Kessel",
+            "Knochen",
+            "Werwolf",
+            "Friedhof",
+            "Hexenhut",
+            "Schädel",
+            "Kerkertür"
+          ],
+          "material": [
+            "Zettel und Stifte: 1 pro Spieler"
+          ]
+        },
+        "knobeln": {
+          "pos": 500,
+          "name": "Knobeln",
+          "category": "all",
+          "scoring": "perPoint",
+          "description": "Gespielt werden drei Runden. Jeder bekommt drei Streichhölzer und nimmt heimlich 0 bis 3 davon in die Faust. Dann strecken alle ihre Faust nach vorn. Wer die meisten Münzen hat, tippt zuerst, wie viele Streichhölzer insgesamt in allen Fäusten stecken. Danach tippt reihum jeder andere, aber keine Zahl darf zweimal genannt werden. Dann öffnen alle die Fäuste. Wer genau richtig oder am nächsten dran liegt, bekommt einen Punkt. Liegen mehrere gleich nah dran, bekommt jeder von ihnen einen Punkt. Nach drei Runden bekommt jeder für jeden Punkt 2 Münzen.",
+          "reward": {
+            "perPoint": 2,
+            "rounds": 3
+          },
+          "opener": "most",
+          "twoPlayer": true,
+          "material": [
+            "Streichhölzer: 3 pro Spieler"
+          ]
+        },
+        "der-spion-am-schluesselloch": {
+          "pos": 510,
+          "name": "Der Spion am Schlüsselloch",
+          "category": "oneVsAll",
+          "description": "Der Einzelne hat durchs Schlüsselloch etwas erspäht, und zwar etwas, das alle gerade sehen können. Die Gruppe hat zusammen 10 Ja-Nein-Fragen, um es zu erraten. Errät sie es, gewinnt die Gruppe, sonst der Einzelne.",
           "reward": {
             "solo": 4,
             "group": 1
-          }
+          },
+          "twoPlayer": true
         },
-        "das-verhoer": {
-          "pos": 100,
-          "name": "Das Verhör",
+        "gestaendnisse-am-henkerstisch": {
+          "pos": 520,
+          "name": "Geständnisse am Henkerstisch",
+          "category": "all",
+          "scoring": "none",
+          "description": "Reihum sagt jeder einmal: „Ich hab noch nie …“ und ergänzt etwas, das er wirklich noch nie getan hat. Gern lustig, makaber oder gruselig. Alle, die es doch schon getan haben, trinken einen Schluck. Zum Beispiel: „Ich hab noch nie bei einem Horrorfilm laut geschrien.“ – „Ich hab noch nie nachts allein über einen Friedhof gelaufen.“ – „Ich hab noch nie mit einem Hexenbrett einen Geist gerufen.“",
+          "reward": {},
+          "drinking": true
+        },
+        "der-trank-der-kerkerkoechin": {
+          "pos": 530,
+          "name": "Der Trank der Kerkerköchin",
           "category": "oneVsAll",
-          "description": "Die Gruppe verhört den Einzelnen eine Minute lang mit schnellen Fragen. Er muss jede Frage beantworten, darf aber nie „Ja“ oder „Nein“ sagen, auch nicht „Jo“, „Nö“ oder nicken. Hält er die ganze Minute durch, gewinnt er. Rutscht ihm ein Ja oder Nein heraus, gewinnt die Gruppe. Die Zeit nimmt jemand mit dem Handy.",
-          "reward": {
-            "solo": 4,
-            "group": 1
-          }
+          "scoring": "none",
+          "description": "Die Kerkerköchin hat wieder etwas zusammengepanscht. Wer die wenigsten Münzen hat, geht kurz vor die Tür. Die anderen mischen ihm zwei Getränke, die heute im Umlauf sind, in ein Glas. Sie müssen nicht auf dem Tisch stehen. Er probiert und muss beide Zutaten nennen. Errät er beide, darf er 10 Schlücke unter den anderen verteilen. Schafft er es nicht, trinkt er einen Strafshot.",
+          "reward": {},
+          "alone": "fewest",
+          "drinking": true,
+          "material": [
+            "Mehrere verschiedene Getränke zum Mischen",
+            "Ein leeres Glas",
+            "Ein Strafshot"
+          ]
         },
-        "zehn-ausreden": {
-          "pos": 110,
-          "name": "Zehn Ausreden",
+        "der-vorkoster": {
+          "pos": 540,
+          "name": "Der Vorkoster",
           "category": "oneVsAll",
-          "description": "Der Einzelne hat eine Minute Zeit, zehn verschiedene Ausreden zu nennen, warum er völlig unschuldig im Verlies sitzt. Die Gruppe zählt laut mit, Wiederholungen zählen nicht. Schafft er zehn, gewinnt er. Sonst scheitert er. Bei Streit entscheidet die Gruppe per Handzeichen.",
-          "reward": {
-            "solo": 4,
-            "fail": -1
-          }
+          "scoring": "none",
+          "description": "Der Vorkoster muss alles zuerst probieren, man weiß ja nie. Vorher stimmt die Gruppe ab, wer am nüchternsten ist. Der wird Vorkoster. Er schließt die Augen oder bekommt sie verbunden und bekommt nacheinander drei Getränke zum Riechen und Probieren. Für jedes Getränk, das er richtig errät, darf er 3 Schlücke verteilen.",
+          "reward": {},
+          "alone": "vote",
+          "drinking": true,
+          "material": [
+            "Drei verschiedene Getränke zum Probieren",
+            "Eine Augenbinde oder ein Tuch (wer mag)"
+          ]
         },
-        "galgenmaennchen": {
-          "pos": 120,
-          "name": "Galgenmännchen",
-          "category": "team",
-          "description": "Jedes Team denkt sich heimlich ein gruseliges Wort aus (Katakombe, Henkersmahl, Moder …) und nennt nur die Anzahl der Buchstaben. Abwechselnd raten die Teams einen Buchstaben im Wort der anderen. Jeder Fehlversuch bringt das ratende Team eine Stufe näher an den Galgen; zählt laut mit oder malt auf eine Serviette. Wer zuerst das ganze Wort der anderen errät, gewinnt. Nach acht Fehlversuchen hängt das Team und verliert.",
-          "reward": {
-            "team": 2
-          }
-        },
-        "kerkerfluesterpost": {
-          "pos": 130,
-          "name": "Kerkerflüsterpost",
-          "category": "team",
-          "description": "Jedes Team bekommt vom anderen Team einen gruseligen Satz mit mindestens acht Wörtern, geflüstert an die erste Person. Im Team wird der Satz von Ohr zu Ohr weitergeflüstert, jeder flüstert nur einmal. Die letzte Person sagt laut, was angekommen ist. Das Team, bei dem mehr Wörter richtig angekommen sind, gewinnt. Ist ein Team nur eine Person, hört sie den Satz einmal und wiederholt ihn.",
-          "reward": {
-            "team": 2
-          }
-        },
-        "galgen-beil-und-gift": {
-          "pos": 140,
-          "name": "Galgen, Beil und Gift",
-          "category": "uneven",
-          "description": "Wie Schere, Stein, Papier: Das Beil (Handkante) zerhackt den Galgen, der Galgen (flache Hand) schlägt das Gift, das Gift (Faust als Fläschchen) schlägt das Beil, denn der Henker kippt vorher um. Der Henker spielt gleichzeitig gegen beide Verurteilten. Auf „Eins, zwei, drei, tot!“ zeigen alle drei ihr Zeichen. Der Henker bekommt einen Punkt für jeden Verurteilten, den er schlägt, die Verurteilten bekommen einen Punkt für jedes Mal, das einer von ihnen den Henker schlägt. Wer zuerst fünf Punkte hat, gewinnt.",
-          "reward": {
-            "single": 4,
-            "pair": 2,
-            "singleName": "Henker",
-            "pairName": "Verurteilten"
-          }
-        },
-        "die-dreizehnte-stufe": {
-          "pos": 150,
-          "name": "Die dreizehnte Stufe",
-          "category": "uneven",
-          "description": "Der Galgen hat dreizehn Stufen. Ihr zählt laut von eins aufwärts, immer in dieser Reihenfolge: Kerkermeister, erster Ausbrecher, Kerkermeister, zweiter Ausbrecher. Wer dran ist, sagt eine, zwei oder drei Zahlen hintereinander. Wer die Dreizehn sagen muss, verliert die Runde. Gespielt wird, bis eine Seite zwei Runden gewonnen hat.",
-          "reward": {
-            "single": 4,
-            "pair": 2,
-            "singleName": "Kerkermeister",
-            "pairName": "Ausbrecher"
-          }
+        "wer-wuerde-eher": {
+          "pos": 550,
+          "name": "Wer würde eher …?",
+          "category": "all",
+          "scoring": "none",
+          "description": "Die App zeigt eine Frage. Reihum stimmt jeder in der App für eine Person. Die App zeigt danach nur, wer wie oft gewählt wurde, aber nicht, wer wen gewählt hat. Wer die meisten Stimmen hat, trinkt einen Shot, bei Gleichstand alle Gleichplatzierten. Gespielt werden drei Runden mit drei verschiedenen Fragen.",
+          "reward": {},
+          "tool": "vote",
+          "rounds": 3,
+          "prompts": [
+            "Wer würde eher als Erster im Horrorfilm sterben?",
+            "Wer würde eher Gustav als Haustier adoptieren?",
+            "Wer würde eher seine Henkersmahlzeit noch fotografieren?",
+            "Wer würde eher den Kerkermeister für einen Schluck warmes Bier verführen?",
+            "Wer würde eher auf den Ausbruch verzichten und seine Schlüssel einem anderen schenken?"
+          ],
+          "drinking": true,
+          "material": [
+            "Shots: mindestens 3"
+          ]
         }
       },
       "events": {
@@ -1448,7 +1578,10 @@
           "description": "Der Kerkermeister fischt eine alte Münze aus einem Totenschädel und möchte wissen, ob das Glück noch hier unten wohnt. Reihum sagt jeder „Kopf“ oder „Zahl“, dann wirft sein linker Nachbar eine echte Münze. Wer richtig angesagt hat, erhält 1 Münze, wer falsch lag, verliert 1 Münze. Tragt das Ergebnis für jeden in der App ein.",
           "effect": "fateManual",
           "requiresRoles": false,
-          "drinking": false
+          "drinking": false,
+          "material": [
+            "Eine echte Münze zum Werfen"
+          ]
         },
         "gustav-bringt-ein-geschenk": {
           "pos": 190,
