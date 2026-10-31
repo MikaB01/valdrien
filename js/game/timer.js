@@ -57,17 +57,9 @@ function intervalText() {
   return lo === hi ? `Alle ${lo} Minuten` : `Alle ${lo} bis ${hi} Minuten`;
 }
 
-// With a hidden timer only a rough window is shown ("3–13 Min."), or nothing but that the clock runs.
+// A hidden timer never shows any time: random mode only says "bald …", fixed mode that the clock runs.
 function windowText() {
-  const w = state.timerWindow;
-  if (!w) return "läuft";
-  const elapsed = roundMs() - remainingMs();
-  const lo = Math.max(0, Math.ceil((w[0] * 60000 - elapsed) / 60000));
-  const hi = Math.max(0, Math.ceil((w[1] * 60000 - elapsed) / 60000));
-  if (hi <= 1) return "bald …";
-  if (lo <= 0) return `≤ ${hi} Min.`;
-  if (lo === hi) return `${hi} Min.`;
-  return `${lo}–${hi} Min.`;
+  return state.timerWindow ? "bald …" : "läuft";
 }
 
 const PAUSE_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12M15 6v12"/></svg>`;
@@ -95,8 +87,6 @@ function tick() {
   if (!state.running || !state.timerEnd || timerPaused()) return;
   const remaining = remainingMs();
 
-  const windowField = document.getElementById("timer-window");
-  if (windowField) windowField.textContent = windowText();
   const display = document.getElementById("remaining");
   if (display) {
     display.textContent = timeText(remaining);

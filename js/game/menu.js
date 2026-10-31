@@ -197,7 +197,7 @@ function screenSettings() {
         ${hint("clock", visible
           ? "Die Restzeit bis zum nächsten Ereignis steht oben rechts auf der Hauptseite. Ein Tipp darauf hält die Uhr an."
           : random
-            ? "Die genaue Zeit bleibt geheim. Die Uhr oben rechts zeigt nur, in wie vielen Minuten das nächste Ereignis ungefähr kommt. Anhalten und Weiterlaufen geht trotzdem mit einem Tipp darauf."
+            ? "Die Restzeit bleibt geheim. Die Uhr oben rechts zeigt nur „bald …“. Anhalten und Weiterlaufen geht trotzdem mit einem Tipp darauf."
             : "Die Restzeit bleibt geheim. Anhalten und Weiterlaufen geht trotzdem mit einem Tipp auf die Uhr oben rechts.")}
         <div class="segmented" role="group" aria-label="Uhr auf der Hauptseite">
           ${segment(visible, "setSetting('showTimer', true)", "Anzeigen")}

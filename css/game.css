@@ -421,7 +421,7 @@ body[data-screen="overview"] .tile-keys .key-icons img { width: 34px; height: 34
 .timer-text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1; }
 /* Fixed widths: neither the ticking time nor anhalten/fortsetzen may change the size of the pill */
 .timer-time { font-weight: 600; font-size: 0.98rem; color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; min-width: 5ch; }
-.timer-window { font-size: 0.9rem; min-width: 8.5ch; }
+.timer-window { font-size: 0.9rem; }
 .timer-caption { display: grid; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); opacity: 0.8; }
 .timer-caption > span { grid-area: 1 / 1; }
 .timer-caption > .off { visibility: hidden; }
