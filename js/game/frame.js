@@ -1,4 +1,4 @@
-const REFERENCE_SCREENS = ["rules", "settings", "quickGuide", "coins", "material", "install"];
+const REFERENCE_SCREENS = ["rules", "settings", "quickGuide", "coins", "material", "install", "admin"];
 
 // from: where the back button leads, when a reference screen links to another one (rules -> quick guide)
 function openReference(target, from) {
@@ -21,7 +21,8 @@ function backAction() {
   }
   switch (s) {
     case "adventures": return go("start");
-    case "names": return go("adventures");
+    case "intro": return go("adventures");
+    case "names": return go("intro");
     case "overview": return go("start");
     case "roles": return go("overview");
     case "myRole": {
@@ -46,10 +47,10 @@ function backAction() {
     case "minigame": return go("overview");
     case "buyCard": return state.buyCard && state.buyCard.player !== null
       ? () => { state.buyCard.player = null; render(); } : go("overview");
-    case "tasks": return resumeAdventure;
+    case "tasks": return state.gameTimeUp ? null : resumeAdventure;
     case "end":
-      if (keysGoal()) return state.escaped !== undefined && state.escaped !== null ? null : resumeAdventure;
-      return rolesOn() ? go("tasks") : resumeAdventure;
+      if (keysGoal()) return (state.escaped !== undefined && state.escaped !== null) || state.gameTimeUp ? null : resumeAdventure;
+      return rolesOn() && state.players.some((_, i) => roleOf(i) && roleOf(i).task) ? go("tasks") : state.gameTimeUp ? null : resumeAdventure;
     case "keyGlimpse": return () => { state.keyGlimpse = null; show("overview"); };
     case "handCard": return state.handCard && state.handCard.played ? finishHandCard : backToSecrets;
     case "buyKey": {
@@ -115,6 +116,7 @@ function menuSheet() {
               <button class="link-button" onclick="confirmRedraw = false; renderFrame()">Abbrechen</button>
             </div>` : ""}
           ${rolesOn() ? entry(icon("roles"), "Alle Rollen ansehen", "show('roles')") : ""}
+          ${entry(icon("crown"), "Spielleitung", "openReference('admin')")}
           ${eventsUsedUp()
             ? entry(icon("event"), "Ereignisse neu einmischen", "sheet = null; reshuffleEvents()")
             : entry(icon("event"), "Ereigniskarte jetzt ziehen", "sheet = null; drawEvent(false)")}
@@ -168,6 +170,7 @@ function show(screen) {
   confirmFinish = false;
   confirmRedraw = false;
   confirmReroll = false;
+  adminConfirm = null;
   taskPick = null;
   sheet = null;
   closeCardFullscreen();
@@ -192,7 +195,7 @@ function render() {
   document.getElementById("app").innerHTML = fn();
   document.body.dataset.screen = state.screen;
   const inAdventure = !["start", "adventures"].includes(state.screen);
-  const id = inAdventure ? (state.screen === "names" ? setupAdventure() : state.screen === "material" ? materialSetup().adventure : currentAdventure()).id : null;
+  const id = inAdventure ? (["names", "intro"].includes(state.screen) ? setupAdventure() : state.screen === "material" ? materialSetup().adventure : currentAdventure()).id : null;
   const look = backdropClass(id);
   document.getElementById("backdrop").className = look === "tavern" ? look : [look, state.screen === "intro" ? "intro" : ""].join(" ").trim();
   setAdventureLook(id);

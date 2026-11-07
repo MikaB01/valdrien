@@ -63,6 +63,34 @@ function slideMix(input) {
   document.getElementById("mix-value").textContent = mixLabel();
 }
 
+function privateShare() { return Math.max(0, Math.min(1, Number(settings.privateShare ?? RULES.privateShareDefault))); }
+function privateLabel() { return `Davon geheim: ${Math.round(100 * privateShare())} %`; }
+function slidePrivate(input) {
+  settings.privateShare = Number(input.value) / 100;
+  document.getElementById("private-range").style.setProperty("--to", input.value / 100);
+  document.getElementById("private-value").textContent = privateLabel();
+}
+// A new share applies at once: the remaining deck of a running game is mixed again.
+function privateShareChanged() {
+  saveSettings();
+  if (state.running && Array.isArray(state.eventDeck)) { state.eventDeck = []; syncEventDeck(); save(); }
+}
+
+function gameMinutesSection(segment) {
+  const current = Number(settings.gameMinutes) || 0;
+  return `
+      <section>
+        ${sectionHead("duration", "Spieldauer")}
+        ${hint("duration", current
+          ? `Nach ${current} Minuten endet das Spiel von selbst, sobald gerade nichts offen ist. Dann gewinnt, wer nach den Regeln des Abenteuers vorn liegt, im Verlies also mit den meisten verschiedenen Schlüsseln. Hält man die Uhr an, steht auch die Spieldauer still. Gilt ab dem nächsten Spiel, im laufenden Spiel änderst du sie unter Menü › Spielleitung.`
+          : "Ohne Zeitlimit endet das Spiel, wenn ihr es im Menü beendet oder das Abenteuer selbst ein Ende hat, zum Beispiel einen Ausbruch aus dem Verlies.")}
+        <p class="slider-value"><span>Spielende</span><span>${current ? `nach ${current} Minuten` : "ohne Zeitlimit"}</span></p>
+        <div class="segmented" role="group" aria-label="Spieldauer in Minuten">
+          ${RULES.gameMinuteOptions.map(n => segment(current === n, `setSetting('gameMinutes', ${n})`, n ? String(n) : "Ohne")).join("")}
+        </div>
+      </section>`;
+}
+
 function slideVolume(input) {
   setMusicVolume(input.value);
   document.getElementById("volume-range").style.setProperty("--to", input.value / 100);
@@ -167,6 +195,7 @@ function screenSettings() {
       </section>
       ${rolesSection(segment)}
       ${drinkingSection(segment)}
+      ${gameMinutesSection(segment)}
       <section>
         ${sectionHead("time", "Zeit bis zum Ereignis")}
         ${hint("time", random ? randomHint() : "Nach Ablauf der Zeit deckt die App automatisch eine Ereigniskarte auf. Beim Wandern passen 15 Minuten gut, am Tisch eher 10.")}
@@ -185,13 +214,19 @@ function screenSettings() {
       </section>
       <section>
         ${sectionHead("mix", "Ereignisse und Minispiele")}
-        ${hint("mix", "Ist die Zeit um, zieht die App zufällig eine Ereigniskarte oder ein Minispiel. Eine Ereigniskarte löst nie selbst ein Minispiel aus.")}
+        ${hint("mix", "Ist die Zeit um, zieht die App zufällig eine Ereigniskarte oder ein Minispiel. Eine Ereigniskarte löst nie selbst ein Minispiel aus. Der zweite Regler legt fest, wie viele der Ereigniskarten geheim sind. Sind von einer Sorte keine mehr übrig, kommt die andere.")}
         <p class="slider-value" id="mix-value">${mixLabel()}</p>
         <div class="range" id="mix-range" style="--from:0; --to:${eventShare / 100}">
           <input type="range" min="0" max="100" step="10" value="${eventShare}" aria-label="Anteil der Ereigniskarten in Prozent"
                  oninput="slideMix(this)" onchange="saveSettings()">
         </div>
         <div class="range-scale"><span>Nur Minispiele</span><span>Nur Ereignisse</span></div>
+        <p class="slider-value" id="private-value">${privateLabel()}</p>
+        <div class="range" id="private-range" style="--from:0; --to:${privateShare()}">
+          <input type="range" min="0" max="100" step="10" value="${Math.round(100 * privateShare())}" aria-label="Anteil der geheimen Karten unter den Ereigniskarten in Prozent"
+                 oninput="slidePrivate(this)" onchange="privateShareChanged()">
+        </div>
+        <div class="range-scale"><span>Keine geheimen</span><span>Nur geheime</span></div>
       </section>
       <section>
         ${sectionHead("clock", "Uhr auf der Hauptseite")}
@@ -266,9 +301,10 @@ function unplayableText() {
     : `Ohne Rollen nicht spielbar: braucht mindestens ${events}, das keine Rollen voraussetzt`;
 }
 
+// The story comes right after the adventure is chosen, before names and roles.
 function screenIntro() {
-  const a = currentAdventure();
-  const top = currentAdventure().id === "forest" ? `<div class="art-spacer"></div>` : adventureArt(currentAdventure().id, false);
+  const a = setupAdventure();
+  const top = a.id === "forest" ? `<div class="art-spacer"></div>` : adventureArt(a.id, false);
   return `
     ${top}
     <div class="panel speakable">
@@ -279,7 +315,7 @@ function screenIntro() {
         ${a.intro.map(paragraph => `<p>${paragraph}</p>`).join("")}
         <p class="closing">${a.introEnd}</p>
       </div>
-      <button class="btn" onclick="startAdventure()">Abenteuer bestreiten</button>
+      <button class="btn" onclick="show('names')">Abenteuer bestreiten</button>
     </div>
   `;
 }
@@ -291,7 +327,7 @@ function chooseAdventure(id) {
     selectAdventureData(id);
   }
   state.names = state.names.slice(0, Math.max(RULES.minPlayers, maxPlayers()));
-  show("names");
+  show("intro");
 }
 
 Object.assign(SCREENS, {

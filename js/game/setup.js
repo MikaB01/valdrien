@@ -227,7 +227,7 @@ function dealRoles() {
     name: name.trim(),
     role: state.roles ? shuffled[i] : null,
     coins: state.roles ? ROLES[shuffled[i]].startingCoins : RULES.startingCoinsFallback,
-    revealed: false, abilityUsed: false, taskDone: false, rerolls: 0, keys: {},
+    revealed: false, abilityUsed: false, taskDone: false, rerolls: 0, putAway: [], keys: {},
     accessCode: randomCode()
   }));
   const plan = rerollPlan(state.players.length, roleCount(), state.roles ? rerollSetting() : 0);
@@ -235,6 +235,7 @@ function dealRoles() {
   state.rerollShort = plan.short;
   state.discardedRoles = [];
   state.retiredCodes = [];
+  state.codeOwner = {};
   rememberSlots();
   state.current = 0;
   state.cardVisible = false;
@@ -262,7 +263,10 @@ function dealRoles() {
   state.curiosity = null;
   state.jailerDrinks = 0;
   state.cardCount = 0;
-  show(state.roles ? "handover" : "intro");
+  state.shownCard = null;
+  state.gameClock = null;
+  state.gameTimeUp = false;
+  if (state.roles) show("handover"); else startAdventure();
 }
 
 // Roles nobody holds and nobody has seen yet.
@@ -271,47 +275,91 @@ function rerollPool() {
   return activeIndices(ROLES).filter(k => !taken.has(k));
 }
 
+// New roles may be drawn during the handover and, from the player's own phone, until the first card is drawn.
+function rerollOpen(i) {
+  const s = state.players[i];
+  return Boolean(s) && rolesOn() && !s.revealed && !(state.cardCount > 0);
+}
+function rerollsLeft(i) { return Math.max(0, (state.rerollLimit || 0) - (state.players[i].rerolls || 0)); }
+function canReroll(i) { return rerollOpen(i) && rerollsLeft(i) > 0 && rerollPool().length > 0; }
+function putAwayRoles(i) { return rerollOpen(i) ? (state.players[i].putAway || []).filter(k => ROLES[k] && !ROLES[k].deleted) : []; }
+
 function rerollBox(i) {
   const s = state.players[i];
   const limit = state.rerollLimit || 0;
   if (!limit) return "";
   const used = s.rerolls || 0;
   const pool = rerollPool().length;
-  if (used >= limit) return `<p class="muted reroll-line">Du hast schon ${used === 1 ? "einmal" : used + "-mal"} neu gezogen. Diese Rolle bleibt.</p>`;
-  if (!pool) return `<p class="muted reroll-line">Es ist keine Rolle mehr übrig, die du neu ziehen könntest.</p>`;
+  const back = putAwayRoles(i);
+  const takeBack = back.length ? `
+    <div class="reroll">
+      <span class="label">Weggelegt</span>
+      ${back.map(k => `<button class="btn-quiet" onclick="takeBackRole(${i}, ${k})">${ROLES[k].name} zurückholen</button>`).join("")}
+    </div>` : "";
+  if (used >= limit) return `<p class="muted reroll-line">Du hast schon ${used === 1 ? "einmal" : used + "-mal"} neu gezogen. Neu ziehen geht nicht mehr.</p>` + takeBack;
+  if (!pool) return `<p class="muted reroll-line">Es ist keine Rolle mehr übrig, die du neu ziehen könntest.</p>` + takeBack;
   const left = limit - used === 1 ? "Noch einmal möglich" : `Noch ${limit - used}-mal möglich`;
   const short = state.rerollShort ? ` Achtung: Es gibt nicht für alle eine zweite Rolle, übrig ${pool === 1 ? "ist nur noch eine" : `sind noch ${pool}`}.` : "";
   if (confirmReroll) {
     return `
     <div class="confirm reroll-confirm" role="alertdialog" aria-labelledby="reroll-title">
       <strong id="reroll-title">Wirklich eine neue Rolle ziehen?</strong>
-      <p class="muted">${ROLES[s.role].name} legst du dann endgültig weg, zurück geht es nicht. Die neue Rolle ist Zufall.${short}</p>
+      <p class="muted">${ROLES[s.role].name} legst du weg. Zurückholen kannst du sie, bis die erste Karte kommt. Die neue Rolle ist Zufall.${short}</p>
       <button class="btn" onclick="rerollRole()">Ja, neue Rolle ziehen</button>
-      <button class="link-button" onclick="confirmReroll = false; render()">Nein, ${ROLES[s.role].name} behalten</button>
-    </div>`;
+      <button class="link-button" onclick="confirmReroll = false; keepScroll(render)">Nein, ${ROLES[s.role].name} behalten</button>
+    </div>` + takeBack;
   }
   return `
     <div class="reroll">
-      <button class="btn-quiet" onclick="confirmReroll = true; render()">Rolle weglegen und neu ziehen</button>
-      <p class="muted">${left}. Die weggelegte Rolle bekommt niemand mehr zu sehen.${short}</p>
-    </div>`;
+      <button class="btn-quiet" onclick="confirmReroll = true; keepScroll(render)">Rolle weglegen und neu ziehen</button>
+      <p class="muted">${left}. Die weggelegte Rolle bekommt niemand sonst zu sehen.${short}</p>
+    </div>` + takeBack;
+}
+
+function keepScroll(fn) {
+  const y = window.scrollY;
+  fn();
+  window.scrollTo(0, y);
 }
 
 function rerollRole() {
-  const s = state.players[state.current];
-  const pool = rerollPool();
-  if (!confirmReroll || !s || !state.cardVisible || !pool.length || (s.rerolls || 0) >= (state.rerollLimit || 0)) return;
+  if (!confirmReroll || !state.cardVisible) return;
   confirmReroll = false;
+  keepScroll(() => { rerollPlayer(state.current); render(); });
+}
+
+// Puts the role away and draws a random new one. Coins change by the difference of the starting coins.
+function rerollPlayer(i) {
+  const pool = rerollPool();
+  if (!canReroll(i)) return false;
+  const s = state.players[i];
   state.discardedRoles = (state.discardedRoles || []).concat(s.role);
-  s.role = pool[Math.floor(Math.random() * pool.length)];
-  s.coins = ROLES[s.role].startingCoins;
+  s.putAway = (s.putAway || []).concat(s.role);
   s.rerolls = (s.rerolls || 0) + 1;
-  // the QR link names the role: retire the old link, its page tells the player to scan again
+  switchRole(i, pool[Math.floor(Math.random() * pool.length)]);
+  return true;
+}
+
+// A role put away by the same player comes back; it does not count as a new draw.
+function takeBackRole(i, k) {
+  const s = state.players[i];
+  if (!putAwayRoles(i).includes(k)) return false;
+  s.putAway = s.putAway.filter(x => x !== k).concat(s.role);
+  state.discardedRoles = (state.discardedRoles || []).filter(x => x !== k).concat(s.role);
+  switchRole(i, k);
+  if (!own) { save(); keepScroll(render); }
+  return true;
+}
+
+function switchRole(i, k) {
+  const s = state.players[i];
+  s.coins = Math.max(0, s.coins + ROLES[k].startingCoins - ROLES[s.role].startingCoins);
+  s.role = k;
+  // the QR link names the role: retire the old link, its page moves on to the new one
   state.retiredCodes = (state.retiredCodes || []).concat(s.accessCode);
+  state.codeOwner = Object.assign(state.codeOwner || {}, { [s.accessCode]: i });
   s.accessCode = randomCode();
   save();
-  render();
-  window.scrollTo(0, 0);
 }
 
 function nextPlayer() {
@@ -321,7 +369,7 @@ function nextPlayer() {
     state.current++;
     show("handover");
   } else {
-    show("intro");
+    startAdventure();
   }
 }
 

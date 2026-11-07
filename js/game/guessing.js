@@ -7,12 +7,12 @@ function screenGuess() {
   if (r.step === "who") {
     return `
       <h2>Auf eine Rolle raten</h2>
-      <p class="muted">Wer möchte raten? ${guessPriceText()} Schon erratene Rollen können nicht noch einmal erraten werden.</p>
+      <p class="muted">Wer möchte raten? ${guessPriceText()} Ein Treffer bringt ${coinsText(hitReward())}. Schon erratene Rollen können nicht noch einmal erraten werden.</p>
       <div class="choices">
         ${state.players.map((s, i) => `
           <button class="choice" onclick="chooseGuesser(${i})" ${canGuess(i) ? "" : "disabled"}>
             <span>${escapeName(s.name)}</span>
-            <span class="muted">${s.coins < guessCost() ? (s.coins ? "zu wenige Münzen" : "keine Münzen") : !unrevealedOthers(i) ? "alle anderen erraten" : s.coins + " Münzen"}</span>
+            <span class="muted">${s.coins < guessCost() ? "zu wenige Münzen" : !unrevealedOthers(i) ? "alle anderen erraten" : "›"}</span>
           </button>`).join("")}
       </div>`;
   }
@@ -23,7 +23,7 @@ function screenGuess() {
       ${r.tip ? `<p class="note">${tipEntry(r) ? tipEntry(r).title : ""}: Ein Treffer bringt ${coinsText(tipReward())} statt ${hitReward()}.</p>` : ""}
       ${cost ? `
       <h2>${escapeName(guesser.name)}, ${stakeText("eine Münze", coinsText(cost), cost)} setzen, um auf eine Rolle zu raten?</h2>
-      <p class="muted">${guessPriceChanged() ? guessPriceText() + " " : ""}Du hast ${guesser.coins} Münzen. ${stakeText("Die gesetzte Münze geht", "Die gesetzten Münzen gehen", cost)} an die Spielbank.</p>
+      <p class="muted">${guessPriceChanged() ? guessPriceText() + " " : ""}Ein Treffer bringt ${coinsText(r.tip ? tipReward() : hitReward())}. ${stakeText("Die gesetzte Münze geht", "Die gesetzten Münzen gehen", cost)} an die Spielbank.</p>
       <button class="btn" onclick="placeStake()">Ja, ${coinsText(cost)} setzen</button>` : `
       <h2>${escapeName(guesser.name)}, möchtest du auf eine Rolle raten?</h2>
       <p class="muted">${guessPriceText()}</p>

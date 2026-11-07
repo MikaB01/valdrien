@@ -214,6 +214,7 @@ function screenKeysEnd() {
     <p class="winner">${winner}</p>
     <div class="narrative"><p class="closing">${best ? `${best} von ${RULES.keys.length} Schlüsseln. Fast frei ist auch gefangen.` : "Kein einziger Schlüssel. Der Henker freut sich auf eine lange Liste."}</p></div>`;
   return `
+    ${escaped ? "" : timeUpKicker()}
     <div class="speakable epilogue">${speakButton()}${story}</div>
     <span class="label">Wer hatte was?</span>
     <div class="reveal-list">

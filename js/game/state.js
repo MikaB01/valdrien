@@ -9,6 +9,8 @@ let settings = {
   musicVolume: 0.5,
   theme: "auto", // "auto" follows the phone, "light" or "dark" forces it
   minigameShare: RULES.minigameShareDefault,
+  privateShare: RULES.privateShareDefault,
+  gameMinutes: 0, // optional time limit of a game; when it is over the game ends with the adventure's own scoring
   sound: true, // short reward sound when the time is up
   roles: true, // deal secret roles; without them guessing, abilities, tasks and role events are left out
   drinking: false, // drinking game: event cards marked "drinking" join the deck (applies at once, also in a running game)
@@ -48,6 +50,7 @@ function rerollSetting() {
 let confirmFinish = false;
 let confirmRedraw = false;
 let confirmReroll = false;
+let adminConfirm = null; // player whose role the game master is about to draw again
 let taskPick = null; // { i, id }: a task with an effect waits for the other player in the purse
 let sheet = null;
 
@@ -57,7 +60,8 @@ let sheet = null;
 // Further fields are added during play: adventure, running, timerEnd, eventDeck (top = last), playedEvents, playedMinigames, event, minigame,
 // timerPaused, timerDuration, timerWindow, guess, ability, peekRole, lasting (effect until the next event card), tableRules (until the next
 // minigame), winBonus, lastWinnings, lastWinningsCard, lastParticipants, slots, session, handCard, keyGlimpse, recentLoss,
-// and for the newer abilities and the keys goal: players[].keys, buyKey, escaped, tip, pause, curiosity, cardCount.
+// and for the newer abilities and the keys goal: players[].keys, buyKey, escaped, tip, pause, curiosity, cardCount;
+// shownCard (the public card on every phone), gameClock (optional time limit), gameTimeUp, codeOwner (retired link -> player).
 // players[].secrets[]: { id, title, text, kind (instant|task|keep), effect, coins, drinking, status, result, seen, time }
 let state = {
   screen: "start",

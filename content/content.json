@@ -1400,12 +1400,12 @@
           "name": "Das Phantombild",
           "category": "all",
           "scoring": "winners",
-          "description": "Der Henker braucht Steckbriefe. Reihum bekommt jeder das Handy und hat 30 Sekunden Zeit, den Begriff zu malen, den die App nur ihm zeigt, zum Beispiel Galgen, Fledermaus oder Kürbis. Danach zeigt die App alle Bilder nacheinander, und jeder schreibt zu jedem Bild seinen Tipp auf einen Zettel. Für jeden richtigen Tipp gibt es einen Punkt, und für jeden, der dein Bild richtig erraten hat, bekommst du ebenfalls einen Punkt. Wer die meisten Punkte hat, gewinnt.",
+          "description": "Der Henker braucht Steckbriefe. Jeder bekommt einen Begriff, den nur er sieht, zum Beispiel Galgen, Fledermaus oder Kürbis. Erst liest er ihn in Ruhe, dann tippt er auf Los und hat 40 Sekunden, um ihn zu malen: reihum am Spielleiter-Handy oder alle gleichzeitig am eigenen Handy. Danach zeigt die App alle Bilder nacheinander, und jeder schreibt zu jedem Bild seinen Tipp auf einen Zettel. Für jeden richtigen Tipp gibt es einen Punkt, und für jeden, der dein Bild richtig erraten hat, bekommst du ebenfalls einen Punkt. Wer die meisten Punkte hat, gewinnt.",
           "reward": {
             "winner": 4
           },
           "tool": "sketch",
-          "seconds": 30,
+          "seconds": 40,
           "prompts": [
             "Galgen",
             "Fledermaus",

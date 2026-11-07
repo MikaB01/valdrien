@@ -29,6 +29,7 @@ function screenEvent() {
       </div>
       <p class="narrative">${card.text}</p>
     </article>
+    ${readLine()}
     ${cardNotes(e.card)}
     ${pauseControls()}
     ${effect.note ? `<p class="note">${effect.note}</p>` : ""}
@@ -83,12 +84,25 @@ function syncEventDeck() {
     state.playedEvents = deck.length ? playableEvents().filter(i => !deck.includes(i)) : [];
   }
   const remaining = remainingEvents();
-  const kept = deck.filter(i => remaining.includes(i));
+  let kept = deck.filter(i => remaining.includes(i));
   const added = shuffle(remaining.filter(i => !kept.includes(i)));
-  added.forEach(i => kept.splice(Math.floor(Math.random() * (kept.length + 1)), 0, i));
+  if (!kept.length) kept = mixedDeck(added);
+  else added.forEach(i => kept.splice(Math.floor(Math.random() * (kept.length + 1)), 0, i));
   if (added.some(i => EVENTS[i].effect === "jailerDrinks")) orderJailerCards(kept);
   state.eventDeck = kept;
   return kept;
+}
+
+// A new deck is mixed so that about privateShare() of the event cards are secret, spread over the whole deck.
+// Once one kind runs out, the rest of the other follows.
+function mixedDeck(cards) {
+  const secret = shuffle(cards.filter(i => EVENTS[i].isPrivate)), open = shuffle(cards.filter(i => !EVENTS[i].isPrivate));
+  const order = [];
+  while (secret.length || open.length) {
+    const takeSecret = !open.length || (secret.length > 0 && Math.random() < privateShare());
+    order.push(takeSecret ? secret.pop() : open.pop());
+  }
+  return order.reverse();
 }
 
 // The jailer's rounds come in list order: they keep the random deck positions they were shuffled into,
@@ -131,6 +145,7 @@ function drawEvent(automatic, fixedIndex) {
   if (LASTING[effect]) state.lasting = { effect, title: EVENTS[index].title };
   state.lastWinnings = {};
   state.lastParticipants = [];
+  showOnPhones("event", index);
 
   state.event = Object.assign({
     index: index,

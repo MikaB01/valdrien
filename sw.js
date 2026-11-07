@@ -1,7 +1,7 @@
 // Offline support and installability. Code, styles and pages: network first (fresh after a deploy), cache when offline
 // or slow. Images, fonts and the Supabase library: cache first. Supabase API calls are never cached.
 // Bump VERSION when CORE changes; new published files belong in CORE so they work offline from the first start.
-const VERSION = "valdrien-1";
+const VERSION = "valdrien-2";
 const NETWORK_TIMEOUT = 3500;
 
 const CORE = [
@@ -11,7 +11,8 @@ const CORE = [
   "js/game/frame.js", "js/game/install.js", "js/game/menu.js", "js/game/rulebook.js", "js/game/setup.js",
   "js/game/material.js", "js/game/overview.js", "js/game/timer.js", "js/game/guessing.js", "js/game/abilities.js",
   "js/game/events.js", "js/game/effects.js", "js/game/minigames.js", "js/game/keys.js", "js/game/hand-cards.js",
-  "js/game/ending.js", "js/game/player-page.js", "js/game/speech.js", "js/game/music.js", "js/game/main.js",
+  "js/game/ending.js", "js/game/player-page.js", "js/game/live.js", "js/game/admin.js", "js/game/speech.js",
+  "js/game/music.js", "js/game/main.js",
   "images/forest-guild.jpg", "images/dungeon-castle.jpg", "images/dungeon-hall.jpg", "images/dungeon-keys.jpg",
   "images/key-iron.webp", "images/key-silver.webp", "images/key-bone.webp",
   "images/cobweb-left.webp", "images/cobweb-right.webp",

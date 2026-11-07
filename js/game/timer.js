@@ -1,8 +1,47 @@
 function startAdventure() {
   state.running = true;
+  state.gameTimeUp = false;
+  const limit = Number(settings.gameMinutes) || 0;
+  state.gameClock = limit ? { limit: limit * 60000, used: 0, since: Date.now() } : null;
   resetTimer();
   show("overview");
 }
+
+// Optional time limit of the whole game (settings "Spieldauer"). It stands still while the event clock is paused.
+// state.gameClock = { limit, used, since } in ms; since = null while paused.
+function gameLeftMs() {
+  const c = state.gameClock;
+  if (!c) return Infinity;
+  return c.limit - c.used - (c.since ? Date.now() - c.since : 0);
+}
+function gameEndAt() {
+  const c = state.gameClock;
+  return c && c.since ? c.since + c.limit - c.used : 0;
+}
+function gameClockRun(on) {
+  const c = state.gameClock;
+  if (!c) return;
+  if (!on && c.since) { c.used += Date.now() - c.since; c.since = null; }
+  if (on && !c.since) c.since = Date.now();
+}
+function gameLeftText(ms) {
+  const minutes = Math.max(0, Math.ceil(ms / 60000));
+  return minutes >= 60 ? `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, "0")} h` : `${minutes} Min.`;
+}
+function gameLeftLine() {
+  if (!state.gameClock) return "";
+  return ` · noch <span id="game-left">${gameLeftText(gameLeftMs())}</span>`;
+}
+
+// Time is up: the game ends with the adventure's own scoring (coins, or keys in the Henkersmahl).
+function gameTimeUp() {
+  state.gameTimeUp = true;
+  gameClockRun(false);
+  try { if (navigator.vibrate) navigator.vibrate([300, 150, 300]); } catch (e) {}
+  playChime();
+  finishAdventure();
+}
+function timeUpKicker() { return state.gameTimeUp ? `<p class="kicker">Die Spielzeit ist um!</p>` : ""; }
 
 // state.timerEnd is a timestamp, so the countdown survives a locked phone or reload.
 // While paused, state.timerPaused holds the remaining milliseconds instead.
@@ -39,8 +78,10 @@ function toggleTimer() {
   if (timerPaused()) {
     state.timerEnd = Date.now() + state.timerPaused;
     state.timerPaused = null;
+    gameClockRun(true);
   } else if (state.timerEnd) {
     state.timerPaused = remainingMs();
+    gameClockRun(false);
   }
   save();
   render();
@@ -83,8 +124,15 @@ function timerButton() {
     </button>`;
 }
 
+const INTERRUPTIBLE = ["overview", "coins", "rules", "quickGuide", "roles", "settings", "admin"];
 function tick() {
-  if (!state.running || !state.timerEnd || timerPaused()) return;
+  if (!state.running) return;
+  if (state.gameClock) {
+    const left = document.getElementById("game-left");
+    if (left) left.textContent = gameLeftText(gameLeftMs());
+    if (gameLeftMs() <= 0 && INTERRUPTIBLE.includes(state.screen) && !sheet) { gameTimeUp(); return; }
+  }
+  if (!state.timerEnd || timerPaused()) return;
   const remaining = remainingMs();
 
   const display = document.getElementById("remaining");
@@ -96,7 +144,7 @@ function tick() {
   minigameTimerTick(remaining);
   if (remaining === 0) {
     // never interrupt a minigame or a running flow; the card comes once the overview is shown again
-    const interruptible = ["overview", "coins", "rules", "quickGuide", "roles", "settings"].includes(state.screen);
+    const interruptible = INTERRUPTIBLE.includes(state.screen);
     if (interruptible && !sheet && !canDrawTimed()) { // everything played: start a new round quietly, the overview offers reshuffling
       startRound();
       save();

@@ -1010,6 +1010,20 @@ body.own-page .role-card { --portrait-max: max(300px, calc(100svh - env(safe-are
 .sketch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .sketch-grid figure { margin: 0; display: flex; flex-direction: column; gap: 4px; }
 .sketch-grid figcaption { font-size: 0.95rem; line-height: 1.3; text-align: center; }
+.sketch-term-large { font-size: 2.6rem; text-align: center; overflow-wrap: anywhere; }
+.sketch-tools { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+.sketch-tool {
+  min-height: 44px; border-radius: 9px; border: 1.5px solid var(--line); background: var(--sunken); color: var(--text);
+  font-weight: 700; touch-action: manipulation;
+}
+.sketch-tool[aria-pressed="true"] { background: var(--paper); border-color: var(--brass); color: var(--title); box-shadow: 0 1px 0 var(--shade); }
+.seconds-picker { display: flex; flex-direction: column; gap: 6px; }
+
+/* Live: who read the card, the card on the player's own phone */
+.read-line { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 14px; margin: 0; font-size: 0.95rem; text-align: center; }
+.read-line .read-yes { color: var(--accent); font-weight: 700; }
+.table-card { display: flex; flex-direction: column; gap: 10px; }
+.read-done { margin: 0; text-align: center; color: var(--accent); font-weight: 700; }
 
 /* A secret card shown full screen to the table: only its title and text, nothing else of the player */
 .secret-card.showable { cursor: zoom-in; position: relative; }

@@ -249,7 +249,7 @@ function subscribeContent() {
   const soon = () => { clearTimeout(pending); pending = setTimeout(fetchContent, 300); };
   if (window.supabase && PROJECT_URL && PROJECT_KEY) {
     try {
-      window.supabase.createClient(PROJECT_URL, PROJECT_KEY, { auth: { persistSession: false } })
+      sharedClient()
         .channel("game-content")
         .on("postgres_changes", { event: "*", schema: "public", table: "content" }, soon)
         .subscribe();

@@ -610,3 +610,30 @@ begin
      where c.id = 'valdrien';
   end if;
 end $$;
+
+-- 16) Das Phantombild (2026-11-07): 40 instead of 30 seconds, and the text now says that each player first reads his
+--     term and then starts the time, in turns on the game master phone or all at once on their own phones. Each field
+--     is replaced only while it still has the old built-in value, so edits made in the CMS stay untouched.
+do $$
+declare
+  d jsonb;
+  r record;
+  changed boolean := false;
+begin
+  select c.data into d from public.content c where c.id = 'valdrien' for update;
+  if d is null or jsonb_typeof(d #> '{adventures,dungeon,minigames,das-phantombild}') <> 'object' then return; end if;
+  for r in select * from (values
+      (array['seconds'], $j$30$j$::jsonb, $j$40$j$::jsonb),
+      (array['description'], $j$"Der Henker braucht Steckbriefe. Reihum bekommt jeder das Handy und hat 30 Sekunden Zeit, den Begriff zu malen, den die App nur ihm zeigt, zum Beispiel Galgen, Fledermaus oder Kürbis. Danach zeigt die App alle Bilder nacheinander, und jeder schreibt zu jedem Bild seinen Tipp auf einen Zettel. Für jeden richtigen Tipp gibt es einen Punkt, und für jeden, der dein Bild richtig erraten hat, bekommst du ebenfalls einen Punkt. Wer die meisten Punkte hat, gewinnt."$j$::jsonb, $j$"Der Henker braucht Steckbriefe. Jeder bekommt einen Begriff, den nur er sieht, zum Beispiel Galgen, Fledermaus oder Kürbis. Erst liest er ihn in Ruhe, dann tippt er auf Los und hat 40 Sekunden, um ihn zu malen: reihum am Spielleiter-Handy oder alle gleichzeitig am eigenen Handy. Danach zeigt die App alle Bilder nacheinander, und jeder schreibt zu jedem Bild seinen Tipp auf einen Zettel. Für jeden richtigen Tipp gibt es einen Punkt, und für jeden, der dein Bild richtig erraten hat, bekommst du ebenfalls einen Punkt. Wer die meisten Punkte hat, gewinnt."$j$::jsonb)
+    ) as t(field, old_value, new_value) loop
+    if d #> (array['adventures', 'dungeon', 'minigames', 'das-phantombild'] || r.field) = r.old_value then
+      d := jsonb_set(d, array['adventures', 'dungeon', 'minigames', 'das-phantombild'] || r.field, r.new_value);
+      changed := true;
+    end if;
+  end loop;
+  if changed then
+    update public.content c
+       set data = d, version = c.version + 1, updated_at = now(), updated_by = 'setup'
+     where c.id = 'valdrien';
+  end if;
+end $$;

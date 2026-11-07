@@ -4,7 +4,7 @@
 
 // Before a game: the adventure and the names being set up; during a game: the dealt one.
 function materialSetup() {
-  const fromSetup = state.screen === "names" || (state.screen === "material" && (state.backTo || {}).material === "names");
+  const fromSetup = ["names", "intro"].includes(state.screen) || (state.screen === "material" && ["names", "intro"].includes((state.backTo || {}).material));
   const running = !fromSetup && Boolean(state.running && state.players && state.players.length);
   return {
     adventure: running ? currentAdventure() : setupAdventure(),

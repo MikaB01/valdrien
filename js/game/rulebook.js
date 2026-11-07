@@ -65,7 +65,7 @@ function screenRules() {
           <li>Wählt ein Abenteuer. Dann geben ${RULES.minPlayers} Spieler bis so viele, wie das Abenteuer Rollen hat, ihre Namen ein (zum Beispiel 7 in der Waldgilde, 8 in der Taverne, 10 im Verlies).</li>
           <li>Die App verteilt die Rollen zufällig und geheim.</li>
           <li>Das Handy wird herumgereicht. Jeder sieht nur seine eigene Rolle mit Fähigkeit und geheimer Aufgabe (im Verlies ohne Aufgabe).</li>
-          <li>Gefällt dir deine Rolle nicht, darfst du sie weglegen und eine neue ziehen, so oft wie in den Einstellungen festgelegt. Eine weggelegte Rolle bekommt niemand mehr zu sehen. Reichen die übrigen Rollen nicht, damit jeder gleich oft neu ziehen kann, senkt die App die Zahl für alle gleich. Reicht es nicht einmal für eine zweite Rolle pro Kopf, weist die App darauf hin, und ihr klärt untereinander, wer neu ziehen darf.</li>
+          <li>Gefällt dir deine Rolle nicht, darfst du sie weglegen und eine neue ziehen, so oft wie in den Einstellungen festgelegt. Eine weggelegte Rolle bekommt niemand sonst zu sehen, und bis die erste Karte kommt, kannst du sie zurückholen. Mit dem QR-Code geht beides auch auf deinem eigenen Handy. Reichen die übrigen Rollen nicht, damit jeder gleich oft neu ziehen kann, senkt die App die Zahl für alle gleich. Reicht es nicht einmal für eine zweite Rolle pro Kopf, weist die App darauf hin, und ihr klärt untereinander, wer neu ziehen darf.</li>
           <li>Jeder startet mit dem Startkapital seiner Rolle (3 bis 5 Münzen).</li>
         </ol>
       </section>
@@ -97,6 +97,7 @@ function screenRules() {
 
       <section>
         <h3>Spielende</h3>
+        <p>Ist in den Einstellungen eine Spieldauer festgelegt, endet das Spiel nach dieser Zeit von selbst. Es gewinnt, wer nach den Regeln des Abenteuers vorn liegt.</p>
         <ol>
           <li>Alle Rollen werden enthüllt.</li>
           <li>Jeder weist seine geheime Aufgabe nach, zum Beispiel mit einem Foto oder Gegenstand. Wer sie erfüllt hat, bekommt die Bonusmünzen.</li>

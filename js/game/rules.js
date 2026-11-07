@@ -24,6 +24,9 @@ const RULES = {
   eventMinuteRange: [1, 30], // slider range in the settings
   randomMinutesDefault: [5, 15], // random timer mode: window in minutes
   minigameShareDefault: 0.3, // when the time is up: share of minigames, the rest are event cards
+  privateShareDefault: 0.3, // share of secret cards among the event cards (the deck is mixed that way)
+  gameMinuteOptions: [0, 45, 60, 90, 120], // settings: optional time limit for a game, 0 = none
+  minigameSecondOptions: [30, 40, 60], // a minigame with a time limit: the game master may change it before the start
 
   // Adventures with goal "keys": buy random keys, three different ones break out and win at once.
   // The price falls by 1 with every "jailerDrinks" event card, from start down to min;

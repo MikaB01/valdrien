@@ -12,6 +12,7 @@ function screenTasks() {
   }).join("");
 
   return `
+    ${timeUpKicker()}
     <h2>Die geheimen Aufgaben</h2>
     <p class="muted">Jetzt werden alle Rollen enthüllt. Hakt ab, wer seine Aufgabe nachweisen kann.</p>
     <div>${list}</div>
@@ -31,6 +32,7 @@ function screenEnd() {
   const winnerText = winner.join(" & ");
 
   return `
+    ${timeUpKicker()}
     <div class="speakable epilogue">${speakButton()}${currentAdventure().epilogue(winnerText, winner.length > 1)}</div>
     ${winner.length > 1 ? `<p class="muted" style="text-align:center">Gleichstand! Die Regel dafür legt ihr noch fest.</p>` : ""}
     <div class="ranking">
@@ -43,19 +45,23 @@ function screenEnd() {
 
 function finishAdventure() {
   state.running = false;
+  gameClockRun(false);
   resetTimer();
   show(rolesOn() && !keysGoal() && state.players.some((_, i) => roleOf(i) && roleOf(i).task) ? "tasks" : "end");
 }
 
 function resumeAdventure() {
-  if (state.escaped !== undefined && state.escaped !== null) return;
+  if ((state.escaped !== undefined && state.escaped !== null) || state.gameTimeUp) return;
   state.running = true;
+  gameClockRun(true);
   resetTimer();
   show("overview");
 }
 
 function playAgain() {
   state.running = false;
+  state.gameTimeUp = false;
+  state.gameClock = null;
   state.escaped = null;
   resetTimer();
   state.players = [];
@@ -64,6 +70,8 @@ function playAgain() {
 
 function newGame() {
   state.running = false;
+  state.gameTimeUp = false;
+  state.gameClock = null;
   state.escaped = null;
   resetTimer();
   state.players = [];

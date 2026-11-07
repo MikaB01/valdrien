@@ -20,7 +20,7 @@ function screenOverview() {
   const ready = state.players.filter(s => s.revealed && !s.abilityUsed).length;
   return `
     <div class="overview-head">
-      <span class="eyebrow">${currentAdventure().title}</span>
+      <span class="eyebrow">${currentAdventure().title}${gameLeftLine()}</span>
       <h2>Das Abenteuer</h2>
       ${timerButton()}
     </div>

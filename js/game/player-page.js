@@ -6,6 +6,7 @@ const NO_ROLE_ID = "-";
 
 let seatsEnabled = null;
 let lastSynced = {};
+let lastPushed = {};
 let syncRunning = false, syncAgain = false;
 let own = null;
 
@@ -46,6 +47,7 @@ function qrSection(i) {
 
 // What a player's phone may see. The role itself is not included, only encoded in the QR link.
 function seatData(s) {
+  const i = state.players.indexOf(s);
   return {
     name: s.name,
     coins: s.coins,
@@ -56,7 +58,10 @@ function seatData(s) {
     adventure: state.adventure || "forest",
     phase: state.running ? "running" : (["tasks", "end"].includes(state.screen) ? "end" : "start"),
     timerEnd: state.running && state.timerEnd && !timerPaused() && settings.showTimer !== false ? state.timerEnd : 0,
+    gameEnd: state.running ? gameEndAt() : 0,
     secrets: (s.secrets || []).slice(-12).reverse(),
+    table: tableCard(i),
+    reroll: rolesOn() ? rerollOffer(i) : null,
     notes: [
       lastingNote(),
       ...tableRuleNotes(),
@@ -73,23 +78,29 @@ async function syncSeats() {
   if (syncRunning) { syncAgain = true; return; }
   syncRunning = true;
   if (!state.session) { state.session = newSession(); try { localStorage.setItem("valdrien-game", JSON.stringify(state)); } catch (e) {} }
+  syncLiveChannels();
+  const write = (code, data) => rpc("seat_write", { p_session: state.session.id, p_secret: state.session.secret, p_access: code, p_data: Object.assign({ updatedAt: Date.now() }, data) });
   try {
     for (const s of state.players) {
       if (!s.accessCode) continue;
       const data = seatData(s);
       const json = JSON.stringify(data);
       if (lastSynced[s.accessCode] === json) continue;
+      if (lastPushed[s.accessCode] !== json) { pushSeat(s.accessCode, data); lastPushed[s.accessCode] = json; }
       try {
-        await rpc("seat_write", { p_session: state.session.id, p_secret: state.session.secret, p_access: s.accessCode, p_data: Object.assign(data, { updatedAt: Date.now() }) });
+        await write(s.accessCode, data);
         lastSynced[s.accessCode] = json;
       } catch (e) { /* offline: retried on the next sync */ }
     }
-    // links of roles that were put back while dealing
+    // links of roles that were put away: their pages move on to the player's current link
     for (const code of state.retiredCodes || []) {
-      if (lastSynced[code] === "replaced") continue;
+      const data = replacedData(code);
+      const json = JSON.stringify(data);
+      if (lastSynced[code] === json) continue;
+      if (lastPushed[code] !== json) { pushSeat(code, data); lastPushed[code] = json; }
       try {
-        await rpc("seat_write", { p_session: state.session.id, p_secret: state.session.secret, p_access: code, p_data: { replaced: true, updatedAt: Date.now() } });
-        lastSynced[code] = "replaced";
+        await write(code, data);
+        lastSynced[code] = json;
       } catch (e) {}
     }
   } finally {
@@ -98,9 +109,15 @@ async function syncSeats() {
   }
 }
 
+function replacedData(code) {
+  const owner = (state.codeOwner || {})[code];
+  return { replaced: true, next: state.players[owner] ? playerUrl(owner).split("#")[1] : "" };
+}
+
 function resetSeats() {
   const old = state.session;
   lastSynced = {};
+  lastPushed = {};
   state.session = newSession();
   if (seatsEnabled && old) rpc("session_delete", { p_session: old.id, p_secret: old.secret }).catch(() => {});
 }
@@ -123,24 +140,33 @@ function startOwnPage() {
   setInterval(tickOwnClock, 1000);
   if (!PROJECT_URL || !PROJECT_KEY) { own.status = "noServer"; renderOwn(); return; }
   fetchOwn();
+  startOwnLive();
   setInterval(() => { if (!document.hidden) fetchOwn(); }, 5000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) fetchOwn(); });
   window.addEventListener("online", fetchOwn);
 }
 
-let lastOwnJson = "";
 async function fetchOwn() {
   try {
     const data = await rpc("seat_read", { p_access: own.accessCode });
-    const fresh = JSON.stringify(data);
-    if (fresh === lastOwnJson && own.status !== "loading") return;
-    lastOwnJson = fresh;
-    own.data = data;
-    own.status = data ? "ok" : "empty";
-    renderOwn();
+    applyOwnData(data);
   } catch (e) {
     if (own.status === "loading") { own.status = "offline"; renderOwn(); }
   }
+}
+
+// Seat data from the poll or pushed live; the newer one wins.
+let lastOwnJson = "";
+function applyOwnData(data) {
+  if (data && own.data && data.updatedAt && own.data.updatedAt && data.updatedAt < own.data.updatedAt) return;
+  if (followNewLink(data)) return;
+  const fresh = JSON.stringify(Object.assign({}, data, { updatedAt: 0 }));
+  if (fresh === lastOwnJson && own.status !== "loading") return;
+  lastOwnJson = fresh;
+  own.data = data;
+  own.status = data ? "ok" : "empty";
+  repeatOwnRequest();
+  renderOwn();
 }
 
 function seenSecrets() {
@@ -176,7 +202,11 @@ function secretsHtml(d) {
 }
 
 function renderOwn() {
+  if (sketchPointerDown) { liveRenderPending = true; return; }
+  liveRenderPending = false;
+  ownSketchCurrent = null;
   document.getElementById("app").innerHTML = screenOwnPage();
+  mountOwnSketch();
   document.querySelector(".app-bar").hidden = true;
   document.body.classList.add("own-page");
   document.getElementById("backdrop").className = backdropClass(own.adventure);
@@ -185,9 +215,14 @@ function renderOwn() {
 }
 
 function tickOwnClock() {
-  const field = document.getElementById("own-time");
   const d = own && own.data;
+  const field = document.getElementById("own-time");
   if (field && d && d.timerEnd) field.textContent = timeText(Math.max(0, d.timerEnd - Date.now()));
+  const end = document.getElementById("own-game-end");
+  if (end && d && d.gameEnd) end.textContent = gameLeftText(d.gameEnd - Date.now());
+  const countdown = document.getElementById("own-countdown");
+  if (countdown) countdown.textContent = Math.max(0, Math.ceil((Number(countdown.dataset.end) - Date.now()) / 1000));
+  ownSketchTick();
 }
 
 function openOwnRole() {
@@ -204,7 +239,7 @@ function screenOwnPage() {
   const d = own.data;
   if (d && d.replaced) return `
     <div class="own-header"><span class="eyebrow">Valdrien</span><h1>Neue Rolle</h1></div>
-    <p class="note">Diese Rolle wurde beim Verteilen weggelegt. Lass dir am Spielleiter-Handy den QR-Code deiner neuen Rolle zeigen.</p>`;
+    <p class="note">${d.next ? "Deine neue Rolle wird geladen …" : "Diese Rolle wurde beim Verteilen weggelegt. Lass dir am Spielleiter-Handy den QR-Code deiner neuen Rolle zeigen."}</p>`;
   if (!a || (!r && !noRole)) return `
     <div class="own-header"><span class="eyebrow">Valdrien</span><h1>Deine Rolle</h1></div>
     <p class="note">${contentSource === "live" ? "Diese Rolle gibt es nicht mehr. Frag am Tisch nach einem neuen QR-Code." : "Die Rolle wird geladen …"}</p>`;
@@ -227,6 +262,7 @@ function screenOwnPage() {
       <span class="own-count">${Number(d.coins) || 0}<span class="coin-icon" aria-hidden="true"></span></span>
       <div class="chips">${status}</div>
       ${d.phase === "running" && d.timerEnd ? `<span class="own-clock">Nächstes Ereignis in <strong id="own-time">${timeText(Math.max(0, d.timerEnd - Date.now()))}</strong></span>` : ""}
+      ${d.phase === "running" && d.gameEnd ? `<span class="own-clock">Spielende in <strong id="own-game-end">${gameLeftText(d.gameEnd - Date.now())}</strong></span>` : ""}
       ${d.phase === "start" ? `<span class="own-clock">Das Abenteuer beginnt gleich.</span>` : ""}
       ${d.phase === "end" ? `<span class="own-clock">Das Abenteuer ist zu Ende. Am Tisch wird jetzt gezählt.</span>` : ""}`;
   }
@@ -238,11 +274,13 @@ function screenOwnPage() {
       <h1>${d && d.name ? escapeName(d.name) : noRole ? "Deine Seite" : "Deine Rolle"}</h1>
     </div>
     <div class="own-coins" aria-live="polite">${coinsHtml}</div>
+    ${ownTableHtml(d)}
     ${d && d.keys ? `<span class="label">Deine Schlüssel</span>${keyStrip(d.keys)}` : ""}
     ${notes}
     ${secretsHtml(d)}
     ${noRole ? "" : own.open ? `
       ${roleCard(r, own.adventure)}
+      ${ownRerollHtml(d)}
       <button class="btn-quiet" onclick="own.open = false; renderOwn()">Rolle verdecken</button>` : `
       <div class="covered">
         <span class="card-name">Deine Rolle</span>

@@ -47,6 +47,8 @@ No build step: plain `<script>` files loaded in order, all top-level declaration
 | `hand-cards.js` | `HAND_CARDS`: private cards the player keeps and plays later under "Nachsehen". |
 | `ending.js` | Secret tasks, final count, play again. |
 | `player-page.js` | QR links, syncing seats to Supabase, the player's own page. |
+| `live.js` | Live connection between the game master phone and the player pages (Supabase Realtime broadcast, one channel per seat): instant seat updates, the public card on every phone with "Gelesen", new role draws from the own phone, drawing on the own phone. |
+| `admin.js` | Menu › Spielleitung: coins, drawing a player's role again, moving the event clock, the optional time limit. |
 | `speech.js` | Read-aloud buttons via the browser's Web Speech API (on-device voices, no service). |
 | `music.js` | Background music while the timer runs, generated live with the Web Audio API (no audio files). |
 | `main.js` | Startup. |
@@ -103,6 +105,8 @@ Tables: `content` (one row `id = 'valdrien'`, `data` jsonb, `version`), `editors
 
 - CMS (signed in, listed in `editors`): `content_set(path, value)`, `content_delete(path)`, `content_replace(data)`, `editor_add`, `editor_remove`, `is_editor()`.
 - Game (anon): `seat_write(p_session, p_secret, p_access, p_data)` from the game master phone, `seat_read(p_access)` from a player phone, `seat_status`, `session_delete`. Sessions older than 3 days are removed on the next write.
+
+Live connection (`js/game/live.js`): Realtime broadcast on the public channel `valdrien-seat-<access code>`, so only the phone with that QR link listens in; no table or SQL is needed. The game master phone pushes `{ type: "seat", data }` whenever a seat changes (the stored seat and the player page's 5 s poll stay as fallback). Phones send `hello` (every 25 s, marks the phone as connected) and requests that the game master phone checks before applying them: `reroll` / `takeBack` (with the role the phone shows), `read` (card id), `sketch` (a drawing as a small JPEG data URL). A phone repeats a request until its seat shows the result. A retired link's seat holds `{ replaced: true, next }`, and its page moves on to the player's current link.
 
 `content` is part of the `supabase_realtime` publication, so CMS windows and games update live.
 

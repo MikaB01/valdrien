@@ -31,7 +31,7 @@ function screenMinigame() {
       <p class="narrative">${mg.text}</p>
       <p class="coin-line">${rewardText(mg, m)}</p>
     </article>`;
-  const notes = cardNotes(m.card) + pauseControls();
+  const notes = readLine() + cardNotes(m.card) + pauseControls();
 
   if (isDuel(m) && m.opponent === undefined) {
     return kicker + lineup("Wer spielt mit?", [{ label: "Fordert heraus", players: [m.challenger] }],
@@ -198,6 +198,7 @@ function startMinigame(index, player, duel) {
   }
 
   state.minigame = m;
+  showOnPhones("minigame", index);
   if (lineupComplete(m)) prepareMinigame(m);
   show("minigame");
 }
@@ -580,7 +581,8 @@ MINIGAME_TOOLS.untilTimer = {
     const clock = settings.showTimer !== false ? ` Noch <strong id="mg-clock">${timeText(remainingMs())}</strong>.` : "";
     return `<p class="note">Das Minispiel läuft, bis die Uhr abläuft und die nächste Karte kommt.${clock} Ist vorher nur noch einer übrig, gewinnt er allein.</p>
       ${timerPaused() ? `<button class="btn-quiet" onclick="toggleTimer()">Die Uhr ist angehalten: weiterlaufen lassen</button>` : ""}`;
-  }
+  },
+  phone: m => ({ text: m.timeUp ? "Die Uhr ist abgelaufen: Wer noch dabei ist, hat gewonnen." : "Läuft, bis die Uhr abläuft und die nächste Karte kommt." })
 };
 // Called by tick() every second while the event timer runs.
 function minigameTimerTick(remaining) {
@@ -596,20 +598,46 @@ function minigameTimerTick(remaining) {
   render();
 }
 
+// Time limit of a minigame: the game master may change it before the start (m.seconds, default = the minigame's own).
+function toolSeconds(m) { return m.seconds || MINIGAMES[m.index].seconds; }
+function secondOptions(mg) {
+  const d = mg.seconds;
+  const list = d >= RULES.minigameSecondOptions[0] ? RULES.minigameSecondOptions.concat(d) : [d / 2, d, d * 1.5, d * 2].map(Math.round);
+  return [...new Set(list)].filter(n => n > 0).sort((a, b) => a - b);
+}
+function secondsPicker(m, mg) {
+  const now = toolSeconds(m);
+  return `
+    <div class="seconds-picker">
+      <span class="label">Zeit</span>
+      <div class="segmented" role="group" aria-label="Zeit in Sekunden">
+        ${secondOptions(mg).map(n => `<button aria-pressed="${n === now}" onclick="setToolSeconds(${n})">${n} s</button>`).join("")}
+      </div>
+    </div>`;
+}
+function setToolSeconds(n) {
+  const m = openMinigame();
+  if (!m) return;
+  m.seconds = n;
+  save();
+  keepScroll(render);
+}
+
 MINIGAME_TOOLS.countdown = {
   html: (m, mg) => {
     const r = m.run || {};
-    if (!r.end) return `<button class="btn" onclick="startCountdown()">Countdown starten (${mg.seconds} Sekunden)</button>`;
+    if (!r.end) return secondsPicker(m, mg) + `<button class="btn" onclick="startCountdown()">Countdown starten (${toolSeconds(m)} Sekunden)</button>`;
     if (!r.done) return `<div class="countdown" id="mg-countdown" aria-live="off">${Math.max(1, Math.ceil((r.end - Date.now()) / 1000))}</div>`;
     return `<div class="countdown countdown-done">Jetzt!</div>
       <button class="link-button" onclick="startCountdown()">Countdown noch einmal</button>`;
-  }
+  },
+  phone: m => m.run && m.run.end && !m.run.done ? { countdown: m.run.end } : null
 };
 function startCountdown() {
   const m = openMinigame();
   if (!m) return;
   unlockAudio();
-  m.run = { end: Date.now() + MINIGAMES[m.index].seconds * 1000 };
+  m.run = { end: Date.now() + toolSeconds(m) * 1000 };
   save();
   render();
   scrollToTool();
@@ -640,6 +668,12 @@ MINIGAME_TOOLS.hourglass = {
       const d = r.times[i] - r.target * 1000;
       return `${d >= 0 ? "+" : "−"}${secondsText(Math.abs(d))} s`;
     });
+  },
+  phone: (m, mg, i) => {
+    const r = m.run;
+    if (r.turn >= r.order.length) return { text: `Zielzeit ${r.target} Sekunden. Alle haben gestoppt, das Ergebnis steht am Spielleiter-Handy.` };
+    const p = r.order[r.turn];
+    return { text: `Zielzeit ${r.target} Sekunden. ${p === i ? "Du bist dran, am Spielleiter-Handy." : `Dran ist ${state.players[p].name}.`}` };
   }
 };
 function hourglassStart() {
@@ -679,10 +713,13 @@ function rankingHtml(m, value, detail) {
 
 MINIGAME_TOOLS.length = {
   prepare: (m, mg) => { m.run = { cm: randomInt(mg.min, mg.max) }; },
-  html: m => toolBox("So lang soll der Strick werden", `${m.run.cm} cm`)
+  html: m => toolBox("So lang soll der Strick werden", `${m.run.cm} cm`),
+  phone: m => ({ text: `So lang soll der Strick werden: ${m.run.cm} cm.` })
 };
 
-// Drawing in turns: each player sees only his own term, then the app shows every picture (Das Phantombild).
+// Drawing: each player sees only his own term, first the term, then "Los" starts the time (Das Phantombild).
+// In turns on this phone, or at the same time on everybody's own phone (mode "phones", needs all of them connected);
+// then the app shows every picture. Strokes are kept in run.strokes, so the drawing survives a re-render.
 MINIGAME_TOOLS.sketch = {
   prepare: (m, mg) => {
     const order = minigameParticipants();
@@ -692,28 +729,38 @@ MINIGAME_TOOLS.sketch = {
       if (!pool.length) pool = shuffle(mg.prompts.length ? mg.prompts : ["Etwas Gruseliges"]);
       terms[i] = pool.pop();
     });
-    m.run = { order, terms, turn: 0, started: null, current: null, images: {}, phase: "draw", view: 0 };
+    m.run = { order, terms, turn: 0, reveal: false, started: null, strokes: [], images: {}, handedIn: {}, mode: "turns", phase: "draw", view: 0 };
   },
   ready: m => Boolean(m.run) && m.run.phase === "solution",
-  focus: m => Boolean(m.run) && (m.run.started !== null || m.run.phase === "gallery"),
+  focus: m => Boolean(m.run) && (m.run.reveal || m.run.started !== null || m.run.phase === "gallery"),
   html: (m, mg) => {
     const r = m.run;
+    if (r.phase === "draw" && r.mode === "phones") return sketchPhonesHtml(m);
     if (r.phase === "draw" && r.turn < r.order.length) {
       const p = playerName(r.order[r.turn]);
-      if (r.started === null) return `
+      const term = r.terms[r.order[r.turn]];
+      if (r.reveal) return `
+        <div class="handover handover-small">
+          <p class="muted">${p}, dein Begriff</p>
+          <p class="sketch-term sketch-term-large">${term}</p>
+          <p class="muted">Lies ihn in Ruhe. Die Zeit läuft erst, wenn du auf Los tippst.</p>
+          <button class="btn" onclick="sketchStart()">Los, ${toolSeconds(m)} Sekunden</button>
+        </div>`;
+      if (r.started === null) return (r.turn ? "" : sketchSetupHtml(m, mg)) + `
         <div class="handover handover-small">
           <p class="muted">Bild ${r.turn + 1} von ${r.order.length}. Gib das Handy an</p>
           <p class="name-large">${p}</p>
-          <p class="muted">Nur ${p} schaut jetzt aufs Handy: ${mg.seconds} Sekunden für deinen Begriff.</p>
-          <button class="btn" onclick="sketchStart()">Ich bin ${p}, Begriff zeigen</button>
+          <p class="muted">Nur ${p} schaut jetzt aufs Handy: ${toolSeconds(m)} Sekunden für deinen Begriff.</p>
+          <button class="btn" onclick="sketchReveal()">Ich bin ${p}, Begriff zeigen</button>
         </div>`;
       const over = sketchTimeLeft(m) <= 0;
       return `
         <div class="sketch-head">
-          <span><span class="label">Dein Begriff</span><strong class="sketch-term">${r.terms[r.order[r.turn]]}</strong></span>
+          <span><span class="label">Dein Begriff</span><strong class="sketch-term">${term}</strong></span>
           <span class="sketch-clock ${over ? "over" : ""}" id="mg-countdown">${over ? "Zeit um" : Math.ceil(sketchTimeLeft(m))}</span>
         </div>
         <canvas class="sketch-canvas ${over ? "locked" : ""}" id="sketch-canvas" width="600" height="600" aria-label="Zeichenfläche"></canvas>
+        ${over ? "" : sketchToolbar()}
         <button class="btn" onclick="sketchDone()">${over ? "Fertig, Handy weitergeben" : "Schon fertig"}</button>`;
     }
     if (r.phase === "draw") return `
@@ -738,20 +785,93 @@ MINIGAME_TOOLS.sketch = {
       <p class="note">Je richtiger Tipp 1 Punkt, und jeder Maler bekommt 1 Punkt für jeden, der sein Bild erraten hat.</p>
       <button class="link-button" onclick="sketchView(0)">Bilder noch einmal zeigen</button>`;
   },
-  mounted: m => mountCanvas(m)
+  mounted: m => {
+    const canvas = document.getElementById("sketch-canvas");
+    const r = m.run;
+    if (canvas) sketchPad(canvas, r.strokes, () => r.started !== null && sketchTimeLeft(m) > 0, save);
+  },
+  phone: (m, mg, i) => {
+    const r = m.run;
+    if (r.phase === "draw" && r.mode === "phones" && r.order.includes(i)) {
+      return { sketch: { key: r.key, term: r.terms[i], seconds: toolSeconds(m), done: Boolean(r.handedIn[i]) } };
+    }
+    if (r.phase === "draw" && r.turn < r.order.length) {
+      const p = r.order[r.turn];
+      return { text: p === i ? "Du bist dran: Am Spielleiter-Handy malen." : `Bild ${r.turn + 1} von ${r.order.length}: ${state.players[p].name} malt am Spielleiter-Handy.` };
+    }
+    return { text: r.phase === "solution" ? "Auflösung am Spielleiter-Handy." : "Die Bilder werden am Spielleiter-Handy gezeigt. Schreib deine Tipps auf." };
+  }
 };
+
+// Before the first picture: the drawing time, and drawing at the same time on everybody's own phone.
+function sketchSetupHtml(m, mg) {
+  const r = m.run;
+  const connected = r.order.filter(phoneConnected);
+  const all = connected.length === r.order.length;
+  return `
+    ${secondsPicker(m, mg)}
+    ${all ? `
+      <button class="btn" onclick="sketchOnPhones()">Alle malen gleichzeitig am eigenen Handy</button>
+      <p class="muted">Oder reihum an diesem Handy:</p>` : liveReady() ? `
+      <p class="muted">Gleichzeitig am eigenen Handy malen geht, sobald alle ihre Seite per QR-Code offen haben (${connected.length} von ${r.order.length}).</p>` : ""}`;
+}
+
+function sketchPhonesHtml(m) {
+  const r = m.run;
+  const missing = r.order.filter(i => !r.handedIn[i]);
+  return `
+    <p class="note">Jeder malt jetzt auf seinem eigenen Handy: erst den Begriff lesen, dann mit Los die ${toolSeconds(m)} Sekunden starten.</p>
+    <div class="tally">${r.order.map(i => `
+      <div class="tally-row ${r.handedIn[i] ? "best" : ""}"><span class="player-name">${playerName(i)}</span><span>${r.handedIn[i] ? "✓ fertig" : "malt noch …"}</span></div>`).join("")}
+    </div>
+    <button class="btn" onclick="sketchGallery()" ${missing.length ? "disabled" : ""}>Bilder zeigen</button>
+    ${missing.length ? `<button class="link-button" onclick="sketchGallery()">Nicht mehr warten, Bilder jetzt zeigen</button>` : ""}`;
+}
+
+function sketchOnPhones() {
+  const m = openMinigame();
+  const r = m && m.run;
+  if (!r || r.turn || r.started !== null) return;
+  r.mode = "phones";
+  r.key = randomCode().slice(0, 8);
+  save();
+  keepScroll(render);
+}
+
+// A picture from a player's own phone (mode "phones").
+function sketchReceived(i, key, image) {
+  const m = openMinigame();
+  const r = m && m.run;
+  if (!r || MINIGAMES[m.index].tool !== "sketch" || r.mode !== "phones" || r.key !== key || r.phase !== "draw" || !r.order.includes(i) || r.handedIn[i]) return false;
+  const ok = typeof image === "string" && /^data:image\/(jpeg|png|webp);base64,/.test(image) && image.length < 600000;
+  r.images[i] = ok ? image : null;
+  r.handedIn[i] = true;
+  return true;
+}
+
 function sketchImage(r, i) {
   return r.images[i] ? `<img class="sketch-image" src="${r.images[i]}" alt="Bild von ${playerName(i)}">` : `<div class="sketch-image sketch-empty">Leer gelassen</div>`;
 }
 function sketchTimeLeft(m) {
   const r = m.run;
-  return r.started === null ? MINIGAMES[m.index].seconds : MINIGAMES[m.index].seconds - (Date.now() - r.started) / 1000;
+  return r.started === null ? toolSeconds(m) : toolSeconds(m) - (Date.now() - r.started) / 1000;
+}
+function sketchReveal() {
+  const m = openMinigame();
+  if (!m || !m.run || m.run.started !== null) return;
+  m.run.reveal = true;
+  save();
+  render();
+  window.scrollTo(0, 0);
 }
 function sketchStart() {
   const m = openMinigame();
   if (!m || !m.run || m.run.started !== null) return;
+  unlockAudio();
+  m.run.reveal = false;
   m.run.started = Date.now();
-  m.run.current = null;
+  m.run.strokes = [];
+  sketchErasing = false;
   save();
   render();
   window.scrollTo(0, 0);
@@ -760,8 +880,8 @@ function sketchDone() {
   const m = openMinigame();
   const r = m && m.run;
   if (!r || r.started === null) return;
-  r.images[r.order[r.turn]] = r.current;
-  r.current = null;
+  r.images[r.order[r.turn]] = r.strokes.length ? strokesToImage(r.strokes, 600, "image/png") : null;
+  r.strokes = [];
   r.started = null;
   r.turn++;
   save();
@@ -778,45 +898,92 @@ function sketchView(step) {
 }
 function sketchSolution() { openMinigame().run.phase = "solution"; save(); render(); }
 
-// The drawing survives a re-render (live content updates): every stroke is kept in run.current.
-function mountCanvas(m) {
-  const canvas = document.getElementById("sketch-canvas");
-  if (!canvas) return;
-  const r = m.run;
-  const ctx = canvas.getContext("2d");
-  ctx.fillStyle = "#f7f0e1";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  if (r.current) { const img = new Image(); img.onload = () => ctx.drawImage(img, 0, 0); img.src = r.current; }
+/* --- Drawing surface, shared by the game master phone and the player's own phone ---
+   strokes: [{ erase, points: [[x, y], …] }] in a 600 × 600 space; the eraser paints with the paper colour. */
+const SKETCH_SIZE = 600;
+const SKETCH_PAPER = "#f7f0e1";
+const SKETCH_INK = "#2b1d12";
+let sketchErasing = false;
+let sketchPointerDown = false;
+let activePad = null;
+
+function drawStroke(ctx, stroke, scale = 1) {
+  const pts = stroke.points;
+  if (!pts.length) return;
+  ctx.save();
+  ctx.scale(scale, scale);
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
-  ctx.lineWidth = 7;
-  ctx.strokeStyle = "#2b1d12";
-  let last = null;
+  ctx.lineWidth = stroke.erase ? 34 : 7;
+  ctx.strokeStyle = ctx.fillStyle = stroke.erase ? SKETCH_PAPER : SKETCH_INK;
+  ctx.beginPath();
+  if (pts.length === 1) { ctx.arc(pts[0][0], pts[0][1], ctx.lineWidth / 2, 0, Math.PI * 2); ctx.fill(); }
+  else { ctx.moveTo(pts[0][0], pts[0][1]); pts.slice(1).forEach(p => ctx.lineTo(p[0], p[1])); ctx.stroke(); }
+  ctx.restore();
+}
+
+function strokesToImage(strokes, size, type, quality) {
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = SKETCH_PAPER;
+  ctx.fillRect(0, 0, size, size);
+  strokes.forEach(st => drawStroke(ctx, st, size / SKETCH_SIZE));
+  return canvas.toDataURL(type, quality);
+}
+
+function sketchPad(canvas, strokes, isOpen, changed) {
+  const ctx = canvas.getContext("2d");
+  const paint = () => {
+    ctx.fillStyle = SKETCH_PAPER;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    strokes.forEach(st => drawStroke(ctx, st, canvas.width / SKETCH_SIZE));
+  };
+  paint();
+  let current = null;
   const at = e => {
     const box = canvas.getBoundingClientRect();
-    return [(e.clientX - box.left) * canvas.width / box.width, (e.clientY - box.top) * canvas.height / box.height];
+    return [Math.round((e.clientX - box.left) * SKETCH_SIZE / box.width), Math.round((e.clientY - box.top) * SKETCH_SIZE / box.height)];
   };
-  const open = () => r.started !== null && sketchTimeLeft(m) > 0;
+  const end = () => {
+    if (!current) return;
+    strokes.push(current);
+    current = null;
+    sketchPointerDown = false;
+    changed();
+    if (liveRenderPending) setTimeout(() => (own ? renderOwn() : liveRender()), 0);
+  };
   canvas.addEventListener("pointerdown", e => {
-    if (!open()) return;
+    if (!isOpen()) return;
     canvas.setPointerCapture(e.pointerId);
-    last = at(e);
-    ctx.beginPath(); ctx.arc(last[0], last[1], ctx.lineWidth / 2, 0, Math.PI * 2); ctx.fillStyle = ctx.strokeStyle; ctx.fill();
+    sketchPointerDown = true;
+    current = { erase: sketchErasing, points: [at(e)] };
+    drawStroke(ctx, current, canvas.width / SKETCH_SIZE);
   });
   canvas.addEventListener("pointermove", e => {
-    if (!last || !open()) return;
+    if (!current) return;
+    if (!isOpen()) { end(); return; }
     const p = at(e);
-    ctx.beginPath(); ctx.moveTo(last[0], last[1]); ctx.lineTo(p[0], p[1]); ctx.stroke();
-    last = p;
+    const last = current.points[current.points.length - 1];
+    current.points.push(p);
+    drawStroke(ctx, { erase: current.erase, points: [last, p] }, canvas.width / SKETCH_SIZE);
   });
-  const end = () => {
-    if (!last) return;
-    last = null;
-    r.current = canvas.toDataURL("image/png");
-    save();
-  };
   canvas.addEventListener("pointerup", end);
   canvas.addEventListener("pointercancel", end);
+  activePad = { undo: () => { if (!strokes.length) return; strokes.pop(); paint(); changed(); } };
+}
+
+function sketchToolbar() {
+  return `
+    <div class="sketch-tools" role="group" aria-label="Werkzeug">
+      <button class="sketch-tool" aria-pressed="${!sketchErasing}" onclick="setEraser(false, this)">Stift</button>
+      <button class="sketch-tool" aria-pressed="${sketchErasing}" onclick="setEraser(true, this)">Radierer</button>
+      <button class="sketch-tool" onclick="if (activePad) activePad.undo()">Rückgängig</button>
+    </div>`;
+}
+function setEraser(on, button) {
+  sketchErasing = on;
+  button.parentNode.querySelectorAll("[aria-pressed]").forEach((b, k) => b.setAttribute("aria-pressed", String(k === (on ? 1 : 0))));
 }
 
 // Secret vote in turns; the app shows only how often each player was chosen (Wer würde eher …?).
@@ -854,6 +1021,13 @@ MINIGAME_TOOLS.vote = {
       </div>
       <p class="kicker">${playerNames(top)} ${verb(top, "trinkt", "trinken")} einen Shot.</p>
       ${r.round < r.prompts.length - 1 ? `<button class="btn" onclick="nextVoteRound()">Nächste Frage</button>` : ""}`;
+  },
+  phone: (m, mg, i) => {
+    const r = m.run;
+    const q = `Frage ${r.round + 1} von ${r.prompts.length}: ${r.prompts[r.round].replace(/<[^>]*>/g, "")}`;
+    if (r.turn >= r.order.length) return { text: `${q} Die Stimmen stehen am Spielleiter-Handy.` };
+    const v = r.order[r.turn];
+    return { text: `${q} ${v === i ? "Du stimmst jetzt am Spielleiter-Handy ab." : `${state.players[v].name} stimmt gerade ab.`}` };
   }
 };
 function voteOpen() { const r = openMinigame().run; r.open = true; save(); render(); window.scrollTo(0, 0); }
